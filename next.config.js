@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  distDir: 'out',
   trailingSlash: true,
   typescript: {
     // ⚠️ Dangerously allow production builds to successfully complete even if
@@ -16,7 +14,6 @@ const nextConfig = {
   // Remove reactStrictMode from experimental as it's not valid there
   reactStrictMode: false,
   images: {
-    unoptimized: true, // Required for static export
     remotePatterns: [
       {
         protocol: 'https',
