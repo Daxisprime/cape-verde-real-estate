@@ -8,6 +8,7 @@ import MarketInsights from '@/components/MarketInsights';
 import EstateAgentsDirectory from '@/components/EstateAgentsDirectory';
 import Footer from '@/components/Footer';
 
+// Cape Verde Real Estate Platform - v2.0.0 - 2025-01-10
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
