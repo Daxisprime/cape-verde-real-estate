@@ -1,0 +1,62 @@
+[build]
+  builder = "nixpacks"
+  buildCommand = "npm ci --only=production"
+
+[deploy]
+  numReplicas = 1
+  sleepApplication = false
+  restartPolicyType = "on_failure"
+
+[env]
+  NODE_ENV = "production"
+  PORT = { default = "8080" }
+
+  # Database Configuration
+  DB_HOST = { default = "${{Postgres.PGHOST}}" }
+  DB_PORT = { default = "${{Postgres.PGPORT}}" }
+  DB_NAME = { default = "${{Postgres.PGDATABASE}}" }
+  DB_USER = { default = "${{Postgres.PGUSER}}" }
+  DB_PASSWORD = { default = "${{Postgres.PGPASSWORD}}" }
+  DATABASE_URL = { default = "${{Postgres.DATABASE_URL}}" }
+
+  # Redis Configuration
+  REDIS_URL = { default = "${{Redis.REDIS_URL}}" }
+  REDIS_HOST = { default = "${{Redis.REDIS_HOST}}" }
+  REDIS_PORT = { default = "${{Redis.REDIS_PORT}}" }
+  REDIS_PASSWORD = { default = "${{Redis.REDIS_PASSWORD}}" }
+
+  # Security
+  JWT_SECRET = { value = "production_jwt_secret_replace_with_random_string" }
+  JWT_EXPIRES_IN = { default = "24h" }
+
+  # CORS
+  CORS_ORIGIN = { default = "https://same-t08mrgjy1io-latest.netlify.app,https://procv.cv" }
+  ALLOWED_ORIGINS = { default = "https://same-t08mrgjy1io-latest.netlify.app,https://procv.cv" }
+
+  # File Upload
+  FILE_UPLOAD_MAX_SIZE = { default = "10485760" }
+  FILE_UPLOAD_ALLOWED_TYPES = { default = "image/jpeg,image/png,image/gif,image/webp,application/pdf,text/plain" }
+
+  # WebSocket Configuration
+  WS_HEARTBEAT_INTERVAL = { default = "30000" }
+  WS_CONNECTION_TIMEOUT = { default = "60000" }
+  WS_MAX_CONNECTIONS_PER_USER = { default = "5" }
+
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS = { default = "900000" }
+  RATE_LIMIT_MAX_REQUESTS = { default = "100" }
+
+  # Monitoring
+  ENABLE_ANALYTICS = { default = "true" }
+  LOG_LEVEL = { default = "info" }
+
+[healthcheck]
+  path = "/health"
+  timeout = 10
+  interval = 30
+
+[scaling]
+  minReplicas = 1
+  maxReplicas = 10
+  targetCPU = 80
+  targetMemory = 80

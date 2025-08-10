@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProCV - Offline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .offline-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3B82F6;
+            margin-bottom: 20px;
+        }
+
+        .logo .dot {
+            color: #EF4444;
+        }
+
+        .offline-icon {
+            width: 80px;
+            height: 80px;
+            background: #FEF2F2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #1F2937;
+        }
+
+        p {
+            color: #6B7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .retry-btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+
+        .retry-btn:hover {
+            background: #2563EB;
+            transform: translateY(-2px);
+        }
+
+        .cache-btn {
+            background: #10B981;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cache-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #6B7280;
+        }
+
+        .feature-item::before {
+            content: "✓";
+            color: #10B981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #E5E7EB;
+            border-top: 2px solid #3B82F6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .offline-container {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .retry-btn, .cache-btn {
+                display: block;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="logo">PRO<span class="dot">•</span>CV</div>
+
+        <div class="offline-icon">
+            📡
+        </div>
+
+        <h1>You're Offline</h1>
+        <p>It looks like you're not connected to the internet. Some cached content may still be available.</p>
+
+        <button class="retry-btn" onclick="retryConnection()">Try Again</button>
+        <button class="cache-btn" onclick="browseCached()">Browse Cached Properties</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>Checking connection...</span>
+        </div>
+
+        <div class="features">
+            <div class="feature-item">Browse previously viewed properties</div>
+            <div class="feature-item">Access cached property images</div>
+            <div class="feature-item">View saved search results</div>
+            <div class="feature-item">Use mortgage calculator</div>
+        </div>
+    </div>
+
+    <script>
+        // Check connection status
+        function updateConnectionStatus() {
+            if (navigator.onLine) {
+                // Connection restored
+                window.location.reload();
+            }
+        }
+
+        // Retry connection
+        function retryConnection() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
+
+            // Simple connectivity check
+            fetch('/', { method: 'HEAD' })
+                .then(() => {
+                    // Connection successful
+                    window.location.reload();
+                })
+                .catch(() => {
+                    // Still offline
+                    loading.style.display = 'none';
+                    alert('Still unable to connect. Please check your internet connection.');
+                });
+        }
+
+        // Browse cached content
+        function browseCached() {
+            // Try to access cached content
+            if ('caches' in window) {
+                caches.open('procv-v1.0.0').then(cache => {
+                    cache.keys().then(requests => {
+                        if (requests.length > 0) {
+                            // Redirect to main app to show cached content
+                            window.location.href = '/';
+                        } else {
+                            alert('No cached content available. Please connect to the internet first.');
+                        }
+                    });
+                });
+            } else {
+                alert('Caching not supported in this browser.');
+            }
+        }
+
+        // Listen for connection changes
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', () => {
+            console.log('Connection lost');
+        });
+
+        // Auto-retry connection every 30 seconds
+        setInterval(() => {
+            if (!navigator.onLine) {
+                fetch('/', { method: 'HEAD' })
+                    .then(() => {
+                        // Connection restored
+                        updateConnectionStatus();
+                    })
+                    .catch(() => {
+                        // Still offline
+                        console.log('Still offline, will retry...');
+                    });
+            }
+        }, 30000);
+
+        // Show current status
+        if (navigator.onLine) {
+            document.querySelector('p').textContent = 'Connection detected, but unable to load the page. Please try again.';
+        }
+    </script>
+</body>
+</html>
