@@ -2,21 +2,32 @@
 
 import React, { useState } from "react";
 import Header from "@/components/Header";
-import PostAdForm, { CreatedAd } from "@/components/PostAdForm";
-import { Phone, MessageCircle, ExternalLink, Pencil, MapPin } from "lucide-react";
-import { mockProfiles } from "@/lib/mockProfiles";
+import PostAdForm from "@/components/PostAdForm";
+import { Calculator, TrendingUp, MapPin, BarChart3 } from "lucide-react";
+import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
+
+const PRICE_PER_SQM: Record<string, { min: number; max: number }> = {
+  Santiago: { min: 45000, max: 120000 },
+  "Sao Vicente": { min: 55000, max: 150000 },
+  Sal: { min: 70000, max: 200000 },
+  "Boa Vista": { min: 60000, max: 180000 },
+  Fogo: { min: 30000, max: 80000 },
+  "Santo Antao": { min: 25000, max: 70000 },
+  Maio: { min: 25000, max: 60000 },
+  Brava: { min: 20000, max: 55000 },
+  "Sao Nicolau": { min: 20000, max: 50000 },
+};
 
 export default function SellPage() {
-  const vendor = mockProfiles[0];
-  const [recentAds, setRecentAds] = useState<CreatedAd[]>([]);
+  const [valIsland, setValIsland] = useState("");
+  const [valSize, setValSize] = useState("");
+  const [valuation, setValuation] = useState<{ min: number; max: number } | null>(null);
 
-  const handleWhatsApp = () => {
-    const phone = vendor.phone.replace(/\D/g, "");
-    window.open(`https://wa.me/${phone}`, "_blank");
-  };
-
-  const handleAdCreated = (ad: CreatedAd) => {
-    setRecentAds((prev) => [ad, ...prev]);
+  const calculateValuation = () => {
+    const size = parseFloat(valSize);
+    const rates = PRICE_PER_SQM[valIsland];
+    if (!size || !rates) return;
+    setValuation({ min: Math.round(rates.min * size), max: Math.round(rates.max * size) });
   };
 
   return (
@@ -24,122 +35,88 @@ export default function SellPage() {
       <Header />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto px-4 mt-6 items-start pb-20">
-        {/* LEFT COLUMN: Vendor Profile Dashboard */}
+        {/* LEFT COLUMN: Valuation + Market Insights */}
         <aside className="lg:col-span-4">
           <div className="lg:sticky lg:top-20 space-y-4">
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-4">
-              {/* Avatar + Name */}
-              <div className="flex items-center gap-4">
-                <img
-                  src={vendor.avatar_url}
-                  alt={vendor.full_name}
-                  className="h-14 w-14 rounded-full object-cover shrink-0"
-                />
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-base font-bold text-gray-900 truncate">{vendor.full_name}</h2>
-                  <p className="text-xs text-gray-500 truncate">{vendor.company}</p>
-                  <span className="inline-block mt-1 text-xs font-medium text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded capitalize">
-                    {vendor.type}
-                  </span>
+            {/* Free Valuation Calculator */}
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Calculator className="h-4 w-4 text-[#2563EB]" />
                 </div>
+                <h2 className="text-sm font-bold text-gray-900">Free Valuation</h2>
               </div>
 
-              {/* Bio */}
-              <p className="text-sm text-gray-600 leading-relaxed">{vendor.bio}</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Island / Zone</label>
+                  <select
+                    value={valIsland}
+                    onChange={(e) => { setValIsland(e.target.value); setValuation(null); }}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white"
+                  >
+                    <option value="">Select island...</option>
+                    {CAPE_VERDE_ISLANDS.map((island) => (
+                      <option key={island} value={island}>{island}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Call + WhatsApp */}
-              <div className="flex gap-2">
-                <a
-                  href={`tel:${vendor.phone}`}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-[#1D4ED8] transition-colors"
-                >
-                  <Phone className="h-4 w-4" />
-                  Call
-                </a>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Size (m&sup2;)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 120"
+                    value={valSize}
+                    onChange={(e) => { setValSize(e.target.value); setValuation(null); }}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white"
+                  />
+                </div>
+
                 <button
-                  onClick={handleWhatsApp}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                  onClick={calculateValuation}
+                  disabled={!valIsland || !valSize}
+                  className="w-full py-2.5 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-[#1D4ED8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  WhatsApp
+                  Calculate Estimate
                 </button>
-              </div>
 
-              {/* Social Drop-Links */}
-              <div className="pt-3 border-t border-gray-100 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Social Links</p>
-                {vendor.facebook_url && (
-                  <a
-                    href={vendor.facebook_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-[#2563EB] hover:underline"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Facebook Group
-                  </a>
+                {valuation && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <p className="text-xs text-gray-500 mb-1">Estimated market value</p>
+                    <p className="text-lg font-black text-gray-900">
+                      {valuation.min.toLocaleString()} &ndash; {valuation.max.toLocaleString()} <span className="text-sm font-medium text-gray-500">CVE</span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Based on {valIsland} market rates per m&sup2;</p>
+                  </div>
                 )}
-                {vendor.facebook_shop_url && (
-                  <a
-                    href={vendor.facebook_shop_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-[#2563EB] hover:underline"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Facebook Shop
-                  </a>
-                )}
-                {vendor.instagram_url && (
-                  <a
-                    href={vendor.instagram_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-pink-600 hover:underline"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Instagram
-                  </a>
-                )}
-              </div>
-
-              {/* Edit Profile Link */}
-              <div className="pt-3 border-t border-gray-100">
-                <a
-                  href="/settings"
-                  className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit Profile Details
-                </a>
               </div>
             </div>
 
-            {/* Recent Listings Feed */}
-            {recentAds.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Just Posted ({recentAds.length})
-                </p>
-                <div className="space-y-2">
-                  {recentAds.map((ad) => (
-                    <div key={ad.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
-                      {ad.images[0] && (
-                        <img src={ad.images[0]} alt={ad.title} className="h-10 w-10 rounded-md object-cover shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">{ad.title}</p>
-                        <div className="flex items-center gap-1 text-xs text-gray-400">
-                          <MapPin className="h-3 w-3" />
-                          <span className="truncate">{ad.zone ? `${ad.zone}, ` : ""}{ad.island}</span>
-                        </div>
-                      </div>
-                      <p className="text-sm font-bold text-gray-900 whitespace-nowrap">{ad.price.toLocaleString()} CVE</p>
-                    </div>
-                  ))}
+            {/* Market Insights Block */}
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                </div>
+                <h2 className="text-sm font-bold text-gray-900">Market Insights</h2>
+              </div>
+
+              <div className="space-y-3 text-sm text-gray-600 leading-relaxed">
+                <div className="flex items-start gap-2">
+                  <BarChart3 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <p>Praia property demand is up <span className="font-semibold text-emerald-600">+12%</span> this quarter with diaspora buyers driving luxury segment growth.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <p>Sal and Boa Vista rental yields averaging <span className="font-semibold text-[#2563EB]">7.2% annually</span> for tourist-zone apartments.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <TrendingUp className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <p>Listings with photos sell <span className="font-semibold text-gray-900">3x faster</span> than text-only ads. Add at least 3 images to maximize reach.</p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </aside>
 
@@ -147,8 +124,8 @@ export default function SellPage() {
         <main className="lg:col-span-8">
           <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
             <h1 className="text-lg font-bold text-gray-900 mb-1">Create New Listing</h1>
-            <p className="text-sm text-gray-500 mb-6">Post a property or item to your storefront.</p>
-            <PostAdForm vendorId={vendor.id} onAdCreated={handleAdCreated} />
+            <p className="text-sm text-gray-500 mb-6">Post a property, item, or service to the marketplace.</p>
+            <PostAdForm vendorId="vendor-1" />
           </div>
         </main>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User } from 'lucide-react';
@@ -120,12 +121,28 @@ function formatPhoneForTel(phone: string): string {
 }
 
 export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin" /></div>}>
+      <MapPageContent />
+    </Suspense>
+  );
+}
+
+function MapPageContent() {
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get('type');
   const [properties, setProperties] = useState(MOCK_DATA);
   const [searchArea, setSearchArea] = useState('');
-  const [listingType, setListingType] = useState('all');
+  const [listingType, setListingType] = useState(typeParam === 'buy' || typeParam === 'rent' ? typeParam : 'all');
   const [minBedrooms, setMinBedrooms] = useState(0);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [hoveredProperty, setHoveredProperty] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeParam === 'buy' || typeParam === 'rent') {
+      setListingType(typeParam);
+    }
+  }, [typeParam]);
 
   // Synchronized search filter calculations for cards + pins
   const filteredProperties = properties.filter((item) => {
