@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, Store, Settings, ChevronDown } from 'lucide-react';
+import { Menu, X, Store, PlusCircle, ChevronDown } from 'lucide-react';
 import { mockProfiles } from '@/lib/mockProfiles';
 
 export default function Header() {
@@ -76,20 +76,20 @@ export default function Header() {
                     <p className="text-xs text-gray-500 truncate">{vendor.company}</p>
                   </div>
                   <Link
-                    href={`/profile/${vendor.id}`}
+                    href="/my-store"
                     onClick={() => setIsProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Store className="h-4 w-4 text-gray-400" />
-                    My Public Storefront
+                    My Store
                   </Link>
                   <Link
-                    href="/settings"
+                    href="/sell"
                     onClick={() => setIsProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    <Settings className="h-4 w-4 text-gray-400" />
-                    Account Settings
+                    <PlusCircle className="h-4 w-4 text-gray-400" />
+                    Post an Ad
                   </Link>
                 </div>
               )}
@@ -120,11 +120,11 @@ export default function Header() {
               <Link href="/map" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
                 Map
               </Link>
-              <Link href={`/profile/${vendor.id}`} className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-                My Storefront
+              <Link href="/my-store" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                My Store
               </Link>
-              <Link href="/settings" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-                Settings
+              <Link href="/sell" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                Post an Ad
               </Link>
             </div>
           </div>
