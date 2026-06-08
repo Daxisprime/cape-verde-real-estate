@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, Filter, Grid, List, GitCompare, X } from 'lucide-react';
+import { Grid, List, GitCompare, X } from 'lucide-react';
 import VerifiedPropertyCard from '@/components/VerifiedPropertyCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,8 +33,8 @@ export default function PropertyListings({
   searchFilters = {},
   showFilters = true,
   maxProperties,
-  title = "Featured PropTech Properties in Cape Verde",
-  subtitle = "Discover exceptional properties enhanced with next-generation PropTech features across Cape Verde's beautiful islands"
+  title = "Properties in Cape Verde",
+  subtitle = "Browse listings across all 9 inhabited islands"
 }: PropertyListingsProps) {
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -322,27 +322,6 @@ export default function PropertyListings({
             </div>
           )}
 
-          {/* Statistics */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {capeVerdeProperties.length}+
-              </div>
-              <div className="text-gray-600">Verified Properties</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {new Set(capeVerdeProperties.map(p => p.island)).size}
-              </div>
-              <div className="text-gray-600">Islands Covered</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-purple-600 mb-2">
-                {formatCurrency(Math.round(capeVerdeProperties.reduce((sum, p) => sum + p.price, 0) / capeVerdeProperties.length))}
-              </div>
-              <div className="text-gray-600">Average Property Price</div>
-            </div>
-          </div>
         </div>
       </section>
 
