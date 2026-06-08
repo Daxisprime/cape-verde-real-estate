@@ -281,22 +281,48 @@ export default function PropertyListings({
 
           {/* Property Grid/List */}
           {filteredProperties.length > 0 ? (
-            <div className={
-              viewMode === 'grid'
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            }>
-              {filteredProperties.map((property) => (
-                <VerifiedPropertyCard
-                  key={property.id}
-                  property={property}
-                  enableComparison={true}
-                  onCompareToggle={handleCompareToggle}
-                  isInComparison={selectedForComparison.some(p => p.id === property.id)}
-                  className={viewMode === 'list' ? 'max-w-none' : ''}
-                />
-              ))}
-            </div>
+            viewMode === 'list' ? (
+              <div className="space-y-4">
+                {filteredProperties.map((property) => (
+                  <VerifiedPropertyCard
+                    key={property.id}
+                    property={property}
+                    enableComparison={true}
+                    onCompareToggle={handleCompareToggle}
+                    isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                    className="max-w-none"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="w-full">
+                {/* Desktop grid */}
+                <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredProperties.map((property) => (
+                    <VerifiedPropertyCard
+                      key={property.id}
+                      property={property}
+                      enableComparison={true}
+                      onCompareToggle={handleCompareToggle}
+                      isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                    />
+                  ))}
+                </div>
+                {/* Mobile masonry */}
+                <div className="columns-2 gap-2 sm:hidden">
+                  {filteredProperties.map((property) => (
+                    <div key={property.id} className="break-inside-avoid mb-2 w-full inline-block">
+                      <VerifiedPropertyCard
+                        property={property}
+                        enableComparison={true}
+                        onCompareToggle={handleCompareToggle}
+                        isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
           ) : (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🏠</div>
