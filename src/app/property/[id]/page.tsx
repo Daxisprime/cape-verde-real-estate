@@ -89,21 +89,18 @@ function getSimilarProperties(currentId: string, island: string, type: string, p
   const priceLow = price * 0.8;
   const priceHigh = price * 1.2;
 
-  return capeVerdeProperties
-    .filter(p => {
-      if (p.id === currentId) return false;
-      const sameIsland = p.island === island;
-      const sameType = p.type === type;
-      const closePrice = p.price >= priceLow && p.price <= priceHigh;
-      return sameIsland && (sameType || closePrice);
+  const candidates = capeVerdeProperties
+    .filter(p => p.id !== currentId)
+    .map(p => {
+      let score = 0;
+      if (p.island === island) score += 3;
+      if (p.type === type) score += 2;
+      if (p.price >= priceLow && p.price <= priceHigh) score += 1;
+      return { property: p, score };
     })
-    .sort((a, b) => {
-      const aScore = (a.type === type ? 2 : 0) + (Math.abs(a.price - price) < price * 0.1 ? 1 : 0);
-      const bScore = (b.type === type ? 2 : 0) + (Math.abs(b.price - price) < price * 0.1 ? 1 : 0);
-      return bScore - aScore;
-    })
+    .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .map(p => ({
+    .map(({ property: p }) => ({
       id: p.id,
       title: p.title,
       price: p.price,
@@ -114,6 +111,8 @@ function getSimilarProperties(currentId: string, island: string, type: string, p
       bathrooms: p.bathrooms,
       image: p.images[0]
     }));
+
+  return candidates;
 }
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {

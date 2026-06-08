@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle } from "lucide-react";
@@ -56,9 +56,52 @@ interface PropertyDetailClientProps {
   similarProperties?: SimilarProperty[];
 }
 
+const FALLBACK_LISTINGS: SimilarProperty[] = [
+  {
+    id: "cv-fallback-1",
+    title: "Modern Apartment in Palmarejo",
+    price: 185000,
+    location: "Palmarejo, Praia",
+    island: "Santiago",
+    type: "Apartment",
+    bedrooms: 2,
+    bathrooms: 2,
+    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"
+  },
+  {
+    id: "cv-fallback-2",
+    title: "Cozy Studio near Santa Maria Beach",
+    price: 95000,
+    location: "Santa Maria, Sal",
+    island: "Sal",
+    type: "Studio",
+    bedrooms: 1,
+    bathrooms: 1,
+    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop"
+  },
+  {
+    id: "cv-fallback-3",
+    title: "Hillside Villa with Ocean View",
+    price: 420000,
+    location: "Mindelo, Sao Vicente",
+    island: "Sao Vicente",
+    type: "Villa",
+    bedrooms: 4,
+    bathrooms: 3,
+    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop"
+  }
+];
+
 export default function PropertyDetailClient({ property, similarProperties = [] }: PropertyDetailClientProps) {
   const router = useRouter();
   const { currentLanguage } = useLanguage();
+
+  const listings = similarProperties.length >= 3
+    ? similarProperties.slice(0, 3)
+    : [
+        ...similarProperties,
+        ...FALLBACK_LISTINGS.filter(f => !similarProperties.some(s => s.id === f.id) && f.id !== property.id)
+      ].slice(0, 3);
 
   const getTitle = () => {
     switch (currentLanguage) {
@@ -171,46 +214,44 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
         </section>
 
         {/* Similar Properties */}
-        {similarProperties.length > 0 && (
-          <section className="mt-10">
-            <hr className="border-gray-100 mb-6" />
-            <h2 className="text-base font-semibold text-gray-800 mb-4">Similar Listings in the Area</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {similarProperties.slice(0, 3).map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => router.push(`/property/${item.id}`)}
-                  className="group text-left rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    className="w-full h-28 sm:h-24 object-cover"
-                  />
-                  <div className="p-2.5">
-                    <p className="text-sm font-bold text-gray-900">
-                      &euro;{item.price.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
-                      {shortenLocation(item.location)}
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
-                      <span className="inline-flex items-center gap-1">
-                        <Bed className="h-3 w-3" />
-                        {item.bedrooms}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Bath className="h-3 w-3" />
-                        {item.bathrooms}
-                      </span>
-                    </div>
+        <section className="mt-10">
+          <hr className="border-gray-100 mb-6" />
+          <h2 className="text-base font-semibold text-gray-800 mb-4">Similar Listings in the Area</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-4">
+            {listings.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => router.push(`/property/${item.id}`)}
+                className="group text-left rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all"
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  loading="lazy"
+                  className="w-full aspect-square sm:h-28 object-cover"
+                />
+                <div className="p-2.5">
+                  <p className="text-sm font-bold text-gray-900">
+                    &euro;{item.price.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5 truncate">
+                    {shortenLocation(item.location)}
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
+                    <span className="inline-flex items-center gap-1">
+                      <Bed className="h-3 w-3" />
+                      {item.bedrooms}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Bath className="h-3 w-3" />
+                      {item.bathrooms}
+                    </span>
                   </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* Seller Contact Card - fixed at bottom */}
