@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface SearchCriteria {
   location?: string;
@@ -66,7 +68,7 @@ export interface User {
   role?: 'user' | 'agent' | 'admin';
   agentProfile?: AgentProfile;
   preferences: ExtendedPreferences;
-  favorites: string[]; // Property IDs
+  favorites: string[];
   savedSearches: Array<{
     id: string;
     name: string;
@@ -113,352 +115,334 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user database
-const mockUsers: { [email: string]: User & { password: string } } = {
-  'demo@procv.com': {
-    id: 'user-demo-001',
-    email: 'demo@procv.com',
-    password: 'demo123',
-    name: 'Demo User',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    phone: '+238 999 0000',
-    role: 'user',
+function mapProfileToUser(
+  profile: Record<string, unknown>,
+  favorites: string[],
+  savedSearches: User['savedSearches'],
+  viewingHistory: User['viewingHistory'],
+  inquiries: User['inquiries'],
+  searchAlerts: ExtendedPreferences['searchAlerts']
+): User {
+  return {
+    id: profile.id as string,
+    email: profile.email as string,
+    name: profile.name as string,
+    avatar: profile.avatar as string | undefined,
+    phone: profile.phone as string | undefined,
+    role: (profile.role as User['role']) || 'user',
+    membershipLevel: (profile.membership_level as User['membershipLevel']) || 'basic',
+    verified: (profile.verified as boolean) ?? false,
+    createdAt: (profile.created_at as string) || new Date().toISOString(),
+    lastLoginAt: (profile.updated_at as string) || new Date().toISOString(),
     preferences: {
-      currency: 'EUR',
-      language: 'en',
-      theme: 'light',
-      measurementUnit: 'metric',
+      currency: (profile.currency as ExtendedPreferences['currency']) || 'EUR',
+      language: (profile.language as ExtendedPreferences['language']) || 'en',
+      theme: (profile.theme as ExtendedPreferences['theme']) || 'light',
+      measurementUnit: (profile.measurement_unit as ExtendedPreferences['measurementUnit']) || 'metric',
       notifications: {
-        email: true,
-        sms: false,
-        newListings: true,
-        priceAlerts: true,
-        marketUpdates: false
+        email: (profile.email_notifications as boolean) ?? true,
+        sms: (profile.sms_notifications as boolean) ?? false,
+        newListings: (profile.new_listing_alerts as boolean) ?? true,
+        priceAlerts: (profile.price_alerts as boolean) ?? false,
+        marketUpdates: (profile.market_insights as boolean) ?? false,
       },
-      emailNotifications: true,
-      smsNotifications: false,
-      priceAlerts: true,
-      newListingAlerts: true,
-      priceChangeAlerts: true,
+      emailNotifications: (profile.email_notifications as boolean) ?? true,
+      smsNotifications: (profile.sms_notifications as boolean) ?? false,
+      priceAlerts: (profile.price_alerts as boolean) ?? false,
+      newListingAlerts: (profile.new_listing_alerts as boolean) ?? true,
+      priceChangeAlerts: false,
       viewingReminders: true,
-      marketInsights: false,
-      agentMessages: true,
-      searchAlerts: [
-        {
-          id: 'alert-001',
-          name: 'Beachfront Villas Sal',
-          criteria: { island: 'Sal', type: 'Villa', beachDistance: 100 },
-          frequency: 'weekly',
-          active: true
-        }
-      ]
+      marketInsights: (profile.market_insights as boolean) ?? false,
+      agentMessages: (profile.agent_messages as boolean) ?? true,
+      searchAlerts,
     },
-    favorites: ['cv-001', 'cv-004', 'cv-009'],
-    savedSearches: [
-      {
-        id: 'search-001',
-        name: 'Santiago Properties Under €300k',
-        criteria: { island: 'Santiago', maxPrice: 300000 },
-        createdAt: '2024-12-01T10:00:00Z'
-      }
-    ],
-    viewingHistory: [
-      { propertyId: 'cv-001', viewedAt: '2024-12-20T14:30:00Z' },
-      { propertyId: 'cv-004', viewedAt: '2024-12-19T16:45:00Z' }
-    ],
-    inquiries: [
-      {
-        id: 'inquiry-001',
-        propertyId: 'cv-001',
-        agentId: 'agent-maria-santos',
-        message: 'Interested in viewing this property. What are the available times?',
-        status: 'responded',
-        createdAt: '2024-12-18T09:15:00Z'
-      }
-    ],
-    membershipLevel: 'premium',
-    createdAt: '2024-11-01T00:00:00Z',
-    lastLoginAt: '2024-12-20T08:30:00Z',
-    verified: true
-  }
-};
+    favorites,
+    savedSearches,
+    viewingHistory,
+    inquiries,
+  };
+}
 
-// Storage helpers
-const STORAGE_KEY = 'procv_user';
-const SESSION_KEY = 'procv_session';
+async function loadUserData(userId: string): Promise<User | null> {
+  const [profileRes, favoritesRes, searchesRes, historyRes, inquiriesRes, alertsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+    supabase.from('favorites').select('property_id').eq('user_id', userId),
+    supabase.from('saved_searches').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('viewing_history').select('property_id, viewed_at').eq('user_id', userId).order('viewed_at', { ascending: false }),
+    supabase.from('inquiries').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('search_alerts').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+  ]);
 
-const saveUserToStorage = (user: User) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  sessionStorage.setItem(SESSION_KEY, 'authenticated');
-};
+  const profile = profileRes.data;
+  if (!profile) return null;
 
-const removeUserFromStorage = () => {
-  localStorage.removeItem(STORAGE_KEY);
-  sessionStorage.removeItem(SESSION_KEY);
-};
+  const favorites = (favoritesRes.data || []).map((f: Record<string, unknown>) => f.property_id as string);
+  const savedSearches = (searchesRes.data || []).map((s: Record<string, unknown>) => ({
+    id: s.id as string,
+    name: s.name as string,
+    criteria: (s.criteria as SearchCriteria) || {},
+    createdAt: s.created_at as string,
+  }));
+  const viewingHistory = (historyRes.data || []).map((v: Record<string, unknown>) => ({
+    propertyId: v.property_id as string,
+    viewedAt: v.viewed_at as string,
+  }));
+  const inquiries = (inquiriesRes.data || []).map((i: Record<string, unknown>) => ({
+    id: i.id as string,
+    propertyId: i.property_id as string,
+    agentId: i.agent_id as string,
+    message: i.message as string,
+    status: i.status as 'pending' | 'responded' | 'closed',
+    createdAt: i.created_at as string,
+  }));
+  const searchAlerts = (alertsRes.data || []).map((a: Record<string, unknown>) => ({
+    id: a.id as string,
+    name: a.name as string,
+    criteria: (a.criteria as SearchCriteria) || {},
+    frequency: a.frequency as 'daily' | 'weekly' | 'monthly',
+    active: a.active as boolean,
+  }));
 
-const getUserFromStorage = (): User | null => {
-  try {
-    const userStr = localStorage.getItem(STORAGE_KEY);
-    const sessionStr = sessionStorage.getItem(SESSION_KEY);
-
-    if (userStr && sessionStr === 'authenticated') {
-      return JSON.parse(userStr);
-    }
-  } catch (error) {
-    console.error('Error loading user from storage:', error);
-  }
-  return null;
-};
+  return mapProfileToUser(profile, favorites, savedSearches, viewingHistory, inquiries, searchAlerts);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from storage on mount
-  useEffect(() => {
-    const savedUser = getUserFromStorage();
-    if (savedUser) {
-      setUser(savedUser);
-    }
-    setIsLoading(false);
+  const refreshUser = useCallback(async (userId: string) => {
+    const u = await loadUserData(userId);
+    setUser(u);
   }, []);
 
-  // Update storage when user changes
   useEffect(() => {
-    if (user) {
-      saveUserToStorage(user);
-    }
-  }, [user]);
+    let mounted = true;
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user && mounted) {
+        await refreshUser(session.user.id);
+      }
+      if (mounted) setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event: string, session: Session | null) => {
+        if (!mounted) return;
+        if (session?.user) {
+          setIsLoading(true);
+          await refreshUser(session.user.id);
+          setIsLoading(false);
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [refreshUser]);
 
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockUser = mockUsers[email.toLowerCase()];
-    if (!mockUser || mockUser.password !== password) {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
       setIsLoading(false);
-      throw new Error('Invalid email or password');
+      throw new Error(error.message);
     }
-
-    // Remove password from user object
-    const { password: _, ...userWithoutPassword } = mockUser;
-    const loginUser = {
-      ...userWithoutPassword,
-      lastLoginAt: new Date().toISOString()
-    };
-
-    setUser(loginUser);
-    setIsLoading(false);
+    // onAuthStateChange will handle setting the user
   };
 
   const register = async (email: string, password: string, name: string): Promise<void> => {
     setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    if (mockUsers[email.toLowerCase()]) {
-      setIsLoading(false);
-      throw new Error('User already exists');
-    }
-
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email: email.toLowerCase(),
-      name,
-      role: 'user',
-      preferences: {
-        currency: 'EUR',
-        language: 'en',
-        theme: 'light',
-        measurementUnit: 'metric',
-        notifications: {
-          email: true,
-          sms: false,
-          newListings: true,
-          priceAlerts: false,
-          marketUpdates: false
-        },
-        emailNotifications: true,
-        smsNotifications: false,
-        priceAlerts: false,
-        newListingAlerts: true,
-        priceChangeAlerts: false,
-        viewingReminders: true,
-        marketInsights: false,
-        agentMessages: true,
-        searchAlerts: []
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
       },
-      favorites: [],
-      savedSearches: [],
-      viewingHistory: [],
-      inquiries: [],
-      membershipLevel: 'basic',
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString(),
-      verified: false
-    };
-
-    // Add to mock database
-    mockUsers[email.toLowerCase()] = { ...newUser, password };
-
-    setUser(newUser);
-    setIsLoading(false);
+    });
+    if (error) {
+      setIsLoading(false);
+      throw new Error(error.message);
+    }
+    // The trigger will create the profile; onAuthStateChange will refresh
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    removeUserFromStorage();
   };
 
   const updateProfile = async (updates: Partial<User>): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-
-    // Update mock database
-    if (mockUsers[user.email]) {
-      mockUsers[user.email] = { ...mockUsers[user.email], ...updates };
+    const profileUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (updates.name !== undefined) profileUpdates.name = updates.name;
+    if (updates.avatar !== undefined) profileUpdates.avatar = updates.avatar;
+    if (updates.phone !== undefined) profileUpdates.phone = updates.phone;
+    if (updates.role !== undefined) profileUpdates.role = updates.role;
+    if (updates.membershipLevel !== undefined) profileUpdates.membership_level = updates.membershipLevel;
+    if (updates.verified !== undefined) profileUpdates.verified = updates.verified;
+    if (updates.preferences) {
+      const p = updates.preferences;
+      if (p.currency !== undefined) profileUpdates.currency = p.currency;
+      if (p.language !== undefined) profileUpdates.language = p.language;
+      if (p.theme !== undefined) profileUpdates.theme = p.theme;
+      if (p.measurementUnit !== undefined) profileUpdates.measurement_unit = p.measurementUnit;
+      if (p.emailNotifications !== undefined) profileUpdates.email_notifications = p.emailNotifications;
+      if (p.smsNotifications !== undefined) profileUpdates.sms_notifications = p.smsNotifications;
+      if (p.priceAlerts !== undefined) profileUpdates.price_alerts = p.priceAlerts;
+      if (p.newListingAlerts !== undefined) profileUpdates.new_listing_alerts = p.newListingAlerts;
+      if (p.marketInsights !== undefined) profileUpdates.market_insights = p.marketInsights;
+      if (p.agentMessages !== undefined) profileUpdates.agent_messages = p.agentMessages;
     }
 
+    const { error } = await supabase
+      .from('profiles')
+      .update(profileUpdates)
+      .eq('id', user.id);
+
+    if (error) {
+      setIsLoading(false);
+      throw new Error(error.message);
+    }
+
+    await refreshUser(user.id);
     setIsLoading(false);
   };
 
-  const addToFavorites = (propertyId: string) => {
+  const addToFavorites = async (propertyId: string) => {
     if (!user) return;
-
-    const updatedFavorites = [...user.favorites];
-    if (!updatedFavorites.includes(propertyId)) {
-      updatedFavorites.push(propertyId);
-      updateProfile({ favorites: updatedFavorites });
+    const { error } = await supabase
+      .from('favorites')
+      .insert({ user_id: user.id, property_id: propertyId });
+    if (!error) {
+      setUser(prev => prev ? { ...prev, favorites: [...prev.favorites, propertyId] } : null);
     }
   };
 
-  const removeFromFavorites = (propertyId: string) => {
+  const removeFromFavorites = async (propertyId: string) => {
     if (!user) return;
-
-    const updatedFavorites = user.favorites.filter(id => id !== propertyId);
-    updateProfile({ favorites: updatedFavorites });
+    const { error } = await supabase
+      .from('favorites')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('property_id', propertyId);
+    if (!error) {
+      setUser(prev => prev ? { ...prev, favorites: prev.favorites.filter(id => id !== propertyId) } : null);
+    }
   };
 
   const isFavorite = (propertyId: string): boolean => {
     return user?.favorites.includes(propertyId) ?? false;
   };
 
-  const saveSearch = (name: string, criteria: SearchCriteria) => {
+  const saveSearch = async (name: string, criteria: SearchCriteria) => {
     if (!user) return;
-
-    const newSearch = {
-      id: `search-${Date.now()}`,
-      name,
-      criteria,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedSearches = [...user.savedSearches, newSearch];
-    updateProfile({ savedSearches: updatedSearches });
+    const { data, error } = await supabase
+      .from('saved_searches')
+      .insert({ user_id: user.id, name, criteria })
+      .select()
+      .single();
+    if (!error && data) {
+      const newSearch = {
+        id: (data as Record<string, unknown>).id as string,
+        name,
+        criteria,
+        createdAt: (data as Record<string, unknown>).created_at as string,
+      };
+      setUser(prev => prev ? { ...prev, savedSearches: [...prev.savedSearches, newSearch] } : null);
+    }
   };
 
-  const deleteSavedSearch = (searchId: string) => {
+  const deleteSavedSearch = async (searchId: string) => {
     if (!user) return;
-
-    const updatedSearches = user.savedSearches.filter(search => search.id !== searchId);
-    updateProfile({ savedSearches: updatedSearches });
+    const { error } = await supabase
+      .from('saved_searches')
+      .delete()
+      .eq('id', searchId)
+      .eq('user_id', user.id);
+    if (!error) {
+      setUser(prev => prev ? { ...prev, savedSearches: prev.savedSearches.filter(s => s.id !== searchId) } : null);
+    }
   };
 
-  const addToViewingHistory = (propertyId: string) => {
+  const addToViewingHistory = async (propertyId: string) => {
     if (!user) return;
-
-    const newView = {
-      propertyId,
-      viewedAt: new Date().toISOString()
-    };
-
-    // Remove existing view of same property and add new one
-    const updatedHistory = [
-      newView,
-      ...user.viewingHistory.filter(view => view.propertyId !== propertyId)
-    ].slice(0, 50); // Keep only last 50 views
-
-    updateProfile({ viewingHistory: updatedHistory });
+    // Upsert: if already viewed, update timestamp
+    const { error } = await supabase
+      .from('viewing_history')
+      .upsert(
+        { user_id: user.id, property_id: propertyId, viewed_at: new Date().toISOString() },
+        { onConflict: 'user_id,property_id' }
+      );
+    if (!error) {
+      setUser(prev => {
+        if (!prev) return null;
+        const filtered = prev.viewingHistory.filter(v => v.propertyId !== propertyId);
+        return {
+          ...prev,
+          viewingHistory: [{ propertyId, viewedAt: new Date().toISOString() }, ...filtered].slice(0, 50),
+        };
+      });
+    }
   };
 
   const createInquiry = async (propertyId: string, agentId: string, message: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { data, error } = await supabase
+      .from('inquiries')
+      .insert({ user_id: user.id, property_id: propertyId, agent_id: agentId, message })
+      .select()
+      .single();
 
-    const newInquiry = {
-      id: `inquiry-${Date.now()}`,
-      propertyId,
-      agentId,
-      message,
-      status: 'pending' as const,
-      createdAt: new Date().toISOString()
-    };
+    if (error) {
+      setIsLoading(false);
+      throw new Error(error.message);
+    }
 
-    const updatedInquiries = [...user.inquiries, newInquiry];
-    await updateProfile({ inquiries: updatedInquiries });
-
+    if (data) {
+      const newInquiry = {
+        id: (data as Record<string, unknown>).id as string,
+        propertyId,
+        agentId,
+        message,
+        status: 'pending' as const,
+        createdAt: (data as Record<string, unknown>).created_at as string,
+      };
+      setUser(prev => prev ? { ...prev, inquiries: [...prev.inquiries, newInquiry] } : null);
+    }
     setIsLoading(false);
   };
 
   const resendVerification = async (): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // In real app, this would send email
-    console.log('Verification email sent to:', user.email);
-
-    setIsLoading(false);
+    const { error } = await supabase.auth.resend({ type: 'signup', email: user.email });
+    if (error) throw new Error(error.message);
   };
 
   const resetPassword = async (email: string): Promise<void> => {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // In real app, this would send reset email
-    console.log('Password reset email sent to:', email);
-
-    setIsLoading(false);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw new Error(error.message);
   };
 
   const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
+    // Supabase requires re-authentication to change password
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInError) throw new Error('Current password is incorrect');
 
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockUser = mockUsers[user.email];
-    if (!mockUser || mockUser.password !== currentPassword) {
-      setIsLoading(false);
-      throw new Error('Current password is incorrect');
-    }
-
-    // Update password in mock database
-    mockUsers[user.email].password = newPassword;
-
-    setIsLoading(false);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(error.message);
   };
 
   const value: AuthContextType = {
@@ -478,7 +462,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     createInquiry,
     resendVerification,
     resetPassword,
-    changePassword
+    changePassword,
   };
 
   return (
