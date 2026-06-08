@@ -1,25 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Heart, Share2, MapPin, Bed, Bath, Square, Car, Phone, Mail, MessageCircle, Brain, Monitor, Shield, Sparkles } from "lucide-react";
-import { useMountedState } from "@/lib/mounting";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
-import PhotoGallery from "@/components/PhotoGallery";
-import PropertyContactForm from "@/components/PropertyContactForm";
-import VirtualTour from "@/components/VirtualTour";
-import ViewingScheduler from "@/components/ViewingScheduler";
-import AIValuationEngine from "@/components/AIValuationEngine";
-import VRPropertyTours from "@/components/VRPropertyTours";
-import BlockchainIntegration from "@/components/BlockchainIntegration";
 
 interface PropertyDetailClientProps {
   property: {
@@ -59,24 +43,9 @@ interface PropertyDetailClientProps {
 }
 
 export default function PropertyDetailClient({ property }: PropertyDetailClientProps) {
-  const router = useRouter();
-  const isMounted = useMountedState();
   const { currentLanguage } = useLanguage();
-  const { isFavorite, addToFavorites, removeFromFavorites, addToViewingHistory, isAuthenticated } = useAuth();
-  const [isViewingSchedulerOpen, setIsViewingSchedulerOpen] = useState(false);
 
-  const handleContactWhatsApp = () => {
-    const message = encodeURIComponent(`Hi, I'm interested in the property "${getPropertyTitle()}" in ${property.location}. Could you provide more details?`);
-    const phone = property.agent.phone.replace(/\D/g, '');
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-  };
-
-  // Add to user's viewing history
-  React.useEffect(() => {
-    addToViewingHistory(property.id);
-  }, [property.id, addToViewingHistory]);
-
-  const getPropertyTitle = () => {
+  const getTitle = () => {
     switch (currentLanguage) {
       case 'pt': return property.titlePt;
       case 'cv': return property.titleCv;
@@ -84,7 +53,7 @@ export default function PropertyDetailClient({ property }: PropertyDetailClientP
     }
   };
 
-  const getPropertyDescription = () => {
+  const getDescription = () => {
     switch (currentLanguage) {
       case 'pt': return property.descriptionPt;
       case 'cv': return property.descriptionCv;
@@ -92,429 +61,124 @@ export default function PropertyDetailClient({ property }: PropertyDetailClientP
     }
   };
 
-  const getPropertyFeatures = () => {
-    switch (currentLanguage) {
-      case 'pt': return property.featuresPt;
-      case 'cv': return property.featuresCv;
-      default: return property.features;
-    }
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent(
+      `Hi, I'm interested in "${getTitle()}" in ${property.location}. Could you provide more details?`
+    );
+    const phone = property.agent.phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
-  const handleFavoriteToggle = () => {
-    if (isFavorite(property.id)) {
-      removeFromFavorites(property.id);
-    } else {
-      addToFavorites(property.id);
-    }
-  };
-
-  // Convert property data for next-gen components
-  const aiValuationFeatures = {
-    bedrooms: property.bedrooms,
-    bathrooms: property.bathrooms,
-    area: property.area,
-    lotSize: property.lotSize,
-    yearBuilt: property.yearBuilt,
-    location: property.location,
-    island: property.island,
-    propertyType: property.type.toLowerCase(),
-    oceanView: property.features.some(f => f.toLowerCase().includes('ocean view')),
-    beachAccess: property.features.some(f => f.toLowerCase().includes('beach')),
-    pool: property.features.some(f => f.toLowerCase().includes('pool')),
-    garage: property.parking > 0,
-    solarPanels: property.features.some(f => f.toLowerCase().includes('solar')),
-    modernKitchen: property.features.some(f => f.toLowerCase().includes('kitchen')),
-    airConditioning: property.features.some(f => f.toLowerCase().includes('air conditioning')),
-    securitySystem: property.features.some(f => f.toLowerCase().includes('security'))
-  };
+  const title = getTitle();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Properties
-            </Link>
-            {isMounted && (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleFavoriteToggle}
-                  className={isFavorite(property.id) ? "bg-red-50 border-red-200 text-red-600" : ""}
-                >
-                  <Heart className={`h-4 w-4 mr-2 ${isFavorite(property.id) ? "fill-current" : ""}`} />
-                  {isFavorite(property.id) ? "Saved" : "Save"}
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
-                  onClick={() => router.push(`/map?property=${property.id}&lat=${property.coordinates[1]}&lng=${property.coordinates[0]}&zoom=17`)}
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  View on Map
-                </Button>
-              </div>
-            )}
-          </div>
+    <div className="min-h-screen bg-white">
+      {/* Back nav */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="max-w-3xl mx-auto px-4 py-3">
+          <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            Back
+          </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Photo Gallery */}
-            <PhotoGallery images={property.images} title={getPropertyTitle()} />
-
-            {/* Property Info */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-3xl font-bold">{getPropertyTitle()}</CardTitle>
-                    <div className="flex items-center text-gray-600 mt-2">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span>{property.location}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-blue-600">
-                      €{property.price.toLocaleString()}
-                    </div>
-                    {property.featured && (
-                      <Badge className="bg-red-600 text-white mt-2">Featured</Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* View on Map Button */}
-                {isMounted && (
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700"
-                      onClick={() => router.push(`/map?property=${property.id}&lat=${property.coordinates[1]}&lng=${property.coordinates[0]}&zoom=17`)}
-                    >
-                      <MapPin className="h-4 w-4 mr-2" />
-                      View on Map
-                    </Button>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center">
-                    <Bed className="h-6 w-6 mx-auto text-gray-400 mb-2" />
-                    <div className="font-semibold">{property.bedrooms}</div>
-                    <div className="text-sm text-gray-500">Bedrooms</div>
-                  </div>
-                  <div className="text-center">
-                    <Bath className="h-6 w-6 mx-auto text-gray-400 mb-2" />
-                    <div className="font-semibold">{property.bathrooms}</div>
-                    <div className="text-sm text-gray-500">Bathrooms</div>
-                  </div>
-                  <div className="text-center">
-                    <Square className="h-6 w-6 mx-auto text-gray-400 mb-2" />
-                    <div className="font-semibold">{property.area}m²</div>
-                    <div className="text-sm text-gray-500">Floor Area</div>
-                  </div>
-                  <div className="text-center">
-                    <Car className="h-6 w-6 mx-auto text-gray-400 mb-2" />
-                    <div className="font-semibold">{property.parking}</div>
-                    <div className="text-sm text-gray-500">Parking</div>
-                  </div>
-                </div>
-
-                <Separator className="my-6" />
-
-                <div>
-                  <h3 className="text-xl font-bold mb-4">Property Description</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {getPropertyDescription()}
-                  </p>
-                </div>
-
-
-              </CardContent>
-            </Card>
-
-            {/* Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Features</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {getPropertyFeatures().map((feature, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3" />
-                      <span className="text-sm">{feature}</span>
-                    </div>
+      <main className="max-w-3xl mx-auto px-4 pb-32">
+        {/* Photo gallery - lazy loaded images */}
+        <section className="mt-4">
+          {property.images.length > 0 && (
+            <div className="space-y-2">
+              <img
+                src={property.images[0]}
+                alt={title}
+                loading="eager"
+                className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-xl"
+              />
+              {property.images.length > 1 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {property.images.slice(1, 4).map((img, i) => (
+                    <img
+                      key={i}
+                      src={img}
+                      alt={`${title} ${i + 2}`}
+                      loading="lazy"
+                      className="w-full h-24 sm:h-32 object-cover rounded-lg"
+                    />
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
+          )}
+        </section>
 
-            {/* Next-Generation PropTech Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Sparkles className="h-5 w-5 mr-2 text-purple-600" />
-                  PropTech Features
-                  <Badge className="ml-2 bg-purple-100 text-purple-800">Next-Gen</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="vr-tours" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="vr-tours" className="flex items-center">
-                      <Monitor className="h-4 w-4 mr-2" />
-                      VR Tours
-                    </TabsTrigger>
-                    <TabsTrigger value="ai-valuation" className="flex items-center">
-                      <Brain className="h-4 w-4 mr-2" />
-                      AI Valuation
-                    </TabsTrigger>
-                    <TabsTrigger value="blockchain" className="flex items-center">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Blockchain
-                    </TabsTrigger>
-                  </TabsList>
+        {/* Price + Title */}
+        <section className="mt-6">
+          <p className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+            &euro;{property.price.toLocaleString()}
+          </p>
+          <h1 className="mt-2 text-xl sm:text-2xl font-semibold text-gray-800">
+            {title}
+          </h1>
+        </section>
 
-                  <TabsContent value="vr-tours" className="mt-6">
-                    <VRPropertyTours
-                      propertyId={property.id}
-                      propertyTitle={getPropertyTitle()}
-                    />
-                  </TabsContent>
+        {/* Specs row */}
+        <section className="mt-4 flex items-center gap-5 text-gray-600 text-sm">
+          <span className="inline-flex items-center gap-1.5">
+            <Bed className="h-4 w-4" />
+            {property.bedrooms} Beds
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Bath className="h-4 w-4" />
+            {property.bathrooms} Baths
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Square className="h-4 w-4" />
+            {property.area} m&sup2;
+          </span>
+        </section>
 
-                  <TabsContent value="ai-valuation" className="mt-6">
-                    <AIValuationEngine
-                      propertyId={property.id}
-                      initialFeatures={aiValuationFeatures}
-                    />
-                  </TabsContent>
+        {/* Location */}
+        <section className="mt-4 flex items-start gap-1.5 text-gray-600">
+          <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+          <span className="text-sm leading-snug">{property.location}, {property.island}</span>
+        </section>
 
-                  <TabsContent value="blockchain" className="mt-6">
-                    <BlockchainIntegration
-                      propertyId={property.id}
-                      propertyTitle={getPropertyTitle()}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+        {/* Description */}
+        <section className="mt-6">
+          <p className="text-gray-600 text-[15px] leading-relaxed">
+            {getDescription()}
+          </p>
+        </section>
+      </main>
 
-            {/* Virtual Tour */}
-            <VirtualTour url={property.virtualTourUrl} />
-
-            {/* Property Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-gray-500">Property Type:</span>
-                    <span className="ml-2 font-semibold">{property.type}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Year Built:</span>
-                    <span className="ml-2 font-semibold">{property.yearBuilt}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Lot Size:</span>
-                    <span className="ml-2 font-semibold">{property.lotSize}m²</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Island:</span>
-                    <span className="ml-2 font-semibold">{property.island}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Seller Contact Card - fixed at bottom */}
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
+          <img
+            src={property.agent.avatar}
+            alt={property.agent.name}
+            className="h-10 w-10 rounded-full object-cover shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
+            <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Agent Contact */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Agent</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center mb-4">
-                  <Image
-                    src={property.agent.avatar}
-                    alt={property.agent.name}
-                    width={60}
-                    height={60}
-                    className="rounded-full mr-4"
-                  />
-                  <div>
-                    <div className="font-semibold">{property.agent.name}</div>
-                    <div className="text-sm text-gray-500">{property.agent.company}</div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Button
-                    className="w-full bg-red-600 hover:bg-red-700"
-                    onClick={() => window.open(`tel:${property.agent.phone}`, '_self')}
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    Call Agent
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => window.open(`mailto:${property.agent.email}`, '_self')}
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Email Agent
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setIsViewingSchedulerOpen(true)}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Schedule Viewing
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                    onClick={handleContactWhatsApp}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    WhatsApp Agent
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Property Contact Form */}
-            <PropertyContactForm
-              isOpen={true}
-              onClose={() => {}}
-              property={{
-                id: property.id,
-                title: property.title,
-                price: property.price,
-                location: property.location,
-                island: property.island,
-                type: property.type,
-                bedrooms: property.bedrooms,
-                bathrooms: property.bathrooms,
-                totalArea: property.area,
-                images: property.images,
-                features: property.features,
-                description: property.description,
-                isFeatured: property.featured,
-                coordinates: property.coordinates as [number, number],
-                pricePerSqm: Math.round(property.price / property.area),
-                yearBuilt: property.yearBuilt,
-                furnished: false,
-                oceanView: false,
-                beachDistance: 1000,
-                agentId: 'agent-demo',
-                listingDate: '2024-01-01',
-                propertyId: property.id
-              }} />
-
-            {/* Quick Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Price Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Property Price:</span>
-                    <span className="font-semibold">€{property.price.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Price per m²:</span>
-                    <span className="font-semibold">€{Math.round(property.price / property.area).toLocaleString()}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>Last Updated:</span>
-                    <span>Today</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* PropTech Quick Access */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Sparkles className="h-4 w-4 mr-2 text-purple-600" />
-                  PropTech Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => router.push(`/map?property=${property.id}&lat=${property.coordinates[1]}&lng=${property.coordinates[0]}&zoom=17`)}
-                >
-                  <MapPin className="h-4 w-4 mr-2 text-blue-600" />
-                  View Property on Map
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => router.push('/ai-valuation')}
-                >
-                  <Brain className="h-4 w-4 mr-2 text-purple-600" />
-                  AI Property Valuation
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => router.push('/vr-tours')}
-                >
-                  <Monitor className="h-4 w-4 mr-2 text-purple-600" />
-                  Virtual Reality Tours
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => router.push('/blockchain')}
-                >
-                  <Shield className="h-4 w-4 mr-2 text-indigo-600" />
-                  Blockchain Verification
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <a
+            href={`tel:${property.agent.phone}`}
+            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shrink-0"
+            aria-label="Call agent"
+          >
+            <Phone className="h-4 w-4" />
+          </a>
+          <button
+            onClick={handleWhatsApp}
+            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors shrink-0"
+            aria-label="WhatsApp agent"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </button>
         </div>
       </div>
-
-      {/* Viewing Scheduler Modal */}
-      <ViewingScheduler
-        isOpen={isViewingSchedulerOpen}
-        onClose={() => setIsViewingSchedulerOpen(false)}
-        property={{
-          id: property.id,
-          title: getPropertyTitle(),
-          location: property.location,
-          image: property.images[0],
-          agent: property.agent
-        }}
-        mode="book"
-      />
     </div>
   );
 }
