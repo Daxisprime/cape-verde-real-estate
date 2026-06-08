@@ -195,54 +195,55 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
         </div>
       </div>
 
-      {/* 12-Column Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full max-w-7xl mx-auto px-4 pb-40 mt-4">
-
-        {/* LEFT: Main Content — 8 cols */}
-        <main className="lg:col-span-8">
-          {/* Photo Tour Engine */}
-          <section>
-            {property.images.length > 0 && (
-              <div className="space-y-2">
-                <button onClick={() => openGallery(0)} className="w-full block">
-                  <img
-                    src={property.images[0]}
-                    alt={title}
-                    loading="eager"
-                    className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-xl"
-                  />
-                </button>
-                <div className="grid grid-cols-3 gap-2">
-                  {property.images.slice(1, 4).map((img, i) => {
-                    const isLast = i === 2 || i === property.images.length - 2;
-                    const showOverlay = isLast && extraPhotos > 0;
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => openGallery(i + 1)}
-                        className="relative w-full aspect-square overflow-hidden rounded-lg"
-                      >
-                        <img
-                          src={img}
-                          alt={`${title} ${i + 2}`}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                        />
-                        {showOverlay && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+      <div className="max-w-7xl mx-auto px-4 pb-40">
+        {/* TOP ZONE: Full-Width Photo Gallery */}
+        <section className="mt-4">
+          {property.images.length > 0 && (
+            <div className="space-y-2">
+              <button onClick={() => openGallery(0)} className="w-full block">
+                <img
+                  src={property.images[0]}
+                  alt={title}
+                  loading="eager"
+                  className="w-full h-64 sm:h-80 md:h-[420px] object-cover rounded-xl"
+                />
+              </button>
+              <div className="grid grid-cols-3 gap-2">
+                {property.images.slice(1, 4).map((img, i) => {
+                  const isLast = i === 2 || i === property.images.length - 2;
+                  const showOverlay = isLast && extraPhotos > 0;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => openGallery(i + 1)}
+                      className="relative w-full aspect-[4/3] overflow-hidden rounded-lg"
+                    >
+                      <img
+                        src={img}
+                        alt={`${title} ${i + 2}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                      {showOverlay && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </section>
+            </div>
+          )}
+        </section>
 
-          {/* Price + Title */}
-          <section className="mt-6">
+        {/* MIDDLE ZONE: 2-Column Trulia Split */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6 items-start w-full">
+
+          {/* LEFT COLUMN — 8 cols */}
+          <main className="lg:col-span-8">
+            {/* Price + Title */}
+            <section>
             <p className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
               &euro;{property.price.toLocaleString()}
             </p>
@@ -362,11 +363,11 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
               ))}
             </div>
           </section>
-        </main>
+          </main>
 
-        {/* RIGHT: Sticky Inquiry Side-Card — 4 cols */}
-        <aside className="lg:col-span-4">
-          <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
+          {/* RIGHT COLUMN: Sticky Inquiry Side-Card — 4 cols */}
+          <aside className="lg:col-span-4">
+            <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
             {/* Agent mini-header */}
             <div className="flex items-center gap-3">
               <img
@@ -446,8 +447,9 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
                 WhatsApp
               </button>
             </div>
-          </div>
-        </aside>
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* Mobile fixed bottom bar (visible only below lg) */}
