@@ -49,14 +49,19 @@ export default function VendorProfilePage() {
 
       // Try Supabase first
       if (supabase && vendorId) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, phone")
+          .select("id, name, avatar, phone")
           .eq("id", vendorId)
           .maybeSingle();
 
-        if (profileData) {
-          setProfile(profileData as VendorProfile);
+        if (profileData && !error) {
+          setProfile({
+            id: profileData.id,
+            full_name: profileData.name,
+            avatar_url: profileData.avatar,
+            phone: profileData.phone,
+          });
 
           const { data: adsData } = await supabase
             .from("vendor_ads" as never)
