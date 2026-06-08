@@ -137,10 +137,10 @@ export default function MapPage() {
   return (
     <>
       <Header />
-      <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-white">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-white">
 
         {/* TRULIA SIDEBAR: Listings Feed & Filters Section */}
-        <aside className="w-full md:w-[420px] border-r border-gray-200 flex flex-col h-[45vh] min-h-[280px] md:h-full bg-white z-10 shadow-md md:shadow-none border-t md:border-t-0">
+        <aside className="w-full md:w-[450px] lg:w-[500px] border-r border-gray-200 flex flex-col h-[50vh] md:h-full overflow-y-auto bg-white z-10 shadow-md md:shadow-none border-t md:border-t-0">
 
           {/* Render Form Controls IF no individual item is selected */}
           {!selectedProperty ? (
@@ -340,7 +340,7 @@ export default function MapPage() {
         </aside>
 
         {/* DEDICATED MAP MATRIX VIEW FRAME */}
-        <div className="flex-1 h-[55vh] min-h-[300px] md:h-full relative bg-gray-100 z-0">
+        <div className="w-full md:flex-1 h-[50vh] md:h-full relative bg-gray-100 z-0">
           <SafeLeafletMap
             items={filteredProperties}
             activeItem={activeMapItem}
