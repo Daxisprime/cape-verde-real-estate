@@ -103,7 +103,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
     fullName: "",
     phone: "",
     email: "",
-    message: `I am interested in this property. Please contact me with more details.`
+    message: "I am interested in this property. Please contact me with more details."
   });
   const [inquiryStatus, setInquiryStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
@@ -187,7 +187,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
     <div className="min-h-screen bg-white">
       {/* Back nav */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 py-3">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Back
@@ -195,155 +195,212 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 pb-40">
-        {/* Photo Tour Engine */}
-        <section className="mt-4">
-          {property.images.length > 0 && (
-            <div className="space-y-2">
-              <button onClick={() => openGallery(0)} className="w-full block">
-                <img
-                  src={property.images[0]}
-                  alt={title}
-                  loading="eager"
-                  className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-xl"
-                />
-              </button>
-              <div className="grid grid-cols-3 gap-2">
-                {property.images.slice(1, 4).map((img, i) => {
-                  const isLast = i === 2 || i === property.images.length - 2;
-                  const showOverlay = isLast && extraPhotos > 0;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => openGallery(i + 1)}
-                      className="relative w-full aspect-square overflow-hidden rounded-lg"
-                    >
-                      <img
-                        src={img}
-                        alt={`${title} ${i + 2}`}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                      />
-                      {showOverlay && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+      {/* 12-Column Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full max-w-7xl mx-auto px-4 pb-40 mt-4">
+
+        {/* LEFT: Main Content — 8 cols */}
+        <main className="lg:col-span-8">
+          {/* Photo Tour Engine */}
+          <section>
+            {property.images.length > 0 && (
+              <div className="space-y-2">
+                <button onClick={() => openGallery(0)} className="w-full block">
+                  <img
+                    src={property.images[0]}
+                    alt={title}
+                    loading="eager"
+                    className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-xl"
+                  />
+                </button>
+                <div className="grid grid-cols-3 gap-2">
+                  {property.images.slice(1, 4).map((img, i) => {
+                    const isLast = i === 2 || i === property.images.length - 2;
+                    const showOverlay = isLast && extraPhotos > 0;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => openGallery(i + 1)}
+                        className="relative w-full aspect-square overflow-hidden rounded-lg"
+                      >
+                        <img
+                          src={img}
+                          alt={`${title} ${i + 2}`}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                        {showOverlay && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
-        </section>
+            )}
+          </section>
 
-        {/* Price + Title */}
-        <section className="mt-6">
-          <p className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-            &euro;{property.price.toLocaleString()}
-          </p>
-          <h1 className="mt-2 text-xl sm:text-2xl font-semibold text-gray-800">
-            {title}
-          </h1>
-        </section>
-
-        {/* Specs row */}
-        <section className="mt-4 flex items-center gap-5 text-gray-600 text-sm">
-          <span className="inline-flex items-center gap-1.5">
-            <Bed className="h-4 w-4" />
-            {property.bedrooms} Beds
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Bath className="h-4 w-4" />
-            {property.bathrooms} Baths
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Square className="h-4 w-4" />
-            {property.area} m&sup2;
-          </span>
-        </section>
-
-        {/* Location */}
-        <section className="mt-4 flex items-start gap-1.5 text-gray-600">
-          <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-          <span className="text-sm leading-snug">{property.location}, {property.island}</span>
-        </section>
-
-        {/* Description */}
-        <section className="mt-6">
-          <p className="text-gray-600 text-[15px] leading-relaxed">
-            {getDescription()}
-          </p>
-        </section>
-
-        {/* Amenities & Specs */}
-        {features.length > 0 && (
+          {/* Price + Title */}
           <section className="mt-6">
-            <h2 className="text-sm font-semibold text-gray-800 mb-3">Amenities</h2>
-            <div className="flex flex-wrap gap-2">
-              {features.map((feature, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded-full px-3 py-1"
+            <p className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+              &euro;{property.price.toLocaleString()}
+            </p>
+            <h1 className="mt-2 text-xl sm:text-2xl font-semibold text-gray-800">
+              {title}
+            </h1>
+          </section>
+
+          {/* Specs row */}
+          <section className="mt-4 flex items-center gap-5 text-gray-600 text-sm">
+            <span className="inline-flex items-center gap-1.5">
+              <Bed className="h-4 w-4" />
+              {property.bedrooms} Beds
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Bath className="h-4 w-4" />
+              {property.bathrooms} Baths
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Square className="h-4 w-4" />
+              {property.area} m&sup2;
+            </span>
+          </section>
+
+          {/* Location */}
+          <section className="mt-4 flex items-start gap-1.5 text-gray-600">
+            <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+            <span className="text-sm leading-snug">{property.location}, {property.island}</span>
+          </section>
+
+          {/* Description */}
+          <section className="mt-6">
+            <p className="text-gray-600 text-[15px] leading-relaxed">
+              {getDescription()}
+            </p>
+          </section>
+
+          {/* Amenities & Specs */}
+          {features.length > 0 && (
+            <section className="mt-6">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">Amenities</h2>
+              <div className="flex flex-wrap gap-2">
+                {features.map((feature, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded-full px-3 py-1"
+                  >
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5" />
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Static Mini-Map */}
+          {property.coordinates && property.coordinates.length === 2 && (
+            <section className="mt-8">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">Location</h2>
+              <div className="rounded-xl overflow-hidden border border-gray-100 pointer-events-none select-none">
+                <img
+                  src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+1e3a8a(${property.coordinates[0]},${property.coordinates[1]})/${property.coordinates[0]},${property.coordinates[1]},14,0/600x200@2x?access_token=pk.placeholder&attribution=false`}
+                  alt={`Map of ${property.location}`}
+                  loading="lazy"
+                  className="w-full h-[160px] object-cover bg-gray-100"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling;
+                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                  }}
+                />
+                <div className="hidden items-center justify-center h-[160px] bg-gray-50 text-gray-400 text-sm">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  {property.location}, {property.island}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Similar Properties */}
+          <section className="mt-10">
+            <hr className="border-gray-100 mb-6" />
+            <h2 className="text-base font-semibold text-gray-800 mb-4">Similar Listings in the Area</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+              {listings.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => router.push(`/property/${item.id}`)}
+                  className="group text-left rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all"
                 >
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5" />
-                  {feature}
-                </span>
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    loading="lazy"
+                    className="w-full aspect-square sm:h-28 object-cover"
+                  />
+                  <div className="p-2.5">
+                    <p className="text-sm font-bold text-gray-900">
+                      &euro;{item.price.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5 truncate">
+                      {shortenLocation(item.location)}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
+                      <span className="inline-flex items-center gap-1">
+                        <Bed className="h-3 w-3" />
+                        {item.bedrooms}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Bath className="h-3 w-3" />
+                        {item.bathrooms}
+                      </span>
+                    </div>
+                  </div>
+                </button>
               ))}
             </div>
           </section>
-        )}
+        </main>
 
-        {/* Static Mini-Map */}
-        {property.coordinates && property.coordinates.length === 2 && (
-          <section className="mt-8">
-            <h2 className="text-sm font-semibold text-gray-800 mb-3">Location</h2>
-            <div className="rounded-xl overflow-hidden border border-gray-100 pointer-events-none select-none">
+        {/* RIGHT: Sticky Inquiry Side-Card — 4 cols */}
+        <aside className="lg:col-span-4">
+          <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
+            {/* Agent mini-header */}
+            <div className="flex items-center gap-3">
               <img
-                src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+1e3a8a(${property.coordinates[0]},${property.coordinates[1]})/${property.coordinates[0]},${property.coordinates[1]},14,0/600x200@2x?access_token=pk.placeholder&attribution=false`}
-                alt={`Map of ${property.location}`}
-                loading="lazy"
-                className="w-full h-[160px] object-cover bg-gray-100"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling;
-                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                }}
+                src={property.agent.avatar}
+                alt={property.agent.name}
+                className="h-9 w-9 rounded-full object-cover shrink-0"
               />
-              <div className="hidden items-center justify-center h-[160px] bg-gray-50 text-gray-400 text-sm">
-                <MapPin className="h-5 w-5 mr-2" />
-                {property.location}, {property.island}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
+                <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
               </div>
             </div>
-          </section>
-        )}
 
-        {/* Inquiry Form */}
-        <section className="mt-8">
-          <h2 className="text-sm font-semibold text-gray-800 mb-3">Contact About This Property</h2>
-          {inquiryStatus === "sent" ? (
-            <div className="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
-              <p className="text-sm font-medium text-green-800">Inquiry sent successfully!</p>
-              <p className="text-xs text-green-600 mt-1">The agent will be in touch shortly.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleInquirySubmit} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Full Name"
-                required
-                value={inquiryForm.fullName}
-                onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {inquiryStatus === "sent" ? (
+              <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+                <p className="text-sm font-medium text-green-800">Inquiry sent!</p>
+                <p className="text-xs text-green-600 mt-0.5">The agent will contact you shortly.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleInquirySubmit} className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  required
+                  value={inquiryForm.fullName}
+                  onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                />
                 <input
                   type="tel"
                   placeholder="Phone Number"
                   value={inquiryForm.phone}
                   onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                 />
                 <input
                   type="email"
@@ -351,73 +408,51 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
                   required
                   value={inquiryForm.email}
                   onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                 />
-              </div>
-              <textarea
-                rows={3}
-                value={inquiryForm.message}
-                onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
-              />
-              <button
-                type="submit"
-                disabled={inquiryStatus === "sending"}
-                className="w-full py-2.5 rounded-lg bg-[#1e3a8a] text-white text-sm font-semibold hover:bg-[#1e3070] transition-colors disabled:opacity-60"
-              >
-                {inquiryStatus === "sending" ? "Sending..." : "Send Inquiry"}
-              </button>
-              {inquiryStatus === "error" && (
-                <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
-              )}
-            </form>
-          )}
-        </section>
+                <textarea
+                  rows={3}
+                  value={inquiryForm.message}
+                  onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                />
+                <button
+                  type="submit"
+                  disabled={inquiryStatus === "sending"}
+                  className="w-full py-2 rounded-lg bg-[#1e3a8a] text-white text-sm font-semibold hover:bg-[#1e3070] transition-colors disabled:opacity-60"
+                >
+                  {inquiryStatus === "sending" ? "Sending..." : "Send Inquiry"}
+                </button>
+                {inquiryStatus === "error" && (
+                  <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
+                )}
+              </form>
+            )}
 
-        {/* Similar Properties */}
-        <section className="mt-10">
-          <hr className="border-gray-100 mb-6" />
-          <h2 className="text-base font-semibold text-gray-800 mb-4">Similar Listings in the Area</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-4">
-            {listings.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => router.push(`/property/${item.id}`)}
-                className="group text-left rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all"
+            {/* Quick contact shortcuts */}
+            <div className="flex gap-2 pt-1">
+              <a
+                href={`tel:${property.agent.phone}`}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  loading="lazy"
-                  className="w-full aspect-square sm:h-28 object-cover"
-                />
-                <div className="p-2.5">
-                  <p className="text-sm font-bold text-gray-900">
-                    &euro;{item.price.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">
-                    {shortenLocation(item.location)}
-                  </p>
-                  <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
-                    <span className="inline-flex items-center gap-1">
-                      <Bed className="h-3 w-3" />
-                      {item.bedrooms}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Bath className="h-3 w-3" />
-                      {item.bathrooms}
-                    </span>
-                  </div>
-                </div>
+                <Phone className="h-3.5 w-3.5" />
+                Call
+              </a>
+              <button
+                onClick={handleWhatsApp}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                WhatsApp
               </button>
-            ))}
+            </div>
           </div>
-        </section>
-      </main>
+        </aside>
+      </div>
 
-      {/* Seller Contact Card - fixed at bottom */}
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
+      {/* Mobile fixed bottom bar (visible only below lg) */}
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20 lg:hidden">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <img
             src={property.agent.avatar}
             alt={property.agent.name}
