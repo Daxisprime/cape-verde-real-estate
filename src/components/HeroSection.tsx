@@ -40,7 +40,6 @@ export default function HeroSection() {
   const [backgroundImage, setBackgroundImage] = useState(CV_9_ISLAND_IMAGES[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [listingType, setListingType] = useState<"buy" | "rent">("buy");
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
   const [propertyType, setPropertyType] = useState("All");
   const [bedrooms, setBedrooms] = useState("0");
@@ -49,7 +48,7 @@ export default function HeroSection() {
   const [marketplaceCategory, setMarketplaceCategory] = useState("All");
   const filterRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { searchMode, setSearchMode } = useSearchMode();
+  const { searchMode, setSearchMode, listingType, setListingType } = useSearchMode();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -139,7 +138,7 @@ export default function HeroSection() {
       <div className="relative z-10 flex-1 flex items-center justify-center">
         <div className="w-full max-w-2xl mx-auto px-4 text-center flex flex-col items-center gap-8">
           {/* Dynamic 3-way Slogan - scaled for desktop */}
-          <h2 className="text-lg sm:text-2xl lg:text-4xl font-medium tracking-tight text-white drop-shadow-md transition-all duration-200">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-white drop-shadow-md transition-all duration-200 lg:whitespace-nowrap max-w-max mx-auto">
             {getSlogan()}
           </h2>
 

@@ -38,9 +38,9 @@ export default function Header() {
           <div className="flex-1 lg:flex-none">
             <Link href="/" className="flex items-center">
               <span className="text-2xl sm:text-3xl font-bold tracking-tight">
-                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>Pro</span>
-                <span className="text-red-600 mx-[1px] inline-block align-middle text-lg">&#x2022;</span>
-                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>CV</span>
+                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
+                <span className="text-red-600">.</span>
+                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>cv</span>
               </span>
             </Link>
           </div>

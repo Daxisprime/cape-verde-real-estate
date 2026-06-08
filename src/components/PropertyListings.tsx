@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import PropertyComparison from '@/components/PropertyComparison';
 import { capeVerdeProperties, type Property } from '@/data/cape-verde-properties';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchMode } from '@/contexts/SearchModeContext';
 
 interface PropertyListingsProps {
   searchFilters?: {
@@ -22,19 +23,132 @@ interface PropertyListingsProps {
   };
   showFilters?: boolean;
   maxProperties?: number;
-  title?: string;
-  subtitle?: string;
 }
 
 type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'size_asc' | 'size_desc' | 'popular';
 type ViewMode = 'grid' | 'list';
 
+const MARKETPLACE_ITEMS: Property[] = [
+  {
+    id: "mkt-001",
+    propertyId: "MKT-001",
+    title: "Premium Building Cement (50kg bags)",
+    price: 850,
+    location: "Praia, Santiago",
+    island: "Santiago",
+    type: "Building Materials & Tools",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=800&h=600&fit=crop"],
+    features: ["Bulk Available", "Delivery"],
+    description: "High-quality Portland cement for construction projects.",
+    coordinates: [-23.5133, 14.9177],
+    pricePerSqm: 0,
+    agentId: "vendor-001",
+    listingDate: "2026-05-20"
+  },
+  {
+    id: "mkt-002",
+    propertyId: "MKT-002",
+    title: "Samsung Smart TV 55\" 4K",
+    price: 65000,
+    location: "Santa Maria, Sal",
+    island: "Sal",
+    type: "Electronics & Computers",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?w=800&h=600&fit=crop"],
+    features: ["Warranty", "Free Setup"],
+    description: "Brand new Samsung 55 inch smart TV with 4K resolution.",
+    coordinates: [-22.9, 16.73],
+    pricePerSqm: 0,
+    agentId: "vendor-002",
+    listingDate: "2026-06-01"
+  },
+  {
+    id: "mkt-003",
+    propertyId: "MKT-003",
+    title: "Professional Plumbing Services",
+    price: 3500,
+    location: "Mindelo, Sao Vicente",
+    island: "Sao Vicente",
+    type: "Maintenance & Repair Services",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?w=800&h=600&fit=crop"],
+    features: ["Licensed", "Emergency Service", "Free Estimate"],
+    description: "Reliable plumbing installation and repair services across Sao Vicente.",
+    coordinates: [-24.98, 16.87],
+    pricePerSqm: 0,
+    agentId: "vendor-003",
+    listingDate: "2026-05-28"
+  },
+  {
+    id: "mkt-004",
+    propertyId: "MKT-004",
+    title: "Modern Kitchen Set - Complete",
+    price: 185000,
+    location: "Espargos, Sal",
+    island: "Sal",
+    type: "Home, Furniture & Appliances",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?w=800&h=600&fit=crop"],
+    features: ["Installation Included", "Custom Design"],
+    description: "Complete modern kitchen cabinetry and appliance package.",
+    coordinates: [-22.93, 16.74],
+    pricePerSqm: 0,
+    agentId: "vendor-004",
+    listingDate: "2026-06-03"
+  },
+  {
+    id: "mkt-005",
+    propertyId: "MKT-005",
+    title: "Legal & Notary Services",
+    price: 15000,
+    location: "Praia, Santiago",
+    island: "Santiago",
+    type: "Professional Services",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/5668882/pexels-photo-5668882.jpeg?w=800&h=600&fit=crop"],
+    features: ["Property Transfers", "Contracts", "Bilingual"],
+    description: "Comprehensive legal services for property transactions and business registrations.",
+    coordinates: [-23.51, 14.92],
+    pricePerSqm: 0,
+    agentId: "vendor-005",
+    listingDate: "2026-05-15"
+  },
+  {
+    id: "mkt-006",
+    propertyId: "MKT-006",
+    title: "Designer Clothing Boutique Collection",
+    price: 4500,
+    location: "Santa Maria, Sal",
+    island: "Sal",
+    type: "Fashion & Retail",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=800&h=600&fit=crop"],
+    features: ["Local Designs", "Custom Orders"],
+    description: "Curated collection of Cape Verdean designer fashion and accessories.",
+    coordinates: [-22.9, 16.73],
+    pricePerSqm: 0,
+    agentId: "vendor-006",
+    listingDate: "2026-06-05"
+  },
+];
+
 export default function PropertyListings({
   searchFilters = {},
   showFilters = true,
   maxProperties,
-  title = "Properties in Cape Verde",
-  subtitle = "Browse listings across all 9 inhabited islands"
 }: PropertyListingsProps) {
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -43,42 +157,54 @@ export default function PropertyListings({
   const [currentFilters, setCurrentFilters] = useState(searchFilters);
 
   const { user } = useAuth();
+  const { searchMode, listingType } = useSearchMode();
 
-  // Filter and sort properties
+  const getDynamicTitle = () => {
+    if (searchMode === "markets") return "Marketplace Items & Local Services";
+    if (listingType === "rent") return "Properties for Rent";
+    return "Properties for Sale";
+  };
+
   const filteredProperties = useMemo(() => {
-    let filtered = [...capeVerdeProperties];
+    let filtered: Property[];
 
-    // Apply search filters
-    if (currentFilters.location) {
-      filtered = filtered.filter(property =>
-        property.location.toLowerCase().includes(currentFilters.location!.toLowerCase()) ||
-        property.island.toLowerCase().includes(currentFilters.location!.toLowerCase())
-      );
+    if (searchMode === "markets") {
+      filtered = [...MARKETPLACE_ITEMS];
+    } else {
+      filtered = [...capeVerdeProperties];
     }
 
-    if (currentFilters.priceMin) {
-      filtered = filtered.filter(property => property.price >= currentFilters.priceMin!);
+    if (searchMode === "realestate") {
+      if (currentFilters.location) {
+        filtered = filtered.filter(property =>
+          property.location.toLowerCase().includes(currentFilters.location!.toLowerCase()) ||
+          property.island.toLowerCase().includes(currentFilters.location!.toLowerCase())
+        );
+      }
+
+      if (currentFilters.priceMin) {
+        filtered = filtered.filter(property => property.price >= currentFilters.priceMin!);
+      }
+
+      if (currentFilters.priceMax) {
+        filtered = filtered.filter(property => property.price <= currentFilters.priceMax!);
+      }
+
+      if (currentFilters.propertyType && currentFilters.propertyType !== 'all') {
+        filtered = filtered.filter(property =>
+          property.type.toLowerCase() === currentFilters.propertyType!.toLowerCase()
+        );
+      }
+
+      if (currentFilters.bedrooms) {
+        filtered = filtered.filter(property => property.bedrooms >= currentFilters.bedrooms!);
+      }
+
+      if (currentFilters.island && currentFilters.island !== 'all') {
+        filtered = filtered.filter(property => property.island === currentFilters.island);
+      }
     }
 
-    if (currentFilters.priceMax) {
-      filtered = filtered.filter(property => property.price <= currentFilters.priceMax!);
-    }
-
-    if (currentFilters.propertyType && currentFilters.propertyType !== 'all') {
-      filtered = filtered.filter(property =>
-        property.type.toLowerCase() === currentFilters.propertyType!.toLowerCase()
-      );
-    }
-
-    if (currentFilters.bedrooms) {
-      filtered = filtered.filter(property => property.bedrooms >= currentFilters.bedrooms!);
-    }
-
-    if (currentFilters.island && currentFilters.island !== 'all') {
-      filtered = filtered.filter(property => property.island === currentFilters.island);
-    }
-
-    // Apply sorting
     switch (sortBy) {
       case 'price_asc':
         filtered.sort((a, b) => a.price - b.price);
@@ -100,7 +226,6 @@ export default function PropertyListings({
         break;
       case 'popular':
       default:
-        // Sort by featured first, then by price desc
         filtered.sort((a, b) => {
           if (a.isFeatured && !b.isFeatured) return -1;
           if (!a.isFeatured && b.isFeatured) return 1;
@@ -109,13 +234,12 @@ export default function PropertyListings({
         break;
     }
 
-    // Limit number of properties if specified
     if (maxProperties) {
       filtered = filtered.slice(0, maxProperties);
     }
 
     return filtered;
-  }, [currentFilters, sortBy, maxProperties]);
+  }, [searchMode, listingType, currentFilters, sortBy, maxProperties]);
 
   const handleCompareToggle = (property: Property, selected: boolean) => {
     if (selected) {
@@ -159,23 +283,20 @@ export default function PropertyListings({
     <>
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">{subtitle}</p>
+          {/* Dynamic Mode-dependent Headline */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">{getDynamicTitle()}</h2>
           </div>
 
           {/* Filters and Controls */}
           {showFilters && (
             <div className="mb-8">
-              {/* Top Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">
-                    {filteredProperties.length} properties found
+                    {filteredProperties.length} {searchMode === "markets" ? "items" : "properties"} found
                   </span>
 
-                  {/* Active Filters */}
                   {getFilterSummary().length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {getFilterSummary().map((filter, index) => (
@@ -188,7 +309,6 @@ export default function PropertyListings({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Sort Dropdown */}
                   <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Sort by" />
@@ -199,12 +319,11 @@ export default function PropertyListings({
                       <SelectItem value="price_desc">Price: High to Low</SelectItem>
                       <SelectItem value="newest">Newest First</SelectItem>
                       <SelectItem value="oldest">Oldest First</SelectItem>
-                      <SelectItem value="size_desc">Largest First</SelectItem>
-                      <SelectItem value="size_asc">Smallest First</SelectItem>
+                      {searchMode === "realestate" && <SelectItem value="size_desc">Largest First</SelectItem>}
+                      {searchMode === "realestate" && <SelectItem value="size_asc">Smallest First</SelectItem>}
                     </SelectContent>
                   </Select>
 
-                  {/* View Mode Toggle */}
                   <div className="flex border rounded-lg">
                     <Button
                       variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -237,7 +356,7 @@ export default function PropertyListings({
                     <div className="flex items-center gap-2">
                       <GitCompare className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-blue-900">
-                        {selectedForComparison.length} properties selected for comparison
+                        {selectedForComparison.length} selected for comparison
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -287,7 +406,7 @@ export default function PropertyListings({
                   <VerifiedPropertyCard
                     key={property.id}
                     property={property}
-                    enableComparison={true}
+                    enableComparison={searchMode === "realestate"}
                     onCompareToggle={handleCompareToggle}
                     isInComparison={selectedForComparison.some(p => p.id === property.id)}
                     className="max-w-none"
@@ -296,25 +415,23 @@ export default function PropertyListings({
               </div>
             ) : (
               <div className="w-full">
-                {/* Desktop grid */}
                 <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredProperties.map((property) => (
                     <VerifiedPropertyCard
                       key={property.id}
                       property={property}
-                      enableComparison={true}
+                      enableComparison={searchMode === "realestate"}
                       onCompareToggle={handleCompareToggle}
                       isInComparison={selectedForComparison.some(p => p.id === property.id)}
                     />
                   ))}
                 </div>
-                {/* Mobile masonry */}
                 <div className="columns-2 gap-2 sm:hidden">
                   {filteredProperties.map((property) => (
                     <div key={property.id} className="break-inside-avoid mb-2 w-full inline-block">
                       <VerifiedPropertyCard
                         property={property}
-                        enableComparison={true}
+                        enableComparison={searchMode === "realestate"}
                         onCompareToggle={handleCompareToggle}
                         isInComparison={selectedForComparison.some(p => p.id === property.id)}
                       />
@@ -325,10 +442,9 @@ export default function PropertyListings({
             )
           ) : (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">🏠</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Properties Found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Results Found</h3>
               <p className="text-gray-600 mb-6">
-                Try adjusting your search criteria to find more properties.
+                Try adjusting your search criteria to find more listings.
               </p>
               <Button onClick={() => setCurrentFilters({})}>
                 Clear All Filters
@@ -336,8 +452,7 @@ export default function PropertyListings({
             </div>
           )}
 
-          {/* Load More or Show All */}
-          {maxProperties && filteredProperties.length === maxProperties && capeVerdeProperties.length > maxProperties && (
+          {maxProperties && filteredProperties.length === maxProperties && capeVerdeProperties.length > maxProperties && searchMode === "realestate" && (
             <div className="text-center mt-12">
               <Button variant="outline" size="lg">
                 View All Properties
@@ -347,11 +462,9 @@ export default function PropertyListings({
               </p>
             </div>
           )}
-
         </div>
       </section>
 
-      {/* Property Comparison Modal */}
       {isComparisonOpen && (
         <PropertyComparison
           isOpen={isComparisonOpen}
