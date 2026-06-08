@@ -9,10 +9,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, User, LogOut, Settings, Heart, Search, MessageSquare } from 'lucide-react';
+import { ChevronDown, User, LogOut, Settings, Heart, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage, languages } from '@/contexts/LanguageContext';
-import { useChat } from '@/contexts/ChatContext';
 import Link from 'next/link';
 
 interface ClientOnlyHeaderControlsProps {
@@ -28,7 +27,6 @@ export default function ClientOnlyHeaderControls({
 }: ClientOnlyHeaderControlsProps) {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { currentLanguage, setLanguage } = useLanguage();
-  const { totalUnreadCount } = useChat();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {

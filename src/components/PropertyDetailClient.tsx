@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChat } from "@/contexts/ChatContext";
 import PhotoGallery from "@/components/PhotoGallery";
 import PropertyContactForm from "@/components/PropertyContactForm";
 import VirtualTour from "@/components/VirtualTour";
@@ -64,20 +63,12 @@ export default function PropertyDetailClient({ property }: PropertyDetailClientP
   const isMounted = useMountedState();
   const { currentLanguage } = useLanguage();
   const { isFavorite, addToFavorites, removeFromFavorites, addToViewingHistory, isAuthenticated } = useAuth();
-  const { createPropertyInquiry } = useChat();
   const [isViewingSchedulerOpen, setIsViewingSchedulerOpen] = useState(false);
 
-  const handleAskQuestion = () => {
-    if (!isAuthenticated) {
-      // Could trigger login modal
-      return;
-    }
-
-    createPropertyInquiry(
-      property.id,
-      property.agent.name,
-      `Hi ${property.agent.name}, I have some questions about the property "${getPropertyTitle()}" in ${property.location}. Could you please provide more details?`
-    ).catch(console.error);
+  const handleContactWhatsApp = () => {
+    const message = encodeURIComponent(`Hi, I'm interested in the property "${getPropertyTitle()}" in ${property.location}. Could you provide more details?`);
+    const phone = property.agent.phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
   // Add to user's viewing history
@@ -401,12 +392,11 @@ export default function PropertyDetailClient({ property }: PropertyDetailClientP
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
-                    onClick={handleAskQuestion}
-                    disabled={!isAuthenticated}
+                    className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                    onClick={handleContactWhatsApp}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Ask a Question
+                    WhatsApp Agent
                   </Button>
                 </div>
               </CardContent>

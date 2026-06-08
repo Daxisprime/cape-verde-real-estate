@@ -17,7 +17,6 @@ import Footer from "@/components/Footer";
 import PropertyManagementDashboard from "@/components/PropertyManagementDashboard";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChat } from "@/contexts/ChatContext";
 import { useRouter } from "next/navigation";
 
 interface SavedProperty {
@@ -174,7 +173,6 @@ const sampleRecommendations: Recommendation[] = [
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
-  const { conversations, totalUnreadCount } = useChat();
   const router = useRouter();
   const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([]);
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
@@ -285,13 +283,10 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Messages</p>
-                  <p className="text-2xl font-bold text-gray-900">{conversations.length}</p>
-                  {totalUnreadCount > 0 && (
-                    <p className="text-sm text-blue-600">{totalUnreadCount} unread</p>
-                  )}
+                  <p className="text-sm font-medium text-gray-600">Contact Agents</p>
+                  <p className="text-sm text-gray-500 mt-1">Via WhatsApp or phone</p>
                 </div>
-                <MessageSquare className="h-8 w-8 text-blue-600" />
+                <MessageSquare className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>

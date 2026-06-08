@@ -5,7 +5,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PropertySearchProvider } from "@/contexts/PropertySearchContext";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
-import { ChatProvider } from "@/contexts/ChatContext";
 import { PaymentProvider } from "@/contexts/PaymentContext";
 
 interface ProvidersProps {
@@ -19,9 +18,7 @@ export function Providers({ children }: ProvidersProps) {
         <LanguageProvider>
           <PropertySearchProvider>
             <PaymentProvider>
-              <ChatProvider>
-                {children}
-              </ChatProvider>
+              {children}
             </PaymentProvider>
           </PropertySearchProvider>
         </LanguageProvider>
