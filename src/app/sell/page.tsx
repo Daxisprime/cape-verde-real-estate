@@ -64,7 +64,7 @@ export default function SellPage() {
                   href={vendor.facebook_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                  className="flex items-center gap-2 text-sm text-[#2563EB] hover:underline"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Facebook Group
@@ -75,7 +75,7 @@ export default function SellPage() {
                   href={vendor.facebook_shop_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                  className="flex items-center gap-2 text-sm text-[#2563EB] hover:underline"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Facebook Shop

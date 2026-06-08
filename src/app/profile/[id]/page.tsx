@@ -5,14 +5,17 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Phone, MessageCircle, MapPin, Bed, Bath, Square, ExternalLink } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { mockProfiles } from "@/lib/mockProfiles";
 
 interface VendorProfile {
   id: string;
   full_name: string;
   avatar_url: string | null;
   phone: string | null;
+  whatsapp?: string | null;
   bio?: string;
   company?: string;
+  type?: string;
   facebook_url?: string;
   instagram_url?: string;
   facebook_shop_url?: string;
@@ -29,7 +32,7 @@ interface VendorAd {
   bathrooms: number | null;
   square_meters: number | null;
   images: string[];
-  created_at: string;
+  created_at?: string;
 }
 
 export default function VendorProfilePage() {
@@ -43,30 +46,55 @@ export default function VendorProfilePage() {
   useEffect(() => {
     async function load() {
       const supabase = createSupabaseBrowserClient();
-      if (!supabase || !vendorId) {
-        setLoading(false);
-        return;
+
+      // Try Supabase first
+      if (supabase && vendorId) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, phone")
+          .eq("id", vendorId)
+          .maybeSingle();
+
+        if (profileData) {
+          setProfile(profileData as VendorProfile);
+
+          const { data: adsData } = await supabase
+            .from("vendor_ads" as never)
+            .select("id, mode, title, price, island, zone, bedrooms, bathrooms, square_meters, images, created_at")
+            .eq("vendor_id", vendorId)
+            .eq("status", "active")
+            .order("created_at", { ascending: false });
+
+          if (adsData) {
+            setAds(adsData as unknown as VendorAd[]);
+          }
+          setLoading(false);
+          return;
+        }
       }
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url, phone")
-        .eq("id", vendorId)
-        .maybeSingle();
-
-      if (profileData) {
-        setProfile(profileData as VendorProfile);
-      }
-
-      const { data: adsData } = await supabase
-        .from("vendor_ads" as never)
-        .select("id, mode, title, price, island, zone, bedrooms, bathrooms, square_meters, images, created_at")
-        .eq("vendor_id", vendorId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
-
-      if (adsData) {
-        setAds(adsData as unknown as VendorAd[]);
+      // Fall back to mock profiles
+      const mockMatch = mockProfiles.find((p) => p.id === vendorId);
+      if (mockMatch) {
+        setProfile({
+          id: mockMatch.id,
+          full_name: mockMatch.full_name,
+          avatar_url: mockMatch.avatar_url,
+          phone: mockMatch.phone,
+          whatsapp: mockMatch.whatsapp,
+          bio: mockMatch.bio,
+          company: mockMatch.company,
+          type: mockMatch.type,
+          facebook_url: mockMatch.facebook_url,
+          instagram_url: mockMatch.instagram_url,
+          facebook_shop_url: mockMatch.facebook_shop_url,
+        });
+        setAds(
+          mockMatch.listings.map((l) => ({
+            ...l,
+            created_at: new Date().toISOString(),
+          }))
+        );
       }
 
       setLoading(false);
@@ -75,15 +103,15 @@ export default function VendorProfilePage() {
   }, [vendorId]);
 
   const handleWhatsApp = () => {
-    if (!profile?.phone) return;
-    const phone = profile.phone.replace(/\D/g, "");
+    const phone = (profile?.whatsapp || profile?.phone || "").replace(/\D/g, "");
+    if (!phone) return;
     window.open(`https://wa.me/${phone}`, "_blank");
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin" />
       </div>
     );
   }
@@ -92,7 +120,7 @@ export default function VendorProfilePage() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
         <p className="text-gray-500 text-sm">Profile not found.</p>
-        <Link href="/" className="mt-4 text-sm text-blue-600 underline">Back to home</Link>
+        <Link href="/" className="mt-4 text-sm text-[#2563EB] underline">Back to home</Link>
       </div>
     );
   }
@@ -102,7 +130,7 @@ export default function VendorProfilePage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-4 py-3">
-          <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <Link href="/map" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Back
           </Link>
@@ -127,6 +155,11 @@ export default function VendorProfilePage() {
               {profile.company && (
                 <p className="text-sm text-gray-500 truncate">{profile.company}</p>
               )}
+              {profile.type && (
+                <span className="inline-block mt-1 text-xs font-medium text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded capitalize">
+                  {profile.type}
+                </span>
+              )}
               <p className="text-xs text-gray-400 mt-0.5">{ads.length} active listing{ads.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
@@ -146,7 +179,7 @@ export default function VendorProfilePage() {
                 Call
               </a>
             )}
-            {profile.phone && (
+            {(profile.whatsapp || profile.phone) && (
               <button
                 onClick={handleWhatsApp}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
@@ -165,7 +198,7 @@ export default function VendorProfilePage() {
                   href={profile.facebook_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs text-[#2563EB] hover:underline"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Facebook
@@ -176,7 +209,7 @@ export default function VendorProfilePage() {
                   href={profile.facebook_shop_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs text-[#2563EB] hover:underline"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Facebook Shop
@@ -197,7 +230,7 @@ export default function VendorProfilePage() {
           )}
         </div>
 
-        {/* Vendor Listings — Masonry Feed */}
+        {/* Vendor Listings */}
         <div className="mt-6">
           <h2 className="text-sm font-semibold text-gray-800 mb-3">Listings</h2>
           {ads.length === 0 ? (
@@ -237,7 +270,7 @@ export default function VendorProfilePage() {
                           )}
                           {ad.square_meters != null && (
                             <span className="inline-flex items-center gap-0.5">
-                              <Square className="h-3 w-3" />{ad.square_meters}m²
+                              <Square className="h-3 w-3" />{ad.square_meters}m&sup2;
                             </span>
                           )}
                         </div>

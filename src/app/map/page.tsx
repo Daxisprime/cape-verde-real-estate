@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User } from 'lucide-react';
 import Header from '@/components/Header';
 
@@ -26,6 +27,7 @@ const MOCK_DATA = [
     latitude: 14.9250,
     longitude: -23.5160,
     image_url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+    seller_id: 'vendor-1',
     seller_name: 'Maria Santos',
     seller_phone: '+238 991 2345',
     seller_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
@@ -42,7 +44,8 @@ const MOCK_DATA = [
     latitude: 14.9310,
     longitude: -23.5090,
     image_url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
-    seller_name: 'João Silva',
+    seller_id: 'vendor-1',
+    seller_name: 'Jo\u00e3o Silva',
     seller_phone: '+238 995 6789',
     seller_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
     is_verified: true
@@ -58,6 +61,7 @@ const MOCK_DATA = [
     latitude: 14.9170,
     longitude: -23.5120,
     image_url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+    seller_id: 'vendor-2',
     seller_name: 'Ana Ferreira',
     seller_phone: '+238 992 3456',
     seller_avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
@@ -74,6 +78,7 @@ const MOCK_DATA = [
     latitude: 14.9150,
     longitude: -23.5050,
     image_url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800',
+    seller_id: 'vendor-3',
     seller_name: 'Carlos Mendes',
     seller_phone: '+238 997 8901',
     seller_avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
@@ -90,6 +95,7 @@ const MOCK_DATA = [
     latitude: 14.9180,
     longitude: -23.5100,
     image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+    seller_id: 'vendor-2',
     seller_name: 'Sofia Lopes',
     seller_phone: '+238 993 4567',
     seller_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -365,9 +371,9 @@ export default function MapPage() {
                   </div>
 
                   {/* View Profile Link */}
-                  <button className="text-xs font-semibold text-[#2563EB] hover:underline whitespace-nowrap">
+                  <Link href={`/profile/${selectedProperty.seller_id}`} className="text-xs font-semibold text-[#2563EB] hover:underline whitespace-nowrap">
                     View Profile
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
