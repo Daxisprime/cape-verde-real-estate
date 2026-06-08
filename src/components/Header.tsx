@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Store, PlusCircle, ChevronDown } from 'lucide-react';
+import { Menu, X, Store, PlusCircle, ChevronDown, Search } from 'lucide-react';
 import { mockProfiles } from '@/lib/mockProfiles';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 
@@ -11,7 +11,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { searchMode } = useSearchMode();
+  const { searchMode, isResultsViewActive, headerSearchQuery, setHeaderSearchQuery } = useSearchMode();
 
   const isMarkets = searchMode === "markets";
   const vendor = mockProfiles[0];
@@ -33,9 +33,9 @@ export default function Header() {
         : "bg-white border-gray-200"
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo - red dot centered between Pro and CV */}
-          <div className="flex-1 lg:flex-none">
+        <div className="flex justify-between items-center h-16 gap-4">
+          {/* Logo */}
+          <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
               <span className="text-2xl sm:text-3xl font-bold tracking-tight">
                 <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
@@ -45,32 +45,53 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
-            <Link href="/map?type=buy" className={`font-medium transition-colors ${
-              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
-            }`}>
-              Buy
-            </Link>
-            <Link href="/map?type=rent" className={`font-medium transition-colors ${
-              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
-            }`}>
-              Rent
-            </Link>
-            <Link href="/sell" className={`font-medium transition-colors ${
-              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
-            }`}>
-              Sell
-            </Link>
-            <Link href="/map" className={`font-medium transition-colors ${
-              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
-            }`}>
-              Map
-            </Link>
-          </nav>
+          {/* Center: Compact search bar (Results View only) */}
+          {isResultsViewActive ? (
+            <div className="flex-1 max-w-md mx-auto hidden sm:block">
+              <div className="relative">
+                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                  isMarkets ? "text-white/50" : "text-gray-400"
+                }`} />
+                <input
+                  type="text"
+                  placeholder="Search location..."
+                  value={headerSearchQuery}
+                  onChange={(e) => setHeaderSearchQuery(e.target.value)}
+                  className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
+                    isMarkets
+                      ? "bg-white/15 border border-white/30 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/60"
+                      : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  }`}
+                />
+              </div>
+            </div>
+          ) : (
+            <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
+              <Link href="/map?type=buy" className={`font-medium transition-colors ${
+                isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+              }`}>
+                Buy
+              </Link>
+              <Link href="/map?type=rent" className={`font-medium transition-colors ${
+                isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+              }`}>
+                Rent
+              </Link>
+              <Link href="/sell" className={`font-medium transition-colors ${
+                isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+              }`}>
+                Sell
+              </Link>
+              <Link href="/map" className={`font-medium transition-colors ${
+                isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+              }`}>
+                Map
+              </Link>
+            </nav>
+          )}
 
           {/* Right side: Profile Avatar Dropdown */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -129,6 +150,20 @@ export default function Header() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className={`lg:hidden py-4 border-t ${isMarkets ? "border-white/20" : "border-gray-200"}`}>
+            {isResultsViewActive && (
+              <div className="mb-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search location..."
+                    value={headerSearchQuery}
+                    onChange={(e) => setHeaderSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-full text-sm bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 outline-none"
+                  />
+                </div>
+              </div>
+            )}
             <div className="flex flex-col space-y-4">
               <Link href="/map?type=buy" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Buy

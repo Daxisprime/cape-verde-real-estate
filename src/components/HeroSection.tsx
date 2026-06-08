@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 
@@ -47,8 +46,7 @@ export default function HeroSection() {
   const [priceMax, setPriceMax] = useState("");
   const [marketplaceCategory, setMarketplaceCategory] = useState("All");
   const filterRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const { searchMode, setSearchMode, listingType, setListingType } = useSearchMode();
+  const { searchMode, setSearchMode, listingType, setListingType, setIsResultsViewActive, setHeaderSearchQuery } = useSearchMode();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -73,24 +71,8 @@ export default function HeroSection() {
   }, [isFilterOpen]);
 
   const handleSearch = () => {
-    const params = new URLSearchParams();
-    params.set("type", listingType);
-    if (searchQuery.trim()) params.set("q", searchQuery.trim());
-
-    if (searchMode === "realestate") {
-      if (propertyType !== "All") params.set("propertyType", propertyType.toLowerCase());
-      if (bedrooms !== "0") params.set("beds", bedrooms);
-      if (priceMin) params.set("priceMin", priceMin);
-      if (priceMax) params.set("priceMax", priceMax);
-    } else {
-      params.set("mode", "marketplace");
-      params.set("tab", marketplaceTab);
-      if (marketplaceCategory !== "All") params.set("category", marketplaceCategory.toLowerCase());
-      if (priceMin) params.set("priceMin", priceMin);
-      if (priceMax) params.set("priceMax", priceMax);
-    }
-
-    router.push(`/map?${params.toString()}`);
+    setHeaderSearchQuery(searchQuery);
+    setIsResultsViewActive(true);
   };
 
   const getSlogan = () => {
