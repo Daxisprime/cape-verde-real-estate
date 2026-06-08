@@ -140,7 +140,7 @@ export default function VendorProfilePage() {
             {profile.phone && (
               <a
                 href={`tel:${profile.phone}`}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#003DA5] text-white text-sm font-medium hover:bg-[#00338A] transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-[#1D4ED8] transition-colors"
               >
                 <Phone className="h-4 w-4" />
                 Call

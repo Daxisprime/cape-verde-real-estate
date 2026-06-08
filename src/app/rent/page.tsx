@@ -166,13 +166,13 @@ export default function RentPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       {/* Hero Section */}
-      <div className="bg-gray-900 text-white">
+      <div className="bg-white border-b border-gray-100 text-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Rental Properties in Cape Verde
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-500 max-w-3xl mx-auto">
               Find your perfect rental home or list your property for rent.
               Professional rental services for both tenants and landlords.
             </p>
@@ -258,7 +258,7 @@ export default function RentPage() {
                     Our professional listing service includes photography, marketing, and tenant screening.
                   </p>
                   <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <Button className="bg-[#003DA5] hover:bg-[#00338A] px-8">
+                    <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] px-8">
                       <Key className="mr-2 h-4 w-4" />
                       List My Property
                     </Button>
@@ -322,10 +322,10 @@ export default function RentPage() {
                   />
                   <div className="absolute top-3 left-3 flex flex-col space-y-2">
                     {property.newListing && (
-                      <Badge className="bg-[#003DA5] text-white">New</Badge>
+                      <Badge className="bg-[#2563EB] text-white">New</Badge>
                     )}
                     {property.furnished && (
-                      <Badge className="bg-[#003DA5] text-white">Furnished</Badge>
+                      <Badge className="bg-[#2563EB] text-white">Furnished</Badge>
                     )}
                   </div>
                   <div className="absolute top-3 right-3 flex space-x-2">
@@ -387,7 +387,7 @@ export default function RentPage() {
                   </div>
 
                   <div className="flex">
-                    <Button size="sm" className="w-full bg-[#003DA5] hover:bg-[#00338A]">
+                    <Button size="sm" className="w-full bg-[#2563EB] hover:bg-[#1D4ED8]">
                       Contact Owner
                     </Button>
                   </div>
@@ -418,7 +418,7 @@ export default function RentPage() {
                     <Link key={index} href={guide.link}>
                       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
                         <CardContent className="p-6 text-center">
-                          <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 group-hover:bg-[#003DA5] transition-colors">
+                          <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 group-hover:bg-[#2563EB] transition-colors">
                             <IconComponent className="h-8 w-8 text-green-600 group-hover:text-white transition-colors" />
                           </div>
                           <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
@@ -443,7 +443,7 @@ export default function RentPage() {
                     <Link key={index} href={guide.link}>
                       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
                         <CardContent className="p-6 text-center">
-                          <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 group-hover:bg-[#003DA5] transition-colors">
+                          <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 group-hover:bg-[#2563EB] transition-colors">
                             <IconComponent className="h-8 w-8 text-green-600 group-hover:text-white transition-colors" />
                           </div>
                           <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
@@ -464,14 +464,14 @@ export default function RentPage() {
 
         {/* Call to Action */}
         <div className="py-12 border-t border-gray-200">
-          <div className="bg-gray-900 rounded-2xl p-8 text-white text-center">
-            <h2 className="text-2xl font-bold mb-4">Start Your Rental Journey Today</h2>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
+          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Start Your Rental Journey Today</h2>
+            <p className="text-gray-500 mb-6 max-w-2xl mx-auto">
               Whether you're looking for a rental property or want to list your property for rent,
               our expert team is here to help you every step of the way.
             </p>
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button className="bg-white text-green-600 hover:bg-gray-100 px-8">
+              <Button className="bg-[#2563EB] text-white hover:bg-[#1D4ED8] px-8">
                 <Home className="mr-2 h-4 w-4" />
                 Browse Rentals
               </Button>

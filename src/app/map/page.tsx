@@ -207,7 +207,7 @@ export default function MapPage() {
                           className="w-full aspect-[4/3] object-cover bg-gray-100"
                         />
                         <div className="p-2.5">
-                          <span className="text-[10px] font-bold text-[#003DA5] uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider">
                             {property.listing_type === 'buy' ? 'Sale' : 'Rent'}
                           </span>
                           <h3 className="font-bold text-xs text-gray-900 line-clamp-2 mt-0.5">{property.title}</h3>
@@ -241,7 +241,7 @@ export default function MapPage() {
                         className="w-24 h-20 object-cover rounded-lg bg-gray-100 flex-shrink-0"
                       />
                       <div className="flex flex-col justify-center min-w-0">
-                        <span className="text-[10px] font-bold text-[#003DA5] uppercase tracking-wider">
+                        <span className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider">
                           {property.listing_type === 'buy' ? 'For Sale' : 'To Rent'} • {property.neighborhood}
                         </span>
                         <h3 className="font-bold text-sm text-gray-900 truncate mt-0.5">{property.title}</h3>
@@ -267,7 +267,7 @@ export default function MapPage() {
               <div className="p-4 pb-0">
                 <button
                   onClick={() => setSelectedProperty(null)}
-                  className="text-[#003DA5] font-semibold text-xs mb-4 flex items-center gap-1.5 uppercase tracking-wide hover:underline text-left"
+                  className="text-[#2563EB] font-semibold text-xs mb-4 flex items-center gap-1.5 uppercase tracking-wide hover:underline text-left"
                 >
                   <ArrowLeft className="h-4 w-4" /> Back to List View
                 </button>
@@ -284,7 +284,7 @@ export default function MapPage() {
 
               {/* Property Details */}
               <div className="p-4 space-y-3 flex-1">
-                <span className="text-xs font-bold bg-gray-50 text-[#003DA5] px-2 py-1 rounded inline-block">
+                <span className="text-xs font-bold bg-gray-50 text-[#2563EB] px-2 py-1 rounded inline-block">
                   {selectedProperty.neighborhood}
                 </span>
                 <h2 className="font-extrabold text-xl text-gray-900 leading-tight">
@@ -314,10 +314,10 @@ export default function MapPage() {
                     className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group"
                   >
                     <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <Phone className="h-5 w-5 text-[#003DA5]" />
+                      <Phone className="h-5 w-5 text-[#2563EB]" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-900 group-hover:text-[#003DA5] transition">
+                      <p className="text-sm font-bold text-gray-900 group-hover:text-[#2563EB] transition">
                         {formatPhoneForDisplay(selectedProperty.seller_phone || '+238 000 0000')}
                       </p>
                       <p className="text-xs text-gray-500">Tap to call</p>
@@ -365,7 +365,7 @@ export default function MapPage() {
                   </div>
 
                   {/* View Profile Link */}
-                  <button className="text-xs font-semibold text-[#003DA5] hover:underline whitespace-nowrap">
+                  <button className="text-xs font-semibold text-[#2563EB] hover:underline whitespace-nowrap">
                     View Profile
                   </button>
                 </div>

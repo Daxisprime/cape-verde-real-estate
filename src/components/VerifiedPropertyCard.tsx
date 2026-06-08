@@ -127,7 +127,7 @@ export default function VerifiedPropertyCard({
         {/* Property Content */}
         <CardContent className="p-4">
           <div className="mb-3">
-            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-[#003DA5] transition-colors mb-2">
+            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-[#2563EB] transition-colors mb-2">
               {property.title}
             </h3>
             <div className="flex items-center text-gray-600 text-sm mb-2">

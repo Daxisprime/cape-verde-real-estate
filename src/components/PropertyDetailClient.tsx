@@ -420,7 +420,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
                 <button
                   type="submit"
                   disabled={inquiryStatus === "sending"}
-                  className="w-full py-2 rounded-lg bg-[#003DA5] text-white text-sm font-semibold hover:bg-[#00338A] transition-colors disabled:opacity-60"
+                  className="w-full py-2 rounded-lg bg-[#2563EB] text-white text-sm font-semibold hover:bg-[#1D4ED8] transition-colors disabled:opacity-60"
                 >
                   {inquiryStatus === "sending" ? "Sending..." : "Send Inquiry"}
                 </button>
@@ -466,7 +466,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           </div>
           <a
             href={`tel:${property.agent.phone}`}
-            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#003DA5] text-white hover:bg-[#00338A] transition-colors shrink-0"
+            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors shrink-0"
             aria-label="Call agent"
           >
             <Phone className="h-4 w-4" />
