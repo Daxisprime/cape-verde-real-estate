@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export interface SimilarProperty {
   id: string;
@@ -96,6 +97,16 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
   const router = useRouter();
   const { currentLanguage } = useLanguage();
 
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [inquiryForm, setInquiryForm] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    message: `I am interested in this property. Please contact me with more details.`
+  });
+  const [inquiryStatus, setInquiryStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
   const listings = similarProperties.length >= 3
     ? similarProperties.slice(0, 3)
     : [
@@ -119,6 +130,14 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
     }
   };
 
+  const getFeatures = () => {
+    switch (currentLanguage) {
+      case 'pt': return property.featuresPt;
+      case 'cv': return property.featuresCv;
+      default: return property.features;
+    }
+  };
+
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
       `Hi, I'm interested in "${getTitle()}" in ${property.location}. Could you provide more details?`
@@ -132,7 +151,37 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
     return parts.slice(0, 2).join(', ');
   };
 
+  const openGallery = useCallback((index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  }, []);
+
+  const handleInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inquiryForm.fullName || !inquiryForm.email) return;
+
+    setInquiryStatus("sending");
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        const { error } = await supabase.from("property_inquiries" as never).insert({
+          property_id: property.id,
+          full_name: inquiryForm.fullName,
+          phone: inquiryForm.phone || null,
+          email: inquiryForm.email,
+          message: inquiryForm.message,
+        } as never);
+        if (error) throw error;
+      }
+      setInquiryStatus("sent");
+    } catch {
+      setInquiryStatus("error");
+    }
+  };
+
   const title = getTitle();
+  const features = getFeatures();
+  const extraPhotos = property.images.length > 4 ? property.images.length - 4 : 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -147,29 +196,43 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
       </div>
 
       <main className="max-w-3xl mx-auto px-4 pb-40">
-        {/* Photo gallery - lazy loaded images */}
+        {/* Photo Tour Engine */}
         <section className="mt-4">
           {property.images.length > 0 && (
             <div className="space-y-2">
-              <img
-                src={property.images[0]}
-                alt={title}
-                loading="eager"
-                className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-xl"
-              />
-              {property.images.length > 1 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {property.images.slice(1, 4).map((img, i) => (
-                    <img
+              <button onClick={() => openGallery(0)} className="w-full block">
+                <img
+                  src={property.images[0]}
+                  alt={title}
+                  loading="eager"
+                  className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-xl"
+                />
+              </button>
+              <div className="grid grid-cols-3 gap-2">
+                {property.images.slice(1, 4).map((img, i) => {
+                  const isLast = i === 2 || i === property.images.length - 2;
+                  const showOverlay = isLast && extraPhotos > 0;
+                  return (
+                    <button
                       key={i}
-                      src={img}
-                      alt={`${title} ${i + 2}`}
-                      loading="lazy"
-                      className="w-full h-24 sm:h-32 object-cover rounded-lg"
-                    />
-                  ))}
-                </div>
-              )}
+                      onClick={() => openGallery(i + 1)}
+                      className="relative w-full aspect-square overflow-hidden rounded-lg"
+                    >
+                      <img
+                        src={img}
+                        alt={`${title} ${i + 2}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                      {showOverlay && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </section>
@@ -211,6 +274,104 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           <p className="text-gray-600 text-[15px] leading-relaxed">
             {getDescription()}
           </p>
+        </section>
+
+        {/* Amenities & Specs */}
+        {features.length > 0 && (
+          <section className="mt-6">
+            <h2 className="text-sm font-semibold text-gray-800 mb-3">Amenities</h2>
+            <div className="flex flex-wrap gap-2">
+              {features.map((feature, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded-full px-3 py-1"
+                >
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5" />
+                  {feature}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Static Mini-Map */}
+        {property.coordinates && property.coordinates.length === 2 && (
+          <section className="mt-8">
+            <h2 className="text-sm font-semibold text-gray-800 mb-3">Location</h2>
+            <div className="rounded-xl overflow-hidden border border-gray-100 pointer-events-none select-none">
+              <img
+                src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+1e3a8a(${property.coordinates[0]},${property.coordinates[1]})/${property.coordinates[0]},${property.coordinates[1]},14,0/600x200@2x?access_token=pk.placeholder&attribution=false`}
+                alt={`Map of ${property.location}`}
+                loading="lazy"
+                className="w-full h-[160px] object-cover bg-gray-100"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling;
+                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                }}
+              />
+              <div className="hidden items-center justify-center h-[160px] bg-gray-50 text-gray-400 text-sm">
+                <MapPin className="h-5 w-5 mr-2" />
+                {property.location}, {property.island}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Inquiry Form */}
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold text-gray-800 mb-3">Contact About This Property</h2>
+          {inquiryStatus === "sent" ? (
+            <div className="rounded-xl border border-green-100 bg-green-50 p-4 text-center">
+              <p className="text-sm font-medium text-green-800">Inquiry sent successfully!</p>
+              <p className="text-xs text-green-600 mt-1">The agent will be in touch shortly.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleInquirySubmit} className="space-y-3">
+              <input
+                type="text"
+                placeholder="Full Name"
+                required
+                value={inquiryForm.fullName}
+                onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="tel"
+                  placeholder="Phone Number"
+                  value={inquiryForm.phone}
+                  onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
+                />
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  required
+                  value={inquiryForm.email}
+                  onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
+                />
+              </div>
+              <textarea
+                rows={3}
+                value={inquiryForm.message}
+                onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={inquiryStatus === "sending"}
+                className="w-full py-2.5 rounded-lg bg-[#1e3a8a] text-white text-sm font-semibold hover:bg-[#1e3070] transition-colors disabled:opacity-60"
+              >
+                {inquiryStatus === "sending" ? "Sending..." : "Send Inquiry"}
+              </button>
+              {inquiryStatus === "error" && (
+                <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
+              )}
+            </form>
+          )}
         </section>
 
         {/* Similar Properties */}
@@ -255,7 +416,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
       </main>
 
       {/* Seller Contact Card - fixed at bottom */}
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <img
             src={property.agent.avatar}
@@ -282,6 +443,42 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           </button>
         </div>
       </div>
+
+      {/* Photo Gallery Modal */}
+      {galleryOpen && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-white/70 text-sm">{galleryIndex + 1} / {property.images.length}</span>
+            <button onClick={() => setGalleryOpen(false)} className="text-white/70 hover:text-white p-1">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-4 relative">
+            <img
+              src={property.images[galleryIndex]}
+              alt={`${title} ${galleryIndex + 1}`}
+              loading="lazy"
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            {galleryIndex > 0 && (
+              <button
+                onClick={() => setGalleryIndex(i => i - 1)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <ChevronLeft className="h-6 w-6 text-white" />
+              </button>
+            )}
+            {galleryIndex < property.images.length - 1 && (
+              <button
+                onClick={() => setGalleryIndex(i => i + 1)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <ChevronRight className="h-6 w-6 text-white" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
