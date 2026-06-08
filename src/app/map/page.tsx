@@ -5,15 +5,13 @@ import dynamic from 'next/dynamic';
 import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User } from 'lucide-react';
 import Header from '@/components/Header';
 
-// Dynamically import Leaflet with SSR disabled to prevent cloud sandbox timeouts
-const SafeLeafletMap = dynamic(() => import('@/components/MapboxMap'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-gray-50 flex items-center justify-center text-sm text-gray-400 animate-pulse">
-      Loading Cape Verde Map View...
-    </div>
-  )
-});
+const SafeLeafletMap = dynamic(
+  () => import('@/components/MapboxMap'),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
+  }
+);
 
 // Mock Property Data Array - Fully mapped to Cape Verdean markets for testing
 const MOCK_DATA = [
