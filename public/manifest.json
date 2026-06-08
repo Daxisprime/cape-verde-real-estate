@@ -1,0 +1,161 @@
+{
+  "name": "ProCV - Cape Verde Property Platform",
+  "short_name": "ProCV",
+  "description": "Cape Verde's premier property portal with PropTech features, real-time chat, and property verification",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["business", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Property search and listings"
+    },
+    {
+      "src": "/screenshots/mobile-1.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile property browsing"
+    },
+    {
+      "src": "/screenshots/mobile-2.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Real-time chat with agents"
+    }
+  ],
+  "features": [
+    "Property search and filtering",
+    "Real-time chat with agents",
+    "AI property valuation",
+    "VR property tours",
+    "Blockchain verification",
+    "Mortgage calculator",
+    "Market analytics",
+    "Offline property browsing"
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {},
+  "shortcuts": [
+    {
+      "name": "Search Properties",
+      "short_name": "Search",
+      "description": "Find properties across Cape Verde",
+      "url": "/?shortcut=search",
+      "icons": [
+        {
+          "src": "/icons/search-72x72.png",
+          "sizes": "72x72",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "short_name": "Chat",
+      "description": "Message with property agents",
+      "url": "/?shortcut=chat",
+      "icons": [
+        {
+          "src": "/icons/chat-72x72.png",
+          "sizes": "72x72",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "short_name": "Favorites",
+      "description": "View saved properties",
+      "url": "/favorites",
+      "icons": [
+        {
+          "src": "/icons/heart-72x72.png",
+          "sizes": "72x72",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mortgage Calculator",
+      "short_name": "Calculator",
+      "description": "Calculate mortgage payments",
+      "url": "/?shortcut=calculator",
+      "icons": [
+        {
+          "src": "/icons/calculator-72x72.png",
+          "sizes": "72x72",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
