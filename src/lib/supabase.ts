@@ -122,6 +122,8 @@ export interface Database {
 // Supabase Client Configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Service role key — server-side only, never expose to the browser
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 export const isSupabaseConfigured = (): boolean => {
   return !!(supabaseUrl && supabaseAnonKey &&
@@ -134,9 +136,13 @@ export const createSupabaseBrowserClient = () => {
   return createClient<Database>(supabaseUrl, supabaseAnonKey);
 };
 
+// Server client bypasses RLS — use only in API routes / server components, never in 'use client' files
 export const createSupabaseServerClient = () => {
-  if (!isSupabaseConfigured()) return null;
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+  if (!supabaseUrl) return null;
+  const key = supabaseServiceRoleKey || supabaseAnonKey;
+  return createClient<Database>(supabaseUrl, key, {
+    auth: { persistSession: false },
+  });
 };
 
 export const supabase = isSupabaseConfigured()

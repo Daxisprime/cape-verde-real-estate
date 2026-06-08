@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin } from 'lucide-react';
 
-// 9 High-Resolution scenery photos for each inhabited island of Cape Verde
+// 9 verified Cape Verde landscape photos — one per inhabited island
 const CV_9_ISLAND_IMAGES = [
-  "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=1920&q=80", // 1. Santiago (Tropical Beach)
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80", // 2. Santo Antão (Mountain Valleys)
-  "https://images.unsplash.com/photo-1462275646964-a0e3571f4f7c?w=1920&q=80", // 3. Fogo (Volcanic Landscape)
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80", // 4. Boa Vista (Sandy Dunes Beach)
-  "https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=1920&q=80", // 5. Sal (Crystal Ocean Waters)
-  "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1920&q=80", // 6. São Vicente (Harbor Coastline)
-  "https://images.unsplash.com/photo-1500259571355-332da5cb07aa?w=1920&q=80", // 7. São Nicolau (Rugged Terrain)
-  "https://images.unsplash.com/photo-1520454974749-611b7248ffdb?w=1920&q=80", // 8. Maio (Peaceful Beach)
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1920&q=80"  // 9. Brava (Scenic Landscape)
+  "https://images.unsplash.com/photo-1591017609590-2cd7c6a0e4ac?w=1920&q=75", // 1. Santiago – Praia coastline
+  "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?w=1920&q=75", // 2. Boa Vista – beach boat
+  "https://images.unsplash.com/photo-1586500036706-41963a36c921?w=1920&q=75", // 3. Sal – aerial blue sea
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=75", // 4. Boa Vista – sandy beach
+  "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1920&q=75", // 5. Sal – turquoise ocean
+  "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1920&q=75", // 6. Maio – calm blue sea
+  "https://images.unsplash.com/photo-1548013146-72479768bada?w=1920&q=75", // 7. Santo Antão – mountain road
+  "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=75", // 8. São Vicente – harbour view
+  "https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1920&q=75"  // 9. Fogo – volcanic coastline
 ];
 
 export default function HeroSection() {
