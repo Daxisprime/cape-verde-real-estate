@@ -16,7 +16,21 @@ import {
   X,
   Check,
   AlertTriangle,
+  RotateCcw,
+  Archive,
 } from "lucide-react";
+
+type ListingStatus = "active" | "reviewing" | "closed";
+
+interface ManagedListing extends MockVendorListing {
+  status: ListingStatus;
+}
+
+const STATUS_TABS: { key: ListingStatus; label: string }[] = [
+  { key: "active", label: "Active" },
+  { key: "reviewing", label: "Reviewing" },
+  { key: "closed", label: "Closed" },
+];
 
 export default function MyStorePage() {
   const [vendor, setVendor] = useState(mockProfiles[0]);
@@ -29,8 +43,22 @@ export default function MyStorePage() {
     instagram_url: vendor.instagram_url,
     facebook_shop_url: vendor.facebook_shop_url || "",
   });
-  const [listings, setListings] = useState<MockVendorListing[]>(vendor.listings);
+  const [listings, setListings] = useState<ManagedListing[]>(() =>
+    vendor.listings.map((l, i) => ({
+      ...l,
+      status: i === 0 ? "active" : i === 1 ? "reviewing" : "active",
+    }))
+  );
+  const [activeTab, setActiveTab] = useState<ListingStatus>("active");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const filteredListings = listings.filter((l) => l.status === activeTab);
+
+  const tabCounts = {
+    active: listings.filter((l) => l.status === "active").length,
+    reviewing: listings.filter((l) => l.status === "reviewing").length,
+    closed: listings.filter((l) => l.status === "closed").length,
+  };
 
   const handleSaveProfile = () => {
     setVendor((prev) => ({
@@ -43,6 +71,14 @@ export default function MyStorePage() {
       facebook_shop_url: editForm.facebook_shop_url,
     }));
     setIsEditing(false);
+  };
+
+  const handleMarkSold = (id: string) => {
+    setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: "closed" as ListingStatus } : l)));
+  };
+
+  const handleRelist = (id: string) => {
+    setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: "active" as ListingStatus } : l)));
   };
 
   const handleDelete = (id: string) => {
@@ -85,7 +121,6 @@ export default function MyStorePage() {
                 </button>
               </div>
 
-              {/* Bio */}
               {isEditing ? (
                 <textarea
                   value={editForm.bio}
@@ -97,7 +132,6 @@ export default function MyStorePage() {
                 <p className="mt-2 text-sm text-gray-600 leading-relaxed">{vendor.bio}</p>
               )}
 
-              {/* Communication Row */}
               <div className="flex flex-wrap gap-2 mt-4">
                 {isEditing ? (
                   <>
@@ -138,7 +172,6 @@ export default function MyStorePage() {
                 )}
               </div>
 
-              {/* Social Links */}
               <div className="mt-4 pt-4 border-t border-gray-100">
                 {isEditing ? (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -194,7 +227,6 @@ export default function MyStorePage() {
                 )}
               </div>
 
-              {/* Save button when editing */}
               {isEditing && (
                 <div className="mt-4">
                   <button
@@ -210,48 +242,99 @@ export default function MyStorePage() {
           </div>
         </section>
 
-        {/* Listings Grid Section */}
+        {/* Listings Section */}
         <section>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">My Active Listings</h2>
-            <span className="text-sm text-gray-500">{listings.length} item{listings.length !== 1 ? "s" : ""}</span>
+            <a href="/sell" className="text-sm text-[#2563EB] font-medium hover:underline">+ Post New</a>
           </div>
 
-          {listings.length === 0 ? (
+          {/* Status Tab Bar */}
+          <div className="bg-gray-100 rounded-full p-1 flex mb-6">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeTab === tab.key
+                    ? "bg-[#1e3a8a] text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {tab.label} ({tabCounts[tab.key]})
+              </button>
+            ))}
+          </div>
+
+          {/* Filtered Listings Grid */}
+          {filteredListings.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-              <p className="text-gray-500 text-sm">No active listings yet.</p>
-              <a href="/sell" className="mt-3 inline-block text-sm text-[#2563EB] font-medium hover:underline">
-                Post your first ad
-              </a>
+              <p className="text-sm text-gray-500">No listings found in this category.</p>
+              {activeTab === "active" && (
+                <a href="/sell" className="mt-3 inline-block text-sm text-[#2563EB] font-medium hover:underline">
+                  Post your first ad
+                </a>
+              )}
             </div>
           ) : (
-            <div className="columns-1 sm:columns-2 gap-4 space-y-4">
-              {listings.map((listing) => (
+            <div className="columns-2 gap-2 md:block md:space-y-4">
+              {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
-                  className="break-inside-avoid bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden relative group"
+                  className="break-inside-avoid mb-2 md:mb-0 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden relative group"
                 >
-                  {/* Owner Controls Overlay */}
-                  <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-                      <Pencil className="h-3 w-3" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(listing.id)}
-                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-red-200 rounded-md text-red-600 hover:bg-red-50 transition-colors shadow-sm"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Delete
-                    </button>
-                  </div>
+                  {/* Reviewing Badge */}
+                  {listing.status === "reviewing" && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-100">
+                        Under Review
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Active Card Controls */}
+                  {listing.status === "active" && (
+                    <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm">
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleMarkSold(listing.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm"
+                      >
+                        <Archive className="h-3 w-3" />
+                        Mark as Sold
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Closed Card Controls */}
+                  {listing.status === "closed" && (
+                    <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleRelist(listing.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-blue-200 rounded-md text-[#2563EB] hover:bg-blue-50 shadow-sm"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Relist Ad
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(listing.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-red-200 rounded-md text-red-600 hover:bg-red-50 shadow-sm"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </button>
+                    </div>
+                  )}
 
                   {/* Image */}
                   {listing.images[0] && (
                     <img
                       src={listing.images[0]}
                       alt={listing.title}
-                      className="w-full h-40 object-cover"
+                      className={`w-full h-40 object-cover ${listing.status === "closed" ? "opacity-60 grayscale" : ""}`}
                     />
                   )}
 
@@ -271,13 +354,11 @@ export default function MyStorePage() {
                       {listing.price.toLocaleString()} <span className="text-xs font-medium text-gray-400">CVE</span>
                     </p>
 
-                    {/* Location */}
                     <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
                       <MapPin className="h-3 w-3" />
                       <span>{listing.zone ? `${listing.zone}, ` : ""}{listing.island}</span>
                     </div>
 
-                    {/* Property Details */}
                     {listing.mode === "real_estate" && (
                       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
                         {listing.bedrooms && (
@@ -308,8 +389,8 @@ export default function MyStorePage() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-gray-900">Delete Listing</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone.</p>
+                <h3 className="text-base font-bold text-gray-900">Delete Permanently</h3>
+                <p className="text-sm text-gray-500">This listing will be removed forever.</p>
               </div>
             </div>
             <div className="flex gap-2 mt-5">
