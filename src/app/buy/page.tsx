@@ -133,13 +133,13 @@ export default function BuyPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       {/* Hero Section with Search */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <div className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Find Your Dream Property in Cape Verde
             </h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Discover stunning properties across Cape Verde's beautiful islands.
               From beachfront villas to city apartments, your perfect home awaits.
             </p>
@@ -180,7 +180,7 @@ export default function BuyPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-[#003DA5] hover:bg-[#00338A]">
                   <Search className="mr-2 h-4 w-4" />
                   Search
                 </Button>
@@ -200,7 +200,7 @@ export default function BuyPage() {
             {marketStats.map((stat, index) => (
               <Card key={index} className="text-center">
                 <CardContent className="p-6">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                  <div className="text-3xl font-bold text-[#003DA5] mb-2">
                     {stat.value}
                   </div>
                   <div className="text-gray-600 mb-2">{stat.label}</div>
@@ -239,7 +239,7 @@ export default function BuyPage() {
                   </div>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-2xl font-bold text-blue-600">
+                      <span className="text-2xl font-bold text-[#003DA5]">
                         €{property.price.toLocaleString()}
                       </span>
                       <Badge variant="secondary">{property.island}</Badge>
@@ -285,10 +285,10 @@ export default function BuyPage() {
                 <Link key={index} href={guide.link}>
                   <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
                     <CardContent className="p-6 text-center">
-                      <div className="bg-blue-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 group-hover:bg-blue-600 transition-colors">
-                        <IconComponent className="h-8 w-8 text-blue-600 group-hover:text-white transition-colors" />
+                      <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 group-hover:bg-[#003DA5] transition-colors">
+                        <IconComponent className="h-8 w-8 text-[#003DA5] group-hover:text-white transition-colors" />
                       </div>
-                      <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#003DA5] transition-colors">
                         {guide.title}
                       </h3>
                       <p className="text-sm text-gray-600">
@@ -304,18 +304,18 @@ export default function BuyPage() {
 
         {/* Call to Action */}
         <div className="py-12 border-t border-gray-200">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white text-center">
+          <div className="bg-gray-900 rounded-2xl p-8 text-white text-center">
             <h2 className="text-2xl font-bold mb-4">Ready to Buy Your Cape Verde Property?</h2>
-            <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
               Get personalized assistance from our expert real estate agents. We'll help you find the perfect property
               and guide you through the entire buying process.
             </p>
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8">
+              <Button className="bg-white text-[#003DA5] hover:bg-gray-100 px-8">
                 <Users className="mr-2 h-4 w-4" />
                 Find an Agent
               </Button>
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8">
+              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#003DA5] px-8">
                 <Calculator className="mr-2 h-4 w-4" />
                 Calculate Affordability
               </Button>

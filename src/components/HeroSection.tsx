@@ -76,7 +76,7 @@ export default function HeroSection() {
 
           <button
             onClick={handleSearch}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
+            className="bg-[#003DA5] hover:bg-[#00338A] text-white font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
           >
             <Search className="h-4 w-4" /> Search Properties
           </button>

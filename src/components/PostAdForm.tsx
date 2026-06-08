@@ -129,7 +129,7 @@ export default function PostAdForm({ vendorId }: { vendorId?: string }) {
               type="button"
               onClick={() => setMode("real_estate")}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
-                mode === "real_estate" ? "bg-[#1e3a8a] text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                mode === "real_estate" ? "bg-[#003DA5] text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
               }`}
             >
               <Home className="h-4 w-4" />
@@ -139,7 +139,7 @@ export default function PostAdForm({ vendorId }: { vendorId?: string }) {
               type="button"
               onClick={() => setMode("item_service")}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
-                mode === "item_service" ? "bg-[#1e3a8a] text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                mode === "item_service" ? "bg-[#003DA5] text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
               }`}
             >
               <Package className="h-4 w-4" />
@@ -274,7 +274,7 @@ export default function PostAdForm({ vendorId }: { vendorId?: string }) {
           <button
             type="submit"
             disabled={status === "submitting"}
-            className="w-full py-3 rounded-lg bg-[#1e3a8a] text-white text-sm font-semibold hover:bg-[#1e3070] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg bg-[#003DA5] text-white text-sm font-semibold hover:bg-[#00338A] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
             {status === "submitting" ? "Posting..." : "Post Ad"}

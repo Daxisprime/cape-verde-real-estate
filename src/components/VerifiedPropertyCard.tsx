@@ -127,7 +127,7 @@ export default function VerifiedPropertyCard({
         {/* Property Content */}
         <CardContent className="p-4">
           <div className="mb-3">
-            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-blue-600 transition-colors mb-2">
+            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-[#003DA5] transition-colors mb-2">
               {property.title}
             </h3>
             <div className="flex items-center text-gray-600 text-sm mb-2">
@@ -138,7 +138,7 @@ export default function VerifiedPropertyCard({
 
           {/* Price */}
           <div className="mb-3">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-gray-900">
               {formatCurrency(property.price)}
             </div>
             <div className="text-sm text-gray-500">
@@ -204,7 +204,7 @@ export default function VerifiedPropertyCard({
 
           {/* Comparison indicator */}
           {isInComparison && (
-            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700 text-center">
+            <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700 text-center">
               Added to comparison
             </div>
           )}

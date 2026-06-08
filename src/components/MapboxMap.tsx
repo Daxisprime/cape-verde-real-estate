@@ -20,8 +20,8 @@ function formatPriceShort(price: number): string {
 function createPriceIcon(price: number, isActive = false): L.DivIcon {
   const priceLabel = formatPriceShort(price);
   const pinClasses = isActive
-    ? 'bg-[#3b82f6] text-white border-2 border-white font-black text-[11px] w-11 h-11 rounded-full flex items-center justify-center shadow-2xl'
-    : 'bg-[#1e3a8a] text-white border-2 border-white font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-lg';
+    ? 'bg-[#003DA5] text-white border-2 border-white font-black text-[11px] w-11 h-11 rounded-full flex items-center justify-center shadow-2xl'
+    : 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-[#003DA5] hover:text-white transition-colors';
 
   return L.divIcon({
     className: 'custom-price-marker',
