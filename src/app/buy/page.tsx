@@ -147,7 +147,45 @@ export default function BuyPage() {
 
           {/* Property Search */}
           <div className="max-w-6xl mx-auto">
-            <PropertyFilterBar listingType="buy" />
+            <Card className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by location or property type..."
+                    className="pl-10"
+                  />
+                </div>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Island" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {islands.map((island) => (
+                      <SelectItem key={island} value={island.toLowerCase()}>
+                        {island}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Property Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {propertyTypes.map((type) => (
+                      <SelectItem key={type} value={type.toLowerCase()}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
@@ -177,7 +215,62 @@ export default function BuyPage() {
 
         {/* Property Search Results */}
         <div className="py-12 border-t border-gray-200">
-          <PropertyGrid />
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Properties</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {featuredProperties.map((property) => (
+                <Card key={property.id} className="hover:shadow-lg transition-all duration-300">
+                  <div className="relative">
+                    <img
+                      src={property.image}
+                      alt={property.title}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    {property.featured && (
+                      <Badge className="absolute top-2 left-2 bg-red-600 text-white">
+                        Featured
+                      </Badge>
+                    )}
+                    {property.newListing && (
+                      <Badge className="absolute top-2 right-2 bg-green-600 text-white">
+                        New
+                      </Badge>
+                    )}
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-2xl font-bold text-blue-600">
+                        €{property.price.toLocaleString()}
+                      </span>
+                      <Badge variant="secondary">{property.island}</Badge>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{property.title}</h3>
+                    <div className="flex items-center text-gray-600 text-sm mb-3">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>{property.location}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center">
+                        <Bed className="h-4 w-4 mr-1" />
+                        <span>{property.bedrooms} bed</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Bath className="h-4 w-4 mr-1" />
+                        <span>{property.bathrooms} bath</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Square className="h-4 w-4 mr-1" />
+                        <span>{property.area}m²</span>
+                      </div>
+                    </div>
+                    <Button className="w-full" variant="outline">
+                      View Details
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Buying Guides */}

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import io, { Socket } from 'socket.io-client';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/hooks/use-toast';
+
+// Socket type (not importing socket.io-client to reduce bundle size)
+type Socket = any;
 
 interface Message {
   id: string;
@@ -411,18 +413,22 @@ export function ChatProvider({ children }: ChatProviderProps) {
     });
   }, [isConnecting, isConnected, currentConversation, toast, loadMockData, loadConversations, connectionError]);
 
-  // Initialize socket connection
+  // Initialize socket connection - DISABLED for performance
+  // The chat server is not running, so we skip connection attempts and use mock data
   React.useEffect(() => {
-    if (user) {
-      connectToServer();
-    }
+    // Skip socket connection - just load mock data for demo
+    loadMockData();
 
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, [user, connectToServer, socket]);
+    // Uncomment below to enable real socket connection when chat server is available:
+    // if (user) {
+    //   connectToServer();
+    // }
+    // return () => {
+    //   if (socket) {
+    //     socket.disconnect();
+    //   }
+    // };
+  }, [loadMockData]);
 
 
 

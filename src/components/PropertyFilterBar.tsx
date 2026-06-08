@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Filter, X, MapPin, SlidersHorizontal } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Filter, X, MapPin, SlidersHorizontal, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { usePropertySearch } from '@/contexts/PropertySearchContext';
+import { usePropertySearch, getCitiesForIsland } from '@/contexts/PropertySearchContext';
 import { useRouter } from 'next/navigation';
 
 interface PropertyFilterBarProps {
@@ -33,12 +33,17 @@ export default function PropertyFilterBar({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const router = useRouter();
 
+  // Get cities based on selected island
+  const availableCities = useMemo(() => {
+    return getCitiesForIsland(filters.island);
+  }, [filters.island]);
+
   // Set listing type when component mounts
   React.useEffect(() => {
     if (listingType !== 'all') {
       updateFilter('listingType', listingType);
     }
-  }, [listingType, updateFilter]); // Include updateFilter dependency
+  }, [listingType, updateFilter]);
 
   // Perform initial search once when component mounts
   React.useEffect(() => {
@@ -46,7 +51,7 @@ export default function PropertyFilterBar({
       performSearch();
     }, 300);
     return () => clearTimeout(timer);
-  }, [performSearch]); // Include performSearch dependency
+  }, [performSearch]);
 
   const islands = [
     'All Islands', 'Santiago', 'Sal', 'São Vicente', 'Boa Vista',
@@ -107,6 +112,7 @@ export default function PropertyFilterBar({
     if (filters.bedrooms > 0) count++;
     if (filters.bathrooms > 0) count++;
     if (filters.island !== 'all') count++;
+    if (filters.city !== 'all') count++;
     return count;
   };
 
@@ -254,7 +260,8 @@ export default function PropertyFilterBar({
         {/* Advanced Filters Panel */}
         {showAdvancedFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Island Filter */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Island</label>
                 <Select
@@ -274,6 +281,31 @@ export default function PropertyFilterBar({
                 </Select>
               </div>
 
+              {/* City Filter - Dynamic based on island */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center">
+                  <Building2 className="h-4 w-4 mr-1" />
+                  City
+                </label>
+                <Select
+                  value={filters.city}
+                  onValueChange={(value) => updateFilter('city', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select City" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Cities</SelectItem>
+                    {availableCities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Bathrooms Filter */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Bathrooms</label>
                 <Select
@@ -293,6 +325,7 @@ export default function PropertyFilterBar({
                 </Select>
               </div>
 
+              {/* Sort By */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Sort By</label>
                 <Select
@@ -312,6 +345,7 @@ export default function PropertyFilterBar({
                 </Select>
               </div>
 
+              {/* Min Area */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Min Area (m²)</label>
                 <Input
@@ -383,6 +417,15 @@ export default function PropertyFilterBar({
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
                   onClick={() => updateFilter('island', 'all')}
+                />
+              </Badge>
+            )}
+            {filters.city !== 'all' && (
+              <Badge variant="secondary" className="flex items-center bg-blue-100 text-blue-800">
+                City: {filters.city}
+                <X
+                  className="ml-1 h-3 w-3 cursor-pointer"
+                  onClick={() => updateFilter('city', 'all')}
                 />
               </Badge>
             )}

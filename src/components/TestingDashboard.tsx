@@ -418,7 +418,7 @@ export default function TestingDashboard() {
         <Alert>
           <User className="h-4 w-4" />
           <AlertDescription>
-            ✅ Currently logged in as: <strong>{user?.name}</strong> ({user?.role})
+            ✅ Currently logged in as: <strong>{user?.name}</strong> ({user?.roles?.join(', ')})
           </AlertDescription>
         </Alert>
       )}

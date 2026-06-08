@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Search, MapPin, X, Home, Building, Building2, TreePine, ShoppingBag, Clock, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, MapPin, X, Home, Building, Building2, TreePine, ShoppingBag, Clock, TrendingUp, ChevronDown, ChevronUp, Star, History, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -33,6 +33,9 @@ interface SearchHistoryItem {
   selections: SelectedLocation[];
   timestamp: number;
   type: 'location' | 'property_type' | 'combined';
+  resultCount?: number;
+  sessionId?: string;
+  frequency?: number;
 }
 
 interface WorkingSearchProps {
@@ -138,40 +141,180 @@ class SearchAnalyticsService {
   }
 }
 
-// Search History Service
+// Enhanced Search History Service with better persistence
 class SearchHistoryService {
-  private static readonly STORAGE_KEY = 'search_history';
-  private static readonly MAX_HISTORY = 10;
+  private static readonly STORAGE_KEY = 'cv_search_history';
+  private static readonly ANALYTICS_KEY = 'cv_search_analytics';
+  private static readonly MAX_HISTORY = 15;
+  private static readonly EXPIRY_DAYS = 30; // Keep history for 30 days
 
   static addToHistory(query: string, selections: SelectedLocation[]) {
+    if (typeof window === 'undefined') return; // SSR safety
+
     const history = this.getHistory();
+    const timestamp = Date.now();
     const newItem: SearchHistoryItem = {
-      id: Date.now().toString(),
-      query,
+      id: `search_${timestamp}`,
+      query: query.trim(),
       selections,
-      timestamp: Date.now(),
-      type: selections.length > 0 ? 'combined' : 'location'
+      timestamp,
+      type: this.determineSearchType(query, selections),
+      resultCount: 0, // Will be updated when results are known
+      sessionId: this.getSessionId()
     };
 
-    // Remove duplicates and add new item
-    const filtered = history.filter(item =>
-      item.query !== query || JSON.stringify(item.selections) !== JSON.stringify(selections)
-    );
+    // Remove duplicates based on query and selections similarity
+    const filtered = history.filter(item => {
+      const querySimilar = item.query.toLowerCase() === query.toLowerCase().trim();
+      const selectionsSimilar = this.areSelectionsSimilar(item.selections, selections);
+      return !(querySimilar && selectionsSimilar);
+    });
 
+    // Add new item and limit history size
     const updated = [newItem, ...filtered].slice(0, this.MAX_HISTORY);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
+
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
+      this.updateAnalytics(query, selections);
+    } catch (error) {
+      console.warn('Failed to save search history:', error);
+    }
   }
 
   static getHistory(): SearchHistoryItem[] {
+    if (typeof window === 'undefined') return [];
+
     try {
-      return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-    } catch {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (!stored) return [];
+
+      const history = JSON.parse(stored) as SearchHistoryItem[];
+      const now = Date.now();
+      const expiryTime = this.EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+
+      // Filter out expired items
+      const validHistory = history.filter(item =>
+        (now - item.timestamp) < expiryTime
+      );
+
+      // Update storage if we removed expired items
+      if (validHistory.length !== history.length) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(validHistory));
+      }
+
+      return validHistory.sort((a, b) => b.timestamp - a.timestamp);
+    } catch (error) {
+      console.warn('Failed to load search history:', error);
       return [];
     }
   }
 
+  static getRecentSearches(limit: number = 5): SearchHistoryItem[] {
+    return this.getHistory().slice(0, limit);
+  }
+
+  static getPopularSearches(limit: number = 5): SearchHistoryItem[] {
+    const analytics = this.getSearchAnalytics();
+    const history = this.getHistory();
+
+    // Sort by frequency and recency
+    return history
+      .map(item => ({
+        ...item,
+        frequency: analytics[item.query.toLowerCase()] || 1
+      }))
+      .sort((a, b) => {
+        // Weight: 70% frequency, 30% recency
+        const aScore = (a.frequency * 0.7) + ((Date.now() - a.timestamp) / 1000000 * 0.3);
+        const bScore = (b.frequency * 0.7) + ((Date.now() - b.timestamp) / 1000000 * 0.3);
+        return bScore - aScore;
+      })
+      .slice(0, limit);
+  }
+
   static clearHistory() {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem(this.STORAGE_KEY);
+  }
+
+  static clearAnalytics() {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(this.ANALYTICS_KEY);
+  }
+
+  static updateSearchResult(query: string, resultCount: number) {
+    if (typeof window === 'undefined') return;
+
+    const history = this.getHistory();
+    const updated = history.map(item => {
+      if (item.query.toLowerCase() === query.toLowerCase().trim()) {
+        return { ...item, resultCount };
+      }
+      return item;
+    });
+
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.warn('Failed to update search results:', error);
+    }
+  }
+
+  private static determineSearchType(query: string, selections: SelectedLocation[]): 'location' | 'property_type' | 'combined' {
+    if (selections.length === 0) return 'location';
+    if (query.trim() === '') return 'property_type';
+    return 'combined';
+  }
+
+  private static areSelectionsSimilar(selections1: SelectedLocation[], selections2: SelectedLocation[]): boolean {
+    if (selections1.length !== selections2.length) return false;
+
+    const ids1 = selections1.map(s => s.id).sort();
+    const ids2 = selections2.map(s => s.id).sort();
+
+    return ids1.every((id, index) => id === ids2[index]);
+  }
+
+  private static getSessionId(): string {
+    if (typeof window === 'undefined') return 'ssr';
+
+    let sessionId = sessionStorage.getItem('cv_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('cv_session_id', sessionId);
+    }
+    return sessionId;
+  }
+
+  private static updateAnalytics(query: string, selections: SelectedLocation[]) {
+    try {
+      const analytics = this.getSearchAnalytics();
+      const queryKey = query.toLowerCase().trim();
+
+      if (queryKey) {
+        analytics[queryKey] = (analytics[queryKey] || 0) + 1;
+      }
+
+      // Track selection combinations
+      selections.forEach(selection => {
+        const selectionKey = `selection_${selection.category}_${selection.id}`;
+        analytics[selectionKey] = (analytics[selectionKey] || 0) + 1;
+      });
+
+      localStorage.setItem(this.ANALYTICS_KEY, JSON.stringify(analytics));
+    } catch (error) {
+      console.warn('Failed to update analytics:', error);
+    }
+  }
+
+  private static getSearchAnalytics(): Record<string, number> {
+    if (typeof window === 'undefined') return {};
+
+    try {
+      return JSON.parse(localStorage.getItem(this.ANALYTICS_KEY) || '{}');
+    } catch {
+      return {};
+    }
   }
 }
 
@@ -209,7 +352,7 @@ export default function WorkingSearch({
     };
   }, []);
 
-  // Perform comprehensive search
+  // Enhanced comprehensive search with better tracking
   const performSearch = useCallback((searchQuery: string) => {
     if (!searchQuery.trim() || searchQuery.length < 2) {
       setResults([]);
@@ -222,7 +365,7 @@ export default function WorkingSearch({
     const searchResults: SearchResult[] = [];
     const popularItems = SearchAnalyticsService.getPopularItems();
 
-    // Track search query
+    // Track search query with analytics
     SearchAnalyticsService.trackSearch(searchQuery, 'general');
 
     // Search locations
@@ -280,6 +423,11 @@ export default function WorkingSearch({
     setResults(searchResults);
     setShowResults(searchResults.length > 0);
     setIsLoading(false);
+
+    // Update search history with result count for better persistence
+    if (searchResults.length > 0 && searchQuery.trim()) {
+      SearchHistoryService.updateSearchResult(searchQuery, searchResults.length);
+    }
   }, [searchHistory]);
 
   // Handle input change with debouncing
@@ -318,15 +466,31 @@ export default function WorkingSearch({
     }
   };
 
-  // Handle Enter key
+  // Enhanced Enter key handling with search history
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (results.length > 0) {
+
+      // Save current search to history before executing
+      if (query.trim() || selectedLocations.length > 0) {
+        SearchHistoryService.addToHistory(query, selectedLocations);
+        setSearchHistory(SearchHistoryService.getHistory());
+      }
+
+      // If there are results and no query, select the first result
+      if (results.length > 0 && !query.trim()) {
         handleLocationSelect(results[0]);
       } else {
+        // Trigger search with current selections and query
+        onLocationSelect?.(selectedLocations);
         onSearch?.(query);
+
+        // Close results dropdown after search
+        setShowResults(false);
       }
+    } else if (e.key === 'Escape') {
+      // Close dropdown on escape
+      setShowResults(false);
     }
   };
 
@@ -373,7 +537,8 @@ export default function WorkingSearch({
     if (!selectedLocations.find(loc => loc.id === newLocation.id)) {
       const updatedLocations = [...selectedLocations, newLocation];
       setSelectedLocations(updatedLocations);
-      onLocationSelect?.(updatedLocations);
+      // Don't call onLocationSelect immediately - wait for explicit search
+      // onLocationSelect?.(updatedLocations);
 
       // Add to search history
       SearchHistoryService.addToHistory(query, updatedLocations);
@@ -401,21 +566,24 @@ export default function WorkingSearch({
     const updatedLocations = selectedLocations.filter(loc => loc.category !== 'price_range');
     updatedLocations.push(priceLocation);
     setSelectedLocations(updatedLocations);
-    onLocationSelect?.(updatedLocations);
+    // Don't call onLocationSelect immediately - wait for explicit search
+    // onLocationSelect?.(updatedLocations);
   };
 
   // Remove selected location
   const removeLocation = (locationId: string) => {
     const updatedLocations = selectedLocations.filter(loc => loc.id !== locationId);
     setSelectedLocations(updatedLocations);
-    onLocationSelect?.(updatedLocations);
+    // Don't call onLocationSelect immediately - wait for explicit search
+    // onLocationSelect?.(updatedLocations);
   };
 
   // Clear all selections
   const clearAllSelections = () => {
     setSelectedLocations([]);
     handleInputChange("");
-    onLocationSelect?.([]);
+    // Don't call onLocationSelect immediately - wait for explicit search
+    // onLocationSelect?.([]);
   };
 
   // Clear search history
@@ -447,35 +615,46 @@ export default function WorkingSearch({
 
   return (
     <div className={`relative ${className}`}>
-      {/* Selected Locations Tags */}
+      {/* Enhanced Selected Items - Badges/Chips with better visual feedback */}
       {selectedLocations.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {selectedLocations.map((location) => (
-            <div
-              key={location.id}
-              className={`flex items-center px-3 py-1 rounded-full text-sm ${
-                location.category === 'property_type'
-                  ? 'bg-green-600 text-white'
-                  : location.category === 'price_range'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-blue-600 text-white'
-              }`}
+        <div className="mb-3 p-3 bg-gray-50 rounded-lg border animate-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Selected Filters:</span>
+            <button
+              onClick={clearAllSelections}
+              className="text-xs text-red-600 hover:text-red-800 font-medium hover:underline transition-colors"
             >
-              <span>{location.name}</span>
-              <button
-                onClick={() => removeLocation(location.id)}
-                className="ml-2 text-white hover:text-gray-200"
+              Clear all ({selectedLocations.length})
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedLocations.map((location) => (
+              <div
+                key={location.id}
+                className={`group flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium shadow-sm border transition-all duration-200 hover:shadow-md transform hover:scale-105 ${
+                  location.category === 'property_type'
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200'
+                    : location.category === 'price_range'
+                    ? 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200'
+                    : 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200'
+                }`}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={clearAllSelections}
-            className="text-blue-600 hover:text-blue-800 text-sm underline"
-          >
-            Clear all
-          </button>
+                <span className="flex items-center gap-1">
+                  {location.category === 'property_type' && <Home className="h-3 w-3" />}
+                  {location.category === 'price_range' && <TrendingUp className="h-3 w-3" />}
+                  {location.category === 'location' && <MapPin className="h-3 w-3" />}
+                  {location.name}
+                </span>
+                <button
+                  onClick={() => removeLocation(location.id)}
+                  className="ml-1 opacity-70 hover:opacity-100 transition-opacity group-hover:bg-white group-hover:bg-opacity-30 rounded-full p-0.5"
+                  title="Remove filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -550,31 +729,101 @@ export default function WorkingSearch({
             )}
           </div>
 
-          {/* Recent Searches */}
-          {groupedResults.recent && (
+          {/* Enhanced Recent Searches with Persistence */}
+          {(groupedResults.recent || (query === '' && searchHistory.length > 0)) && (
             <div className="border-b border-gray-100">
-              <div className="px-3 py-2 bg-gray-50 flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Recent Searches</span>
+              <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs font-semibold text-blue-900 uppercase tracking-wide">
+                    {query === '' ? 'Search History' : 'Recent Searches'}
+                  </span>
+                  <span className="text-xs text-blue-700 bg-blue-200 px-2 py-0.5 rounded-full">
+                    {searchHistory.length}
+                  </span>
+                </div>
                 <button
                   onClick={clearSearchHistory}
-                  className="text-xs text-blue-600 hover:text-blue-800"
+                  className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
                 >
-                  Clear
+                  Clear All
                 </button>
               </div>
-              {groupedResults.recent.map((result) => (
-                <div
-                  key={result.id}
-                  onClick={() => handleLocationSelect(result)}
-                  className="flex items-center p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-b-0"
-                >
-                  <Clock className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm text-gray-900">{result.place_name}</div>
-                    <div className="text-xs text-gray-600">{result.description}</div>
+
+              {/* Show search history when input is empty or show recent results */}
+              {query === '' ? (
+                searchHistory.slice(0, 5).map((historyItem) => (
+                  <div
+                    key={historyItem.id}
+                    onClick={() => {
+                      setQuery(historyItem.query);
+                      setSelectedLocations(historyItem.selections);
+                      if (historyItem.query) {
+                        performSearch(historyItem.query);
+                      }
+                    }}
+                    className="flex items-center p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-b-0 group transition-colors"
+                  >
+                    <div className="flex items-center mr-3">
+                      <History className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                      {historyItem.type === 'combined' && <Filter className="h-3 w-3 text-purple-500 ml-1" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-gray-900 group-hover:text-blue-900">
+                          {historyItem.query || 'Filter search'}
+                        </span>
+                        {historyItem.frequency && historyItem.frequency > 2 && (
+                          <Star className="h-3 w-3 text-amber-500" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-gray-500">
+                          {new Date(historyItem.timestamp).toLocaleDateString()}
+                        </span>
+                        {historyItem.selections.length > 0 && (
+                          <>
+                            <span className="text-xs text-gray-400">•</span>
+                            <div className="flex gap-1">
+                              {historyItem.selections.slice(0, 2).map((selection) => (
+                                <span key={selection.id} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                                  {selection.name}
+                                </span>
+                              ))}
+                              {historyItem.selections.length > 2 && (
+                                <span className="text-xs text-gray-500">+{historyItem.selections.length - 2} more</span>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {historyItem.resultCount !== undefined && historyItem.resultCount > 0 && (
+                          <>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-green-600">{historyItem.resultCount} results</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Reuse
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                groupedResults.recent?.map((result) => (
+                  <div
+                    key={result.id}
+                    onClick={() => handleLocationSelect(result)}
+                    className="flex items-center p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-b-0"
+                  >
+                    <Clock className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-gray-900">{result.place_name}</div>
+                      <div className="text-xs text-gray-600">{result.description}</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
@@ -654,7 +903,7 @@ export default function WorkingSearch({
       {!MAPBOX_TOKEN || MAPBOX_TOKEN.includes('example-token') ? (
         <div className="absolute top-full left-0 right-0 mt-1 bg-amber-50 border border-amber-200 rounded-lg p-3 z-50">
           <div className="text-xs text-amber-800">
-            <strong>Enhanced Search Ready:</strong> Location search, property types, price filtering & analytics enabled
+            Interactive search functionality requires Mapbox API configuration
           </div>
         </div>
       ) : null}

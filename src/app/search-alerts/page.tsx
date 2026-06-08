@@ -96,10 +96,10 @@ export default function SearchAlertsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthenticated === false && user === null && !isLoading) {
       router.push("/");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, isLoading, router]);
 
   if (!isAuthenticated || !user) {
     return null;

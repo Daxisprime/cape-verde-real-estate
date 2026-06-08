@@ -9,7 +9,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   avatar?: string;
-  role: UserRole;
+  roles: UserRole[]; // Array of roles - user can have multiple (buyer + vendor, etc.)
   verified: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
@@ -25,7 +25,12 @@ export interface User {
   userAgent?: string;
 }
 
-export type UserRole = 'user' | 'agent' | 'admin' | 'superadmin';
+// User can have multiple roles simultaneously
+// buyer: Looking for properties
+// agent: Listing and selling properties
+// vendor: Selling products in local market
+// admin: Platform administration
+export type UserRole = 'buyer' | 'agent' | 'vendor' | 'admin';
 
 export interface UserProfile {
   firstName: string;
@@ -176,7 +181,7 @@ export interface PublicUser {
   firstName?: string;
   lastName?: string;
   avatar?: string;
-  role: UserRole;
+  roles: UserRole[]; // Array of roles
   verified: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
@@ -192,7 +197,7 @@ export interface CustomJWTPayload {
   userId: string;
   email?: string;
   phone?: string;
-  role: UserRole;
+  roles: UserRole[];
   verified: boolean;
   iat: number;
   exp: number;

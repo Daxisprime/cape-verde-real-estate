@@ -1,315 +1,356 @@
-"use client";
+'use client';
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Share2, Heart, Search, Filter, X, MapPin, Home, Bed, Bath, Square } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import Header from "@/components/Header";
-import MapboxPropertyMap from "@/components/MapboxPropertyMap";
-import PropertyDetailModal from "@/components/PropertyDetailModal";
-import { capeVerdeProperties } from "@/data/cape-verde-properties";
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User } from 'lucide-react';
+import Header from '@/components/Header';
 
-// Convert cape verde properties to map format
-const mapProperties = capeVerdeProperties.map(property => ({
-  property_id: property.id,
-  title: property.title,
-  price: property.price,
-  property_type: property.type,
-  island: property.island,
-  total_area: property.totalArea,
-  bedrooms: property.bedrooms,
-  bathrooms: property.bathrooms,
-  zone_type: property.type.toLowerCase().includes('villa') ? 'luxury_residential' :
-             property.type.toLowerCase().includes('apartment') ? 'urban_residential' : 'residential',
-  investment_rating: property.price > 500000 ? "A+" : property.price > 300000 ? "A" : property.price > 150000 ? "B+" : "B",
-  beach_distance: property.beachDistance || Math.floor(Math.random() * 2000) + 100,
-  features: property.features,
-  image: property.images[0],
-  location: property.location,
-  coordinates: property.coordinates,
-  description: property.description
-}));
+// Dynamically import Leaflet with SSR disabled to prevent cloud sandbox timeouts
+const SafeLeafletMap = dynamic(() => import('@/components/MapboxMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-gray-50 flex items-center justify-center text-sm text-gray-400 animate-pulse">
+      Loading Cape Verde Map View...
+    </div>
+  )
+});
 
-interface PropertyData {
-  property_id: string;
-  title: string;
-  price: number;
-  property_type: string;
-  island: string;
-  total_area: number;
-  bedrooms: number;
-  bathrooms: number;
-  zone_type: string;
-  investment_rating: string;
-  beach_distance?: number;
-  features: string[];
-  image: string;
-  location: string;
-  coordinates: [number, number];
-  description: string;
+// Mock Property Data Array - Fully mapped to Cape Verdean markets for testing
+const MOCK_DATA = [
+  {
+    id: '1',
+    title: 'Modern Ocean-View Apartment',
+    price: 12500000,
+    neighborhood: 'Palmarejo',
+    bedrooms: 3,
+    bathrooms: 2,
+    listing_type: 'buy',
+    latitude: 14.9250,
+    longitude: -23.5160,
+    image_url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+    seller_name: 'Maria Santos',
+    seller_phone: '+238 991 2345',
+    seller_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    is_verified: true
+  },
+  {
+    id: '2',
+    title: 'Cozy Studio near Market',
+    price: 35000,
+    neighborhood: 'Fazenda',
+    bedrooms: 1,
+    bathrooms: 1,
+    listing_type: 'rent',
+    latitude: 14.9310,
+    longitude: -23.5090,
+    image_url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+    seller_name: 'João Silva',
+    seller_phone: '+238 995 6789',
+    seller_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    is_verified: true
+  },
+  {
+    id: '3',
+    title: 'Luxury Villa with Private Pool',
+    price: 35000000,
+    neighborhood: 'Prainha',
+    bedrooms: 4,
+    bathrooms: 3,
+    listing_type: 'buy',
+    latitude: 14.9170,
+    longitude: -23.5120,
+    image_url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+    seller_name: 'Ana Ferreira',
+    seller_phone: '+238 992 3456',
+    seller_avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+    is_verified: true
+  },
+  {
+    id: '4',
+    title: 'Beachfront Family Home',
+    price: 28000000,
+    neighborhood: 'Quebra Canela',
+    bedrooms: 3,
+    bathrooms: 2,
+    listing_type: 'buy',
+    latitude: 14.9150,
+    longitude: -23.5050,
+    image_url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800',
+    seller_name: 'Carlos Mendes',
+    seller_phone: '+238 997 8901',
+    seller_avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+    is_verified: false
+  },
+  {
+    id: '5',
+    title: 'Downtown Rental Apartment',
+    price: 65000,
+    neighborhood: 'Plateau',
+    bedrooms: 2,
+    bathrooms: 1,
+    listing_type: 'rent',
+    latitude: 14.9180,
+    longitude: -23.5100,
+    image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+    seller_name: 'Sofia Lopes',
+    seller_phone: '+238 993 4567',
+    seller_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    is_verified: true
+  }
+];
+
+// =============================================
+// PHONE NUMBER FORMATTING UTILITIES
+// =============================================
+function formatPhoneForDisplay(phone: string): string {
+  return phone.replace(/\s+/g, ' ').trim();
 }
 
-function MapPageContent() {
-  const searchParams = useSearchParams();
-  const [selectedProperty, setSelectedProperty] = useState<PropertyData | null>(null);
-  const [hoveredProperty, setHoveredProperty] = useState<PropertyData | null>(null);
-  const [filteredProperties, setFilteredProperties] = useState<PropertyData[]>(mapProperties);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedIsland, setSelectedIsland] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<string>("all");
-  const [propertyType, setPropertyType] = useState<string>("all");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
-  const [mapZoom, setMapZoom] = useState<number | null>(null);
+function formatPhoneForWhatsApp(phone: string): string {
+  // Remove all non-numeric characters except +
+  return phone.replace(/[^\d+]/g, '');
+}
 
-  // Handle URL parameters for property highlighting and zoom
-  useEffect(() => {
-    const propertyId = searchParams.get('property');
-    const lat = searchParams.get('lat');
-    const lng = searchParams.get('lng');
-    const zoom = searchParams.get('zoom');
-
-    if (propertyId) {
-      const property = mapProperties.find(p => p.property_id === propertyId);
-      if (property) {
-        setSelectedProperty(property);
-
-        // Set map center and zoom if coordinates are provided
-        if (lat && lng) {
-          setMapCenter([parseFloat(lng), parseFloat(lat)]);
-        }
-        if (zoom) {
-          setMapZoom(parseInt(zoom));
-        }
-      }
-    }
-  }, [searchParams]);
-
-  // Filter properties based on current filters
-  useEffect(() => {
-    let filtered = mapProperties;
-
-    if (selectedIsland !== "all") {
-      filtered = filtered.filter(p => p.island === selectedIsland);
-    }
-
-    if (propertyType !== "all") {
-      filtered = filtered.filter(p => p.property_type === propertyType);
-    }
-
-    if (priceRange !== "all") {
-      const [min, max] = priceRange.split("-").map(Number);
-      filtered = filtered.filter(p => {
-        if (max) {
-          return p.price >= min && p.price <= max;
-        } else {
-          return p.price >= min;
-        }
-      });
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.island.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.location.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    setFilteredProperties(filtered);
-  }, [selectedIsland, priceRange, propertyType, searchQuery]);
-
-  const handlePropertySelect = (property: PropertyData) => {
-    setSelectedProperty(property);
-    setIsModalOpen(true);
-  };
-
-  const handlePropertyHover = (property: PropertyData | null) => {
-    setHoveredProperty(property);
-  };
-
-  const clearFilters = () => {
-    setSelectedIsland("all");
-    setPriceRange("all");
-    setPropertyType("all");
-    setSearchQuery("");
-  };
-
-  return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <Header />
-
-      {/* Full Screen Map Layout */}
-      <div className="flex-1 relative">
-        {/* Main Map Area */}
-        <div className="absolute inset-0">
-          <MapboxPropertyMap
-            properties={filteredProperties}
-            onPropertySelect={handlePropertySelect}
-            onPropertyHover={handlePropertyHover}
-            selectedProperty={selectedProperty?.property_id}
-            hoveredProperty={hoveredProperty?.property_id}
-            initialCenter={mapCenter}
-            initialZoom={mapZoom}
-            className="w-full h-full"
-          />
-        </div>
-
-        {/* Floating Top Search Bar */}
-        <div className="absolute top-4 left-4 right-4 z-10">
-          <div className="bg-white rounded-lg shadow-lg p-4 max-w-4xl mx-auto">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search properties in Cape Verde..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={selectedIsland} onValueChange={setSelectedIsland}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Island" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Islands</SelectItem>
-                  <SelectItem value="Santiago">Santiago</SelectItem>
-                  <SelectItem value="Sal">Sal</SelectItem>
-                  <SelectItem value="São Vicente">São Vicente</SelectItem>
-                  <SelectItem value="Boa Vista">Boa Vista</SelectItem>
-                  <SelectItem value="Santo Antão">Santo Antão</SelectItem>
-                  <SelectItem value="Fogo">Fogo</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={priceRange} onValueChange={setPriceRange}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Price Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="0-100000">€0 - €100k</SelectItem>
-                  <SelectItem value="100000-200000">€100k - €200k</SelectItem>
-                  <SelectItem value="200000-400000">€200k - €400k</SelectItem>
-                  <SelectItem value="400000-600000">€400k - €600k</SelectItem>
-                  <SelectItem value="600000">€600k+</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                <Filter className="h-4 w-4 mr-2" />
-                Clear
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Property Sidebar - POSITIONED JUST UNDER SEARCH RECTANGLE */}
-        <div className={`absolute top-28 bottom-4 transition-all duration-300 z-10 ${
-          isSidebarOpen ? 'left-4 w-[480px] max-w-2xl' : 'left-4 w-12'
-        }`}>
-          {isSidebarOpen ? (
-            <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
-              {/* Sidebar Header */}
-              <div className="p-4 border-b flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-lg">{filteredProperties.length} Properties</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsSidebarOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-600">Cape Verde Real Estate</p>
-              </div>
-
-              {/* Property List - 2 Column Grid ZILLOW STYLE */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {filteredProperties.map((property) => (
-                    <Card
-                      key={property.property_id}
-                      className={`cursor-pointer transition-all hover:shadow-md ${
-                        selectedProperty?.property_id === property.property_id
-                          ? 'ring-2 ring-blue-500 bg-blue-50'
-                          : hoveredProperty?.property_id === property.property_id
-                            ? 'bg-gray-50'
-                            : ''
-                      }`}
-                      onClick={() => handlePropertySelect(property)}
-                      onMouseEnter={() => handlePropertyHover(property)}
-                      onMouseLeave={() => handlePropertyHover(null)}
-                    >
-                      <CardContent className="p-3">
-                        {/* Property Image */}
-                        <div className="mb-3">
-                          <img
-                            src={property.image}
-                            alt={property.title}
-                            className="w-full h-28 object-cover rounded"
-                          />
-                        </div>
-
-                        {/* Property Info */}
-                        <div className="space-y-2">
-                          <div className="flex items-start justify-between">
-                            <span className="font-bold text-blue-600 text-base">€{property.price.toLocaleString()}</span>
-                            <Badge variant="secondary" className="text-xs">{property.island}</Badge>
-                          </div>
-
-                          <h4 className="font-semibold text-sm line-clamp-2">{property.title}</h4>
-
-                          <div className="flex items-center text-gray-600 text-xs">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            <span className="truncate">{property.location}</span>
-                          </div>
-
-                          <div className="flex gap-3 text-xs text-gray-500">
-                            {property.bedrooms > 0 && <span>{property.bedrooms} bed</span>}
-                            {property.bathrooms > 0 && <span>{property.bathrooms} bath</span>}
-                            <span>{property.total_area}m²</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <Button
-              className="h-12 w-12 rounded-lg shadow-lg"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Home className="h-5 w-5" />
-            </Button>
-          )}
-        </div>
-
-        {/* Property Detail Modal */}
-        <PropertyDetailModal
-          property={selectedProperty}
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedProperty(null);
-          }}
-        />
-      </div>
-    </div>
-  );
+function formatPhoneForTel(phone: string): string {
+  return phone.replace(/[^\d+]/g, '');
 }
 
 export default function MapPage() {
+  const [properties, setProperties] = useState(MOCK_DATA);
+  const [searchArea, setSearchArea] = useState('');
+  const [listingType, setListingType] = useState('all');
+  const [minBedrooms, setMinBedrooms] = useState(0);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [hoveredProperty, setHoveredProperty] = useState<any>(null);
+
+  // Synchronized search filter calculations for cards + pins
+  const filteredProperties = properties.filter((item) => {
+    const matchesArea = searchArea === '' ||
+      item.neighborhood.toLowerCase().includes(searchArea.toLowerCase()) ||
+      item.title.toLowerCase().includes(searchArea.toLowerCase());
+    const matchesType = listingType === 'all' || item.listing_type === listingType;
+    const matchesBed = minBedrooms === 0 || item.bedrooms >= minBedrooms;
+    return matchesArea && matchesType && matchesBed;
+  });
+
+  // Determine active item for map (selected takes priority, then hovered)
+  const activeMapItem = selectedProperty || hoveredProperty;
+
   return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading map...</div>}>
-      <MapPageContent />
-    </Suspense>
+    <>
+      <Header />
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-white">
+
+        {/* TRULIA SIDEBAR: Listings Feed & Filters Section */}
+        <aside className="w-full md:w-[420px] border-r border-gray-200 flex flex-col h-[45vh] md:h-full bg-white z-10 shadow-md">
+
+          {/* Render Form Controls IF no individual item is selected */}
+          {!selectedProperty ? (
+            <>
+              {/* Search Input Box Area */}
+              <div className="p-4 border-b border-gray-100 space-y-3">
+                <div className="relative flex items-center">
+                  <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by neighborhood (e.g., Palmarejo)..."
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                    value={searchArea}
+                    onChange={(e) => setSearchArea(e.target.value)}
+                  />
+                </div>
+
+                {/* Dynamic Filtering Row Selection */}
+                <div className="flex gap-2 text-xs">
+                  <select
+                    className="border rounded-md px-2 py-1.5 bg-white font-medium text-gray-700 outline-none"
+                    value={listingType}
+                    onChange={(e) => setListingType(e.target.value)}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="buy">For Sale</option>
+                    <option value="rent">For Rent</option>
+                  </select>
+
+                  <select
+                    className="border rounded-md px-2 py-1.5 bg-white font-medium text-gray-700 outline-none"
+                    value={minBedrooms}
+                    onChange={(e) => setMinBedrooms(Number(e.target.value))}
+                  >
+                    <option value="0">Any Beds</option>
+                    <option value="1">1+ Beds</option>
+                    <option value="2">2+ Beds</option>
+                    <option value="3">3+ Beds</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Scrollable Results Stream */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
+                <div className="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">
+                  Available Spaces ({filteredProperties.length})
+                </div>
+
+                {filteredProperties.map((property) => (
+                  <div
+                    key={property.id}
+                    onClick={() => setSelectedProperty(property)}
+                    onMouseEnter={() => setHoveredProperty(property)}
+                    onMouseLeave={() => setHoveredProperty(null)}
+                    className={`p-3 border rounded-xl bg-white cursor-pointer transition flex gap-4 ${
+                      hoveredProperty?.id === property.id
+                        ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
+                        : 'border-gray-200 hover:border-blue-400 hover:shadow-md'
+                    }`}
+                  >
+                    <img
+                      src={property.image_url}
+                      alt={property.title}
+                      className="w-24 h-20 object-cover rounded-lg bg-gray-100 flex-shrink-0"
+                    />
+                    <div className="flex flex-col justify-center min-w-0">
+                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                        {property.listing_type === 'buy' ? 'For Sale' : 'To Rent'} • {property.neighborhood}
+                      </span>
+                      <h3 className="font-bold text-sm text-gray-900 truncate mt-0.5">{property.title}</h3>
+                      <p className="font-extrabold text-sm text-gray-800 mt-1">
+                        CVE {property.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredProperties.length === 0 && (
+                  <div className="text-center py-8 text-gray-400 text-sm">
+                    No properties match your filters.
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            /* TRULIA SIDEBAR: Detailed Profile Panel Card View Mode */
+            <div className="flex flex-col h-full bg-white overflow-y-auto">
+              {/* Back Button */}
+              <div className="p-4 pb-0">
+                <button
+                  onClick={() => setSelectedProperty(null)}
+                  className="text-blue-600 font-semibold text-xs mb-4 flex items-center gap-1.5 uppercase tracking-wide hover:underline text-left"
+                >
+                  <ArrowLeft className="h-4 w-4" /> Back to List View
+                </button>
+              </div>
+
+              {/* Property Image */}
+              <div className="px-4">
+                <img
+                  src={selectedProperty.image_url}
+                  alt={selectedProperty.title}
+                  className="w-full h-48 object-cover rounded-xl shadow-inner"
+                />
+              </div>
+
+              {/* Property Details */}
+              <div className="p-4 space-y-3 flex-1">
+                <span className="text-xs font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded inline-block">
+                  {selectedProperty.neighborhood}
+                </span>
+                <h2 className="font-extrabold text-xl text-gray-900 leading-tight">
+                  {selectedProperty.title}
+                </h2>
+                <div className="text-2xl font-black text-gray-800 border-b pb-3">
+                  CVE {selectedProperty.price.toLocaleString()}
+                </div>
+
+                {/* Utility Specs Display Grid */}
+                <div className="grid grid-cols-2 gap-3 py-2 text-sm font-medium text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Bed className="h-4 w-4 text-gray-400" /> {selectedProperty.bedrooms} Bedrooms
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bath className="h-4 w-4 text-gray-400" /> {selectedProperty.bathrooms} Bathrooms
+                  </div>
+                </div>
+
+                {/* Formatted Seller Contact Section */}
+                <div className="border-t pt-4 space-y-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Seller</p>
+
+                  {/* Clickable Phone Number */}
+                  <a
+                    href={`tel:${formatPhoneForTel(selectedProperty.seller_phone || '+238 000 0000')}`}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group"
+                  >
+                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition">
+                        {formatPhoneForDisplay(selectedProperty.seller_phone || '+238 000 0000')}
+                      </p>
+                      <p className="text-xs text-gray-500">Tap to call</p>
+                    </div>
+                  </a>
+
+                  {/* WhatsApp Action Button */}
+                  <a
+                    href={`https://wa.me/${formatPhoneForWhatsApp(selectedProperty.seller_phone || '+238000000')}?text=Hi, I'm interested in your property: ${encodeURIComponent(selectedProperty.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md"
+                  >
+                    <MessageCircle className="h-5 w-5" /> Message on WhatsApp
+                  </a>
+                </div>
+              </div>
+
+              {/* Bottom Circular Seller Profile Section */}
+              <div className="border-t bg-gray-50 p-4">
+                <div className="flex items-center gap-3">
+                  {/* Circular Avatar */}
+                  {selectedProperty.seller_avatar ? (
+                    <img
+                      src={selectedProperty.seller_avatar}
+                      alt={selectedProperty.seller_name || 'Seller'}
+                      className="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                  )}
+
+                  {/* Seller Name & Verification Badge */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">
+                      {selectedProperty.seller_name || 'Property Owner'}
+                    </p>
+                    {selectedProperty.is_verified !== false && (
+                      <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Verified Host
+                      </p>
+                    )}
+                  </div>
+
+                  {/* View Profile Link */}
+                  <button className="text-xs font-semibold text-blue-600 hover:underline whitespace-nowrap">
+                    View Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* DEDICATED MAP MATRIX VIEW FRAME */}
+        <div className="flex-1 h-[55vh] md:h-full relative bg-gray-100 z-0">
+          <SafeLeafletMap
+            items={filteredProperties}
+            activeItem={activeMapItem}
+            onPinClick={setSelectedProperty}
+          />
+        </div>
+
+      </div>
+    </>
   );
 }

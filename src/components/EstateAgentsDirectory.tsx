@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Phone, Mail, Star, Award, Users, Home } from "lucide-react";
+import { MapPin, Phone, Mail, Star, Award, Users, Home, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import UserLinksDisplay, { SocialLinksRow } from "@/components/UserLinksDisplay";
+import type { LinkPlatform } from "@/lib/user-links";
 
 export default function EstateAgentsDirectory() {
   const { t } = useLanguage();
@@ -35,7 +37,12 @@ export default function EstateAgentsDirectory() {
       description: "Specialized in luxury waterfront properties and international client services",
       descriptionPt: "Especializada em propriedades de luxo na costa e atendimento a clientes internacionais",
       descriptionCv: "Spesialista na propriedadi di luxu na kosta i servisu pa klenti internasional",
-      verified: true
+      verified: true,
+      links: [
+        { id: '1', platform: 'whatsapp' as LinkPlatform, formatted_url: 'https://wa.me/2382601234', display_label: 'WhatsApp', is_public: true, is_verified: true },
+        { id: '2', platform: 'instagram' as LinkPlatform, formatted_url: 'https://instagram.com/maria.santos.cv', display_label: null, is_public: true, is_verified: false },
+        { id: '3', platform: 'linkedin' as LinkPlatform, formatted_url: 'https://linkedin.com/in/mariasantos', display_label: null, is_public: true, is_verified: false },
+      ]
     },
     {
       id: 2,
@@ -61,7 +68,12 @@ export default function EstateAgentsDirectory() {
       description: "Expert in beachfront properties and tourism-related real estate investments",
       descriptionPt: "Especialista em propriedades na praia e investimentos imobiliários relacionados ao turismo",
       descriptionCv: "Spesialista na propriedadi na praia i investimentu imobi relasionadu ku turismu",
-      verified: true
+      verified: true,
+      links: [
+        { id: '4', platform: 'whatsapp' as LinkPlatform, formatted_url: 'https://wa.me/2382425678', display_label: 'WhatsApp', is_public: true, is_verified: true },
+        { id: '5', platform: 'facebook' as LinkPlatform, formatted_url: 'https://facebook.com/joaopereira.agent', display_label: null, is_public: true, is_verified: false },
+        { id: '6', platform: 'twitter' as LinkPlatform, formatted_url: 'https://twitter.com/joao_sal', display_label: null, is_public: true, is_verified: false },
+      ]
     },
     {
       id: 3,
@@ -87,7 +99,11 @@ export default function EstateAgentsDirectory() {
       description: "Focuses on Mindelo's vibrant cultural district and historic property restoration",
       descriptionPt: "Foca no vibrante distrito cultural de Mindelo e restauração de propriedades históricas",
       descriptionCv: "Foka na distritu kultural vibranti di Mindelo i restaurasãu di propriedadi históriku",
-      verified: true
+      verified: true,
+      links: [
+        { id: '7', platform: 'whatsapp' as LinkPlatform, formatted_url: 'https://wa.me/2382329012', display_label: 'WhatsApp', is_public: true, is_verified: true },
+        { id: '8', platform: 'instagram' as LinkPlatform, formatted_url: 'https://instagram.com/ana.rodrigues.mindelo', display_label: null, is_public: true, is_verified: true },
+      ]
     },
     {
       id: 4,
@@ -113,7 +129,12 @@ export default function EstateAgentsDirectory() {
       description: "Specializes in large-scale developments and pristine beachfront properties",
       descriptionPt: "Especializa-se em desenvolvimentos de grande escala e propriedades pristinas na praia",
       descriptionCv: "Spesializa na disenvolvimentu di gran eskala i propriedadi linpu na praia",
-      verified: true
+      verified: true,
+      links: [
+        { id: '9', platform: 'whatsapp' as LinkPlatform, formatted_url: 'https://wa.me/2382513456', display_label: 'WhatsApp', is_public: true, is_verified: true },
+        { id: '10', platform: 'linkedin' as LinkPlatform, formatted_url: 'https://linkedin.com/in/carlossilva-cv', display_label: null, is_public: true, is_verified: false },
+        { id: '11', platform: 'website' as LinkPlatform, formatted_url: 'https://boavistarealty.cv/carlos', display_label: 'Website', is_public: true, is_verified: false },
+      ]
     },
     {
       id: 5,
@@ -299,11 +320,39 @@ export default function EstateAgentsDirectory() {
                   </div>
                 </div>
 
+                {/* Social Links */}
+                {agent.links && agent.links.length > 0 && (
+                  <div className="pt-2">
+                    <UserLinksDisplay
+                      links={agent.links}
+                      variant="icons-only"
+                      maxDisplay={4}
+                    />
+                  </div>
+                )}
+
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Phone className="h-4 w-4 mr-1" />
-                    Call
-                  </Button>
+                  {agent.links?.some(l => l.platform === 'whatsapp') ? (
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      asChild
+                    >
+                      <a
+                        href={agent.links.find(l => l.platform === 'whatsapp')?.formatted_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Phone className="h-4 w-4 mr-1" />
+                      Call
+                    </Button>
+                  )}
                   <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700">
                     <Mail className="h-4 w-4 mr-1" />
                     Contact

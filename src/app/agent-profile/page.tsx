@@ -9,8 +9,10 @@ import {
   Star, TrendingUp, Calendar, Eye, Heart, Filter,
   Plus, Edit, Trash2, Users, Home, BarChart3,
   Award, Globe, Languages, CheckCircle, Clock,
-  Target, Briefcase, Camera, Upload
+  Target, Briefcase, Camera, Upload, Settings
 } from "lucide-react";
+import AgentPropertyManager from "@/components/AgentPropertyManager";
+import AgentInquiriesManager from "@/components/AgentInquiriesManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,14 +84,26 @@ export default function AgentProfilePage() {
 
   // Redirect if not authenticated or not an agent
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthenticated === false && user === null && !isLoading) {
       router.push("/");
-    } else if (user?.role !== 'agent') {
+    } else if (isAuthenticated && user && !user.roles?.includes('agent')) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, isLoading, router]);
 
-  if (!isAuthenticated || !user || user.role !== 'agent') {
+  // Show loading if auth is still loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user || !user.roles?.includes('agent')) {
     return null;
   }
 
@@ -304,8 +318,10 @@ export default function AgentProfilePage() {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="manage">Properties</TabsTrigger>
+            <TabsTrigger value="inquiries">Inquiries</TabsTrigger>
             <TabsTrigger value="listings">Listings</TabsTrigger>
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -440,6 +456,16 @@ export default function AgentProfilePage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Manage Properties Tab - Full Property Manager */}
+          <TabsContent value="manage" className="space-y-6">
+            <AgentPropertyManager agentId={user.id} />
+          </TabsContent>
+
+          {/* Inquiries Tab - Manage Property Inquiries */}
+          <TabsContent value="inquiries" className="space-y-6">
+            <AgentInquiriesManager agentId={user.id} />
           </TabsContent>
 
           {/* Listings Tab */}

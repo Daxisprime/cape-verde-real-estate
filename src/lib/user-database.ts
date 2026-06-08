@@ -60,7 +60,7 @@ const mockUsers: User[] = [
     name: 'Maria Santos',
     firstName: 'Maria',
     lastName: 'Santos',
-    role: 'agent',
+    roles: ['agent', 'buyer'],
     verified: true,
     emailVerified: true,
     phoneVerified: true,
@@ -175,7 +175,7 @@ export class UserDatabase {
       name: `${userData.firstName} ${userData.lastName}`,
       firstName: userData.firstName,
       lastName: userData.lastName,
-      role: userData.role || 'user',
+      roles: userData.roles || ['buyer'],
       verified: false,
       emailVerified: false,
       phoneVerified: false,
@@ -478,7 +478,12 @@ export class UserDatabase {
     };
 
     mockUsers.forEach(user => {
-      stats.byRole[user.role]++;
+      // Count each role a user has
+      user.roles?.forEach(role => {
+        if (stats.byRole[role] !== undefined) {
+          stats.byRole[role]++;
+        }
+      });
     });
 
     return stats;

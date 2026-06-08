@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -64,16 +65,58 @@ export default function FavoritesPage() {
   const [filterBy, setFilterBy] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated, router]);
+  // Remove automatic redirect - let users authenticate on this page
+
+  // Show loading if auth is still loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
-    return null;
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-8">
+            <div className="mb-8">
+              <Heart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <h2 className="text-3xl font-bold mb-4">Your Favorite Properties</h2>
+              <p className="text-gray-600 mb-6">Sign in to save and manage your favorite properties across Cape Verde.</p>
+            </div>
+            <div className="space-y-4">
+              <Button
+                onClick={() => setShowAuthModal(true)}
+                className="w-full"
+                size="lg"
+              >
+                Sign In to View Favorites
+              </Button>
+              <p className="text-sm text-gray-500">
+                Don't have an account? Signing in will create one for you.
+              </p>
+            </div>
+          </div>
+        </div>
+        <Footer />
+
+        {showAuthModal && (
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            redirectTo="/favorites"
+          />
+        )}
+      </>
+    );
   }
 
   // Sample saved properties data

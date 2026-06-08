@@ -28,6 +28,9 @@ export default function PWAProvider({ children }: PWAProviderProps) {
 
   useEffect(() => {
     const registerServiceWorker = async () => {
+      // Delay service worker registration to not block initial page load
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
       try {
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',

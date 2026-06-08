@@ -86,7 +86,7 @@ export default function DataIntegrationAdminPage() {
       return;
     }
 
-    if (user?.role !== 'admin') {
+    if (!user?.roles?.includes('admin')) {
       router.push('/dashboard');
       return;
     }
@@ -151,7 +151,7 @@ export default function DataIntegrationAdminPage() {
     }
   };
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  if (!isAuthenticated || !user?.roles?.includes('admin')) {
     return null;
   }
 

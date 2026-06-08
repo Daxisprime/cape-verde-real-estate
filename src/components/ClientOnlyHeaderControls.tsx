@@ -99,9 +99,8 @@ export default function ClientOnlyHeaderControls({
           {/* Authenticated User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-2">
+              <Button variant="outline" className="flex items-center space-x-1 px-3">
                 <User className="h-4 w-4" />
-                <span>{user?.name || 'User'}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -126,7 +125,7 @@ export default function ClientOnlyHeaderControls({
               </DropdownMenuItem>
 
               {/* Admin-only menu items */}
-              {user?.role === 'admin' && (
+              {user?.roles?.includes('admin') && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

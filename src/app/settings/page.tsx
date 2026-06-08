@@ -6,8 +6,9 @@ import {
   User, Settings, Shield, Bell, Eye, EyeOff, Camera,
   Save, Trash2, Mail, Phone, Globe, Palette,
   CreditCard, UserCheck, AlertTriangle, CheckCircle,
-  Lock, Smartphone, Languages
+  Lock, Smartphone, Languages, Link2
 } from "lucide-react";
+import UserLinksManager from "@/components/UserLinksManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -76,12 +77,7 @@ export default function SettingsPage() {
     agentMessages: user?.preferences?.agentMessages || true
   });
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated, router]);
+  // Remove automatic redirect - let users authenticate on this page
 
   if (!isAuthenticated || !user) {
     return null;
@@ -167,7 +163,7 @@ export default function SettingsPage() {
   };
 
   const handleAgentProfileUpdate = async () => {
-    if (user.role !== 'agent') return;
+    if (!user.roles?.includes('agent')) return;
 
     setIsLoading(true);
     try {
@@ -215,7 +211,7 @@ export default function SettingsPage() {
                 {user.verified ? 'Verified' : 'Unverified'}
               </Badge>
               <Badge variant="outline" className="capitalize">
-                {user.role}
+                {user.roles?.join(', ')}
               </Badge>
             </div>
           </div>
@@ -223,10 +219,14 @@ export default function SettingsPage() {
 
         {/* Settings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="profile" className="flex items-center">
               <User className="h-4 w-4 mr-2" />
               Profile
+            </TabsTrigger>
+            <TabsTrigger value="links" className="flex items-center">
+              <Link2 className="h-4 w-4 mr-2" />
+              Links
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center">
               <Shield className="h-4 w-4 mr-2" />
@@ -240,10 +240,10 @@ export default function SettingsPage() {
               <Settings className="h-4 w-4 mr-2" />
               Preferences
             </TabsTrigger>
-            {user.role === 'agent' && (
+            {user.roles?.includes('agent') && (
               <TabsTrigger value="agent" className="flex items-center">
                 <UserCheck className="h-4 w-4 mr-2" />
-                Agent Profile
+                Agent
               </TabsTrigger>
             )}
           </TabsList>
@@ -341,6 +341,11 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Links Settings */}
+          <TabsContent value="links" className="space-y-6">
+            <UserLinksManager userId={user.id} />
           </TabsContent>
 
           {/* Security Settings */}
@@ -561,7 +566,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           {/* Agent Profile Settings */}
-          {user.role === 'agent' && (
+          {user.roles?.includes('agent') && (
             <TabsContent value="agent" className="space-y-6">
               <Card>
                 <CardHeader>

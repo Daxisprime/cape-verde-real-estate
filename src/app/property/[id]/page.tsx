@@ -3,16 +3,38 @@ import Header from "@/components/Header";
 import PropertyDetailClient from "@/components/PropertyDetailClient";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
 
+interface PropertyWithExtras {
+  propertyId?: string;
+  agentId?: string;
+}
+
 // Generate static params for all properties for static export
 export async function generateStaticParams() {
-  return capeVerdeProperties.map((property) => ({
-    id: property.id,
-  }));
+  const params = [];
+
+  // Add all property IDs and simple numeric IDs
+  capeVerdeProperties.forEach((property, index) => {
+    const prop = property as typeof property & PropertyWithExtras;
+    params.push({ id: property.id });
+    params.push({ id: (index + 1).toString() });
+    if (prop.propertyId) {
+      params.push({ id: prop.propertyId });
+    }
+  });
+
+  return params;
 }
 
 // Get property data from our actual database
 const getPropertyData = (id: string) => {
-  const property = capeVerdeProperties.find(p => p.id === id || p.propertyId === id);
+  // Try to find property by id or propertyId, or by a simple numeric match
+  const property = capeVerdeProperties.find(p =>
+    p.id === id ||
+    (p as typeof p & PropertyWithExtras).propertyId === id ||
+    p.id === `cv-${id.padStart(3, '0')}` ||
+    (p as typeof p & PropertyWithExtras).propertyId === `CV-SGO-${id.padStart(3, '0')}` ||
+    p.id.includes(id)
+  );
 
   if (!property) {
     return null;

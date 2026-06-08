@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PropertyManagementDashboard from "@/components/PropertyManagementDashboard";
+import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChat } from "@/contexts/ChatContext";
 import { useRouter } from "next/navigation";
@@ -179,21 +180,54 @@ export default function DashboardPage() {
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [activeAlerts, setActiveAlerts] = useState(3);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/');
-      return;
+    // Load user data when authenticated
+    if (isAuthenticated) {
+      setSavedProperties(sampleSavedProperties);
+      setSearchHistory(sampleSearchHistory);
+      setRecommendations(sampleRecommendations);
     }
+  }, [isAuthenticated, user]);
 
-    // Load user data
-    setSavedProperties(sampleSavedProperties);
-    setSearchHistory(sampleSearchHistory);
-    setRecommendations(sampleRecommendations);
-  }, [isAuthenticated, router]);
+  // Show loading or login prompt if not authenticated
+  if (!isAuthenticated || !user) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-8">
+            <div className="mb-8">
+              <User className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <h2 className="text-3xl font-bold mb-4">Welcome to Your Dashboard</h2>
+              <p className="text-gray-600 mb-6">Sign in to access your saved properties, search history, and personalized recommendations.</p>
+            </div>
+            <div className="space-y-4">
+              <Button
+                onClick={() => setShowAuthModal(true)}
+                className="w-full"
+                size="lg"
+              >
+                Sign In to Continue
+              </Button>
+              <p className="text-sm text-gray-500">
+                Don't have an account? Signing in will create one for you.
+              </p>
+            </div>
+          </div>
+        </div>
+        <Footer />
 
-  if (!isAuthenticated) {
-    return null;
+        {showAuthModal && (
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            redirectTo="/dashboard"
+          />
+        )}
+      </>
+    );
   }
 
   const formatDate = (dateString: string) => {
