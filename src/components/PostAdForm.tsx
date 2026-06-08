@@ -19,7 +19,20 @@ interface FormData {
   squareMeters: string;
 }
 
-export default function PostAdForm({ vendorId }: { vendorId?: string }) {
+export interface CreatedAd {
+  id: string;
+  mode: AdMode;
+  title: string;
+  price: number;
+  island: string;
+  zone: string | null;
+  images: string[];
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_meters: number | null;
+}
+
+export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: string; onAdCreated?: (ad: CreatedAd) => void }) {
   const [mode, setMode] = useState<AdMode>("real_estate");
   const [form, setForm] = useState<FormData>({
     title: "",
@@ -99,6 +112,19 @@ export default function PostAdForm({ vendorId }: { vendorId?: string }) {
 
       const { error } = await supabase.from("vendor_ads" as never).insert(payload as never);
       if (error) throw error;
+
+      onAdCreated?.({
+        id: `local-${Date.now()}`,
+        mode,
+        title: form.title,
+        price: parseFloat(form.price),
+        island: form.island,
+        zone: form.zone || null,
+        images: imageUrls.length > 0 ? imageUrls : previews,
+        bedrooms: mode === "real_estate" && form.bedrooms ? parseInt(form.bedrooms) : null,
+        bathrooms: mode === "real_estate" && form.bathrooms ? parseInt(form.bathrooms) : null,
+        square_meters: mode === "real_estate" && form.squareMeters ? parseFloat(form.squareMeters) : null,
+      });
 
       setStatus("success");
       setForm({ title: "", price: "", description: "", island: "", zone: "", address: "", bedrooms: "", bathrooms: "", squareMeters: "" });
