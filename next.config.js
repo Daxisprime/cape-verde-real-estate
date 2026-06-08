@@ -25,6 +25,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'same-assets.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
       }
     ],
   },
