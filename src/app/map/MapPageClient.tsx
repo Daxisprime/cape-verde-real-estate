@@ -116,15 +116,30 @@ function formatPhoneForTel(phone: string): string {
 
 interface MapPageClientProps {
   initialType: string;
+  initialQuery?: string;
+  initialPropertyType?: string;
+  initialBeds?: string;
+  initialPriceMin?: string;
+  initialPriceMax?: string;
 }
 
-export default function MapPageClient({ initialType }: MapPageClientProps) {
+export default function MapPageClient({
+  initialType,
+  initialQuery = "",
+  initialPropertyType = "",
+  initialBeds = "0",
+  initialPriceMin = "",
+  initialPriceMax = "",
+}: MapPageClientProps) {
   const [properties] = useState(MOCK_DATA);
-  const [searchArea, setSearchArea] = useState('');
+  const [searchArea, setSearchArea] = useState(initialQuery);
   const [listingType, setListingType] = useState(initialType === 'buy' || initialType === 'rent' ? initialType : 'all');
-  const [minBedrooms, setMinBedrooms] = useState(0);
+  const [minBedrooms, setMinBedrooms] = useState(Number(initialBeds) || 0);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [hoveredProperty, setHoveredProperty] = useState<any>(null);
+
+  const priceMin = initialPriceMin ? Number(initialPriceMin) : 0;
+  const priceMax = initialPriceMax ? Number(initialPriceMax) : Infinity;
 
   const filteredProperties = properties.filter((item) => {
     const matchesArea = searchArea === '' ||
@@ -132,7 +147,8 @@ export default function MapPageClient({ initialType }: MapPageClientProps) {
       item.title.toLowerCase().includes(searchArea.toLowerCase());
     const matchesType = listingType === 'all' || item.listing_type === listingType;
     const matchesBed = minBedrooms === 0 || item.bedrooms >= minBedrooms;
-    return matchesArea && matchesType && matchesBed;
+    const matchesPrice = item.price >= priceMin && item.price <= priceMax;
+    return matchesArea && matchesType && matchesBed && matchesPrice;
   });
 
   const activeMapItem = selectedProperty || hoveredProperty;
