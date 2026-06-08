@@ -17,13 +17,11 @@ import Link from 'next/link';
 interface ClientOnlyHeaderControlsProps {
   onSignIn: () => void;
   onSignUp: () => void;
-  onChatOpen: () => void;
 }
 
 export default function ClientOnlyHeaderControls({
   onSignIn,
   onSignUp,
-  onChatOpen
 }: ClientOnlyHeaderControlsProps) {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { currentLanguage, setLanguage } = useLanguage();
