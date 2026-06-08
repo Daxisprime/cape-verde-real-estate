@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Store, PlusCircle, ChevronDown } from 'lucide-react';
 import { mockProfiles } from '@/lib/mockProfiles';
+import { useSearchMode } from '@/contexts/SearchModeContext';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { searchMode, setSearchMode } = useSearchMode();
 
+  const isMarkets = searchMode === "markets";
   const vendor = mockProfiles[0];
 
   useEffect(() => {
@@ -24,32 +27,44 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header className={`sticky top-0 z-50 border-b shadow-sm transition-colors duration-300 ${
+      isMarkets
+        ? "bg-[#2563EB] border-blue-700"
+        : "bg-white border-gray-200"
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-1 lg:flex-none">
             <Link href="/" className="flex items-center">
               <span className="text-2xl sm:text-3xl font-bold">
-                <span className="text-[#2563EB]">pro</span>
-                <span className="text-red-600">•</span>
-                <span className="text-[#2563EB]">cv</span>
+                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
+                <span className="text-red-600">.</span>
+                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>cv</span>
               </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
-            <Link href="/map?type=buy" className="text-gray-700 hover:text-[#2563EB] font-medium transition-colors">
+            <Link href="/map?type=buy" className={`font-medium transition-colors ${
+              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+            }`}>
               Buy
             </Link>
-            <Link href="/map?type=rent" className="text-gray-700 hover:text-[#2563EB] font-medium transition-colors">
+            <Link href="/map?type=rent" className={`font-medium transition-colors ${
+              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+            }`}>
               Rent
             </Link>
-            <Link href="/sell" className="text-gray-700 hover:text-[#2563EB] font-medium transition-colors">
+            <Link href="/sell" className={`font-medium transition-colors ${
+              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+            }`}>
               Sell
             </Link>
-            <Link href="/map" className="text-gray-700 hover:text-[#2563EB] font-medium transition-colors">
+            <Link href="/map" className={`font-medium transition-colors ${
+              isMarkets ? "text-white/80 hover:text-white" : "text-gray-700 hover:text-[#2563EB]"
+            }`}>
               Map
             </Link>
           </nav>
@@ -59,14 +74,18 @@ export default function Header() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-2 rounded-full border border-gray-200 p-1 pr-3 hover:shadow-md transition-shadow"
+                className={`flex items-center gap-2 rounded-full border p-1 pr-3 hover:shadow-md transition-shadow ${
+                  isMarkets ? "border-white/30" : "border-gray-200"
+                }`}
               >
                 <img
                   src={vendor.avatar_url}
                   alt={vendor.full_name}
                   className="h-8 w-8 rounded-full object-cover"
                 />
-                <ChevronDown className={`h-3.5 w-3.5 text-gray-500 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${
+                  isMarkets ? "text-white/70" : "text-gray-500"
+                } ${isProfileOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isProfileOpen && (
@@ -98,32 +117,59 @@ export default function Header() {
             {/* Mobile menu button */}
             <div className="lg:hidden">
               <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {isMobileMenuOpen
+                  ? <X className={`h-6 w-6 ${isMarkets ? "text-white" : ""}`} />
+                  : <Menu className={`h-6 w-6 ${isMarkets ? "text-white" : ""}`} />
+                }
               </Button>
             </div>
           </div>
         </div>
 
+        {/* Global Mode Tabs - floating below nav */}
+        <div className="flex justify-center gap-6 pb-2 -mt-1">
+          <button
+            onClick={() => setSearchMode("realestate")}
+            className={`text-xs font-semibold uppercase tracking-wider transition-all pb-1.5 border-b-2 ${
+              !isMarkets
+                ? "text-[#2563EB] border-[#2563EB]"
+                : "text-white/50 border-transparent hover:text-white/70"
+            }`}
+          >
+            Real Estate
+          </button>
+          <button
+            onClick={() => setSearchMode("markets")}
+            className={`text-xs font-semibold uppercase tracking-wider transition-all pb-1.5 border-b-2 ${
+              isMarkets
+                ? "text-white border-white"
+                : "text-gray-400 border-transparent hover:text-gray-600"
+            }`}
+          >
+            Markets
+          </button>
+        </div>
+
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200">
+          <div className={`lg:hidden py-4 border-t ${isMarkets ? "border-white/20" : "border-gray-200"}`}>
             <div className="flex flex-col space-y-4">
-              <Link href="/map?type=buy" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/map?type=buy" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Buy
               </Link>
-              <Link href="/map?type=rent" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/map?type=rent" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Rent
               </Link>
-              <Link href="/sell" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/sell" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Sell
               </Link>
-              <Link href="/map" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/map" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Map
               </Link>
-              <Link href="/my-store" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/my-store" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 My Store
               </Link>
-              <Link href="/sell" className="text-gray-700 hover:text-[#2563EB] font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/sell" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Post an Ad
               </Link>
             </div>

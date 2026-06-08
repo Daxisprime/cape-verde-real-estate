@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
+import { useSearchMode } from '@/contexts/SearchModeContext';
 
 const CV_9_ISLAND_IMAGES = [
   "https://images.unsplash.com/photo-1591017609590-2cd7c6a0e4ac?w=1920&q=75",
@@ -15,8 +16,6 @@ const CV_9_ISLAND_IMAGES = [
   "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=75",
   "https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1920&q=75"
 ];
-
-type SearchMode = "properties" | "marketplace";
 
 const PROPERTY_TYPES = ["All", "Apartment", "Villa", "Land"];
 const BEDROOM_OPTIONS = [
@@ -33,7 +32,6 @@ export default function HeroSection() {
   const [backgroundImage, setBackgroundImage] = useState(CV_9_ISLAND_IMAGES[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchMode, setSearchMode] = useState<SearchMode>("properties");
   const [listingType, setListingType] = useState<"buy" | "rent">("buy");
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
   const [propertyType, setPropertyType] = useState("All");
@@ -43,6 +41,7 @@ export default function HeroSection() {
   const [marketplaceCategory, setMarketplaceCategory] = useState("All");
   const filterRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { searchMode } = useSearchMode();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -71,7 +70,7 @@ export default function HeroSection() {
     params.set("type", listingType);
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
 
-    if (searchMode === "properties") {
+    if (searchMode === "realestate") {
       if (propertyType !== "All") params.set("propertyType", propertyType.toLowerCase());
       if (bedrooms !== "0") params.set("beds", bedrooms);
       if (priceMin) params.set("priceMin", priceMin);
@@ -87,72 +86,55 @@ export default function HeroSection() {
     router.push(`/map?${params.toString()}`);
   };
 
+  const getSlogan = () => {
+    if (searchMode === "markets") {
+      return "Discover markets and services across Cabo Verde";
+    }
+    if (listingType === "rent") {
+      return "Discover properties for rent across Cabo Verde";
+    }
+    return "Discover properties for sale across Cabo Verde";
+  };
+
   return (
     <section
-      className="relative w-full h-[75vh] min-h-[500px] flex items-center justify-center bg-cover bg-center transition-all duration-1000 ease-in-out"
+      className="relative w-full h-[70vh] min-h-[480px] flex items-center justify-center bg-cover bg-center transition-all duration-1000 ease-in-out"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
 
-      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 text-center text-white space-y-5">
-        {/* Dynamic Slogan */}
-        <p className="text-sm md:text-base text-gray-100 font-normal tracking-wide drop-shadow-sm">
-          {searchMode === "properties"
-            ? "Discover properties, land, and commercial listings across Cabo Verde"
-            : "Discover markets and services across Cabo Verde"
-          }
+      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 text-center text-white flex flex-col items-center">
+        {/* Dynamic 3-way Slogan */}
+        <p className="text-sm md:text-[15px] text-gray-100 font-light tracking-wide drop-shadow-sm mb-10">
+          {getSlogan()}
         </p>
 
-        {/* Global Mode Switcher */}
-        <div className="flex justify-center gap-6">
-          <button
-            onClick={() => setSearchMode("properties")}
-            className={`text-xs font-medium uppercase tracking-wider transition-all pb-1 border-b-2 ${
-              searchMode === "properties"
-                ? "text-white border-white"
-                : "text-white/50 border-transparent hover:text-white/70"
-            }`}
-          >
-            Properties
-          </button>
-          <button
-            onClick={() => setSearchMode("marketplace")}
-            className={`text-xs font-medium uppercase tracking-wider transition-all pb-1 border-b-2 ${
-              searchMode === "marketplace"
-                ? "text-white border-white"
-                : "text-white/50 border-transparent hover:text-white/70"
-            }`}
-          >
-            Marketplace & Services
-          </button>
-        </div>
-
-        {/* Search Container */}
+        {/* Search Container with floating tabs */}
         <div className="w-full relative" ref={filterRef}>
-          {/* Property24-Style Floating Tabs */}
-          <div className="flex justify-start pl-4 mb-0">
-            {searchMode === "properties" ? (
+          {/* Floating Tabs - elevated above search bar */}
+          <div className="flex justify-start pl-3 mb-3">
+            {searchMode === "realestate" ? (
               <div className="flex gap-0">
                 <button
                   onClick={() => setListingType("buy")}
-                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
-                    listingType === "buy" ? "text-white" : "text-white/60 hover:text-white/80"
+                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                    listingType === "buy" ? "text-white" : "text-white/55 hover:text-white/80"
                   }`}
                 >
                   For Sale
                   {listingType === "buy" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                   )}
                 </button>
                 <button
                   onClick={() => setListingType("rent")}
-                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
-                    listingType === "rent" ? "text-white" : "text-white/60 hover:text-white/80"
+                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                    listingType === "rent" ? "text-white" : "text-white/55 hover:text-white/80"
                   }`}
                 >
                   To Rent
                   {listingType === "rent" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                   )}
                 </button>
               </div>
@@ -160,24 +142,24 @@ export default function HeroSection() {
               <div className="flex gap-0">
                 <button
                   onClick={() => setMarketplaceTab("goods")}
-                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
-                    marketplaceTab === "goods" ? "text-white" : "text-white/60 hover:text-white/80"
+                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                    marketplaceTab === "goods" ? "text-white" : "text-white/55 hover:text-white/80"
                   }`}
                 >
                   Goods
                   {marketplaceTab === "goods" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                   )}
                 </button>
                 <button
                   onClick={() => setMarketplaceTab("services")}
-                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
-                    marketplaceTab === "services" ? "text-white" : "text-white/60 hover:text-white/80"
+                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                    marketplaceTab === "services" ? "text-white" : "text-white/55 hover:text-white/80"
                   }`}
                 >
                   Local Services
                   {marketplaceTab === "services" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                   )}
                 </button>
               </div>
@@ -191,7 +173,7 @@ export default function HeroSection() {
                 <MapPin className="absolute left-4 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder={searchMode === "properties"
+                  placeholder={searchMode === "realestate"
                     ? "Enter island or neighborhood (e.g., Palmarejo, Sal)..."
                     : "Search items, services, or suppliers..."
                   }
@@ -228,7 +210,7 @@ export default function HeroSection() {
           {/* Absolute Floating Filter Overlay */}
           {isFilterOpen && (
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-full z-30 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
-              {searchMode === "properties" ? (
+              {searchMode === "realestate" ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</label>
