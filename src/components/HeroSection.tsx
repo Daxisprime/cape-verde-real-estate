@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 
@@ -19,7 +19,14 @@ const CV_9_ISLAND_IMAGES = [
 type SearchMode = "properties" | "marketplace";
 
 const PROPERTY_TYPES = ["All", "Apartment", "Villa", "Land"];
-const BEDROOM_OPTIONS = ["Studio", "1+", "2+", "3+", "4+"];
+const BEDROOM_OPTIONS = [
+  { label: "Any", value: "0" },
+  { label: "Studio", value: "0" },
+  { label: "1+", value: "1" },
+  { label: "2+", value: "2" },
+  { label: "3+", value: "3" },
+  { label: "4+", value: "4" },
+];
 const MARKETPLACE_CATEGORIES = ["All", "Construction", "Appliances", "Services"];
 
 export default function HeroSection() {
@@ -30,10 +37,11 @@ export default function HeroSection() {
   const [listingType, setListingType] = useState<"buy" | "rent">("buy");
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
   const [propertyType, setPropertyType] = useState("All");
-  const [bedrooms, setBedrooms] = useState("Studio");
+  const [bedrooms, setBedrooms] = useState("0");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [marketplaceCategory, setMarketplaceCategory] = useState("All");
+  const filterRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,6 +55,17 @@ export default function HeroSection() {
     setBackgroundImage(CV_9_ISLAND_IMAGES[activeIndex]);
   }, []);
 
+  useEffect(() => {
+    if (!isFilterOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isFilterOpen]);
+
   const handleSearch = () => {
     const params = new URLSearchParams();
     params.set("type", listingType);
@@ -54,7 +73,7 @@ export default function HeroSection() {
 
     if (searchMode === "properties") {
       if (propertyType !== "All") params.set("propertyType", propertyType.toLowerCase());
-      if (bedrooms !== "Studio") params.set("beds", bedrooms.replace("+", ""));
+      if (bedrooms !== "0") params.set("beds", bedrooms);
       if (priceMin) params.set("priceMin", priceMin);
       if (priceMax) params.set("priceMax", priceMax);
     } else {
@@ -76,16 +95,15 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
 
       <div className="relative z-10 w-full max-w-2xl mx-auto px-4 text-center text-white space-y-5">
-        <div className="space-y-2">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight drop-shadow-md">
-            Find Your Space in Cape Verde
-          </h1>
-          <p className="text-sm md:text-base text-gray-100 font-medium tracking-wide drop-shadow-sm">
-            Discover houses, apartments, and commercial listings across 9 inhabited islands
-          </p>
-        </div>
+        {/* Dynamic Slogan */}
+        <p className="text-sm md:text-base text-gray-100 font-normal tracking-wide drop-shadow-sm">
+          {searchMode === "properties"
+            ? "Discover properties, land, and commercial listings across Cabo Verde"
+            : "Discover markets and services across Cabo Verde"
+          }
+        </p>
 
-        {/* Global Mode Switcher - minimal text links */}
+        {/* Global Mode Switcher */}
         <div className="flex justify-center gap-6">
           <button
             onClick={() => setSearchMode("properties")}
@@ -109,12 +127,12 @@ export default function HeroSection() {
           </button>
         </div>
 
-        {/* Search Box + Filter Drawer Container */}
-        <div className="w-full space-y-0">
-          {/* Property24-Style Floating Tabs with Red Underline */}
+        {/* Search Container */}
+        <div className="w-full relative" ref={filterRef}>
+          {/* Property24-Style Floating Tabs */}
           <div className="flex justify-start pl-4 mb-0">
             {searchMode === "properties" ? (
-              <div className="flex gap-0 relative">
+              <div className="flex gap-0">
                 <button
                   onClick={() => setListingType("buy")}
                   className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
@@ -139,7 +157,7 @@ export default function HeroSection() {
                 </button>
               </div>
             ) : (
-              <div className="flex gap-0 relative">
+              <div className="flex gap-0">
                 <button
                   onClick={() => setMarketplaceTab("goods")}
                   className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
@@ -205,115 +223,101 @@ export default function HeroSection() {
                 </button>
               </div>
             </div>
-
-            {/* Expanding Filter Drawer */}
-            {isFilterOpen && (
-              <div className="mt-2 pt-3 border-t border-gray-100 pb-1 space-y-3">
-                {searchMode === "properties" ? (
-                  <>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Property Type</label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {PROPERTY_TYPES.map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => setPropertyType(type)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                              propertyType === type
-                                ? "bg-[#1e3a8a] text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {type}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Bedrooms</label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {BEDROOM_OPTIONS.map((opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => setBedrooms(opt)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                              bedrooms === opt
-                                ? "bg-[#1e3a8a] text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Price Range (CVE)</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          placeholder="Min"
-                          value={priceMin}
-                          onChange={(e) => setPriceMin(e.target.value)}
-                          className="flex-1 px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
-                        />
-                        <input
-                          type="number"
-                          placeholder="Max"
-                          value={priceMax}
-                          onChange={(e) => setPriceMax(e.target.value)}
-                          className="flex-1 px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
-                        />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Category</label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {MARKETPLACE_CATEGORIES.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => setMarketplaceCategory(cat)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                              marketplaceCategory === cat
-                                ? "bg-[#1e3a8a] text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Price Range (CVE)</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          placeholder="Min"
-                          value={priceMin}
-                          onChange={(e) => setPriceMin(e.target.value)}
-                          className="flex-1 px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
-                        />
-                        <input
-                          type="number"
-                          placeholder="Max"
-                          value={priceMax}
-                          onChange={(e) => setPriceMax(e.target.value)}
-                          className="flex-1 px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* Absolute Floating Filter Overlay */}
+          {isFilterOpen && (
+            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-full z-30 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
+              {searchMode === "properties" ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</label>
+                    <select
+                      value={propertyType}
+                      onChange={(e) => setPropertyType(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    >
+                      {PROPERTY_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bedrooms</label>
+                    <select
+                      value={bedrooms}
+                      onChange={(e) => setBedrooms(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    >
+                      {BEDROOM_OPTIONS.map((opt) => (
+                        <option key={opt.value + opt.label} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
+                    <input
+                      type="number"
+                      placeholder="CVE"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
+                    <input
+                      type="number"
+                      placeholder="CVE"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Category</label>
+                    <select
+                      value={marketplaceCategory}
+                      onChange={(e) => setMarketplaceCategory(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    >
+                      {MARKETPLACE_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
+                    <input
+                      type="number"
+                      placeholder="CVE"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
+                    <input
+                      type="number"
+                      placeholder="CVE"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>
