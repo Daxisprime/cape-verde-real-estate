@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import PropertyDetailClient from "@/components/PropertyDetailClient";
+import type { SimilarProperty } from "@/components/PropertyDetailClient";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
 
 interface PropertyWithExtras {
@@ -8,11 +9,9 @@ interface PropertyWithExtras {
   agentId?: string;
 }
 
-// Generate static params for all properties for static export
 export async function generateStaticParams() {
-  const params = [];
+  const params: { id: string }[] = [];
 
-  // Add all property IDs and simple numeric IDs
   capeVerdeProperties.forEach((property, index) => {
     const prop = property as typeof property & PropertyWithExtras;
     params.push({ id: property.id });
@@ -25,9 +24,7 @@ export async function generateStaticParams() {
   return params;
 }
 
-// Get property data from our actual database
 const getPropertyData = (id: string) => {
-  // Try to find property by id or propertyId, or by a simple numeric match
   const property = capeVerdeProperties.find(p =>
     p.id === id ||
     (p as typeof p & PropertyWithExtras).propertyId === id ||
@@ -40,21 +37,19 @@ const getPropertyData = (id: string) => {
     return null;
   }
 
-  // Get agent information
   const agent = property.agentId ? agentDatabase[property.agentId as keyof typeof agentDatabase] : {
     name: "Cape Verde Properties",
     company: "ProCV Real Estate",
     phone: "+238 260 1234",
     email: "info@procv.com",
-    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face"
+    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face"
   };
 
-  // Convert our property data to the format expected by PropertyDetailClient
   return {
     id: property.id,
     title: property.title,
-    titlePt: property.title, // We could add Portuguese translations later
-    titleCv: property.title, // We could add Creole translations later
+    titlePt: property.title,
+    titleCv: property.title,
     price: property.price,
     location: property.location,
     island: property.island,
@@ -62,16 +57,16 @@ const getPropertyData = (id: string) => {
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
     area: property.totalArea,
-    lotSize: property.totalArea * 1.2, // Estimated lot size
+    lotSize: property.totalArea * 1.2,
     yearBuilt: property.yearBuilt || 2020,
     parking: property.type === 'Villa' ? 2 : property.type === 'House' ? 1 : 0,
     featured: property.isFeatured || false,
     description: property.description,
-    descriptionPt: property.description, // We could add Portuguese translations later
-    descriptionCv: property.description, // We could add Creole translations later
+    descriptionPt: property.description,
+    descriptionCv: property.description,
     features: property.features,
-    featuresPt: property.features, // We could add Portuguese translations later
-    featuresCv: property.features, // We could add Creole translations later
+    featuresPt: property.features,
+    featuresCv: property.features,
     images: property.images,
     virtualTourUrl: `https://www.example.com/virtual-tour-${property.id}`,
     agent: {
@@ -90,6 +85,37 @@ const getPropertyData = (id: string) => {
   };
 };
 
+function getSimilarProperties(currentId: string, island: string, type: string, price: number): SimilarProperty[] {
+  const priceLow = price * 0.8;
+  const priceHigh = price * 1.2;
+
+  return capeVerdeProperties
+    .filter(p => {
+      if (p.id === currentId) return false;
+      const sameIsland = p.island === island;
+      const sameType = p.type === type;
+      const closePrice = p.price >= priceLow && p.price <= priceHigh;
+      return sameIsland && (sameType || closePrice);
+    })
+    .sort((a, b) => {
+      const aScore = (a.type === type ? 2 : 0) + (Math.abs(a.price - price) < price * 0.1 ? 1 : 0);
+      const bScore = (b.type === type ? 2 : 0) + (Math.abs(b.price - price) < price * 0.1 ? 1 : 0);
+      return bScore - aScore;
+    })
+    .slice(0, 3)
+    .map(p => ({
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      location: p.location,
+      island: p.island,
+      type: p.type,
+      bedrooms: p.bedrooms,
+      bathrooms: p.bathrooms,
+      image: p.images[0]
+    }));
+}
+
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const property = getPropertyData(id);
@@ -98,10 +124,17 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     notFound();
   }
 
+  const similarProperties = getSimilarProperties(
+    property.id,
+    property.island,
+    property.type,
+    property.price
+  );
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <PropertyDetailClient property={property} />
+      <PropertyDetailClient property={property} similarProperties={similarProperties} />
     </div>
   );
 }
