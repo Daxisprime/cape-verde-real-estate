@@ -11,7 +11,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { searchMode, setSearchMode } = useSearchMode();
+  const { searchMode } = useSearchMode();
 
   const isMarkets = searchMode === "markets";
   const vendor = mockProfiles[0];
@@ -34,13 +34,13 @@ export default function Header() {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo - red dot centered between Pro and CV */}
           <div className="flex-1 lg:flex-none">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl sm:text-3xl font-bold">
-                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
-                <span className="text-red-600">.</span>
-                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>cv</span>
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>Pro</span>
+                <span className="text-red-600 mx-[1px] inline-block align-middle text-lg">&#x2022;</span>
+                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>CV</span>
               </span>
             </Link>
           </div>
@@ -124,30 +124,6 @@ export default function Header() {
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* Global Mode Tabs - floating below nav */}
-        <div className="flex justify-center gap-6 pb-2 -mt-1">
-          <button
-            onClick={() => setSearchMode("realestate")}
-            className={`text-xs font-semibold uppercase tracking-wider transition-all pb-1.5 border-b-2 ${
-              !isMarkets
-                ? "text-[#2563EB] border-[#2563EB]"
-                : "text-white/50 border-transparent hover:text-white/70"
-            }`}
-          >
-            Real Estate
-          </button>
-          <button
-            onClick={() => setSearchMode("markets")}
-            className={`text-xs font-semibold uppercase tracking-wider transition-all pb-1.5 border-b-2 ${
-              isMarkets
-                ? "text-white border-white"
-                : "text-gray-400 border-transparent hover:text-gray-600"
-            }`}
-          >
-            Markets
-          </button>
         </div>
 
         {/* Mobile Navigation */}

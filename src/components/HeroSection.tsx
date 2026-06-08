@@ -20,13 +20,21 @@ const CV_9_ISLAND_IMAGES = [
 const PROPERTY_TYPES = ["All", "Apartment", "Villa", "Land"];
 const BEDROOM_OPTIONS = [
   { label: "Any", value: "0" },
-  { label: "Studio", value: "0" },
+  { label: "Studio", value: "studio" },
   { label: "1+", value: "1" },
   { label: "2+", value: "2" },
   { label: "3+", value: "3" },
   { label: "4+", value: "4" },
 ];
-const MARKETPLACE_CATEGORIES = ["All", "Construction", "Appliances", "Services"];
+const MARKETPLACE_CATEGORIES = [
+  "All",
+  "Building Materials & Tools",
+  "Home, Furniture & Appliances",
+  "Electronics & Computers",
+  "Maintenance & Repair Services",
+  "Professional Services",
+  "Fashion & Retail",
+];
 
 export default function HeroSection() {
   const [backgroundImage, setBackgroundImage] = useState(CV_9_ISLAND_IMAGES[0]);
@@ -41,7 +49,7 @@ export default function HeroSection() {
   const [marketplaceCategory, setMarketplaceCategory] = useState("All");
   const filterRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { searchMode } = useSearchMode();
+  const { searchMode, setSearchMode } = useSearchMode();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -98,208 +106,235 @@ export default function HeroSection() {
 
   return (
     <section
-      className="relative w-full h-[70vh] min-h-[480px] flex items-center justify-center bg-cover bg-center transition-all duration-1000 ease-in-out"
+      className="relative w-full h-[72vh] min-h-[500px] flex flex-col bg-cover bg-center transition-all duration-1000 ease-in-out"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
 
-      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 text-center text-white flex flex-col items-center">
-        {/* Dynamic 3-way Slogan */}
-        <p className="text-sm md:text-[15px] text-gray-100 font-light tracking-wide drop-shadow-sm mb-10">
-          {getSlogan()}
-        </p>
+      {/* Global Mode Tabs - floating at top of hero, just below navbar edge */}
+      <div className="relative z-10 flex justify-center gap-8 pt-4 pb-2">
+        <button
+          onClick={() => setSearchMode("realestate")}
+          className={`text-xs font-semibold uppercase tracking-widest transition-all pb-1.5 border-b-2 ${
+            searchMode === "realestate"
+              ? "text-white border-white"
+              : "text-white/45 border-transparent hover:text-white/70"
+          }`}
+        >
+          Real Estate
+        </button>
+        <button
+          onClick={() => setSearchMode("markets")}
+          className={`text-xs font-semibold uppercase tracking-widest transition-all pb-1.5 border-b-2 ${
+            searchMode === "markets"
+              ? "text-white border-white"
+              : "text-white/45 border-transparent hover:text-white/70"
+          }`}
+        >
+          Markets
+        </button>
+      </div>
 
-        {/* Search Container with floating tabs */}
-        <div className="w-full relative" ref={filterRef}>
-          {/* Floating Tabs - elevated above search bar */}
-          <div className="flex justify-start pl-3 mb-3">
-            {searchMode === "realestate" ? (
-              <div className="flex gap-0">
-                <button
-                  onClick={() => setListingType("buy")}
-                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
-                    listingType === "buy" ? "text-white" : "text-white/55 hover:text-white/80"
-                  }`}
-                >
-                  For Sale
-                  {listingType === "buy" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setListingType("rent")}
-                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
-                    listingType === "rent" ? "text-white" : "text-white/55 hover:text-white/80"
-                  }`}
-                >
-                  To Rent
-                  {listingType === "rent" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
-                  )}
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-0">
-                <button
-                  onClick={() => setMarketplaceTab("goods")}
-                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
-                    marketplaceTab === "goods" ? "text-white" : "text-white/55 hover:text-white/80"
-                  }`}
-                >
-                  Goods
-                  {marketplaceTab === "goods" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setMarketplaceTab("services")}
-                  className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
-                    marketplaceTab === "services" ? "text-white" : "text-white/55 hover:text-white/80"
-                  }`}
-                >
-                  Local Services
-                  {marketplaceTab === "services" && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
+      {/* Centered content area */}
+      <div className="relative z-10 flex-1 flex items-center justify-center">
+        <div className="w-full max-w-2xl mx-auto px-4 text-center flex flex-col items-center gap-8">
+          {/* Dynamic 3-way Slogan - scaled for desktop */}
+          <h2 className="text-lg sm:text-2xl lg:text-4xl font-medium tracking-tight text-white drop-shadow-md transition-all duration-200">
+            {getSlogan()}
+          </h2>
 
-          {/* Main Search Bar */}
-          <div className="w-full bg-white p-2 rounded-2xl shadow-2xl border border-white/20">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 relative flex items-center">
-                <MapPin className="absolute left-4 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={searchMode === "realestate"
-                    ? "Enter island or neighborhood (e.g., Palmarejo, Sal)..."
-                    : "Search items, services, or suppliers..."
-                  }
-                  className="w-full pl-12 pr-4 py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`flex items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-semibold transition-all border ${
-                    isFilterOpen
-                      ? "bg-blue-50 text-[#2563EB] border-blue-200"
-                      : "bg-gray-50 text-[#2563EB] border-gray-200 hover:bg-blue-50"
-                  }`}
-                >
-                  {isFilterOpen ? <X className="h-3.5 w-3.5" /> : <SlidersHorizontal className="h-3.5 w-3.5" />}
-                  Filters
-                </button>
-
-                <button
-                  onClick={handleSearch}
-                  className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
-                >
-                  <Search className="h-4 w-4" /> Search
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Absolute Floating Filter Overlay */}
-          {isFilterOpen && (
-            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-full z-30 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
+          {/* Search Container */}
+          <div className="w-full relative" ref={filterRef}>
+            {/* Centered Search Tabs with red underline */}
+            <div className="flex justify-center mb-4">
               {searchMode === "realestate" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</label>
-                    <select
-                      value={propertyType}
-                      onChange={(e) => setPropertyType(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    >
-                      {PROPERTY_TYPES.map((type) => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bedrooms</label>
-                    <select
-                      value={bedrooms}
-                      onChange={(e) => setBedrooms(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    >
-                      {BEDROOM_OPTIONS.map((opt) => (
-                        <option key={opt.value + opt.label} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
-                    <input
-                      type="number"
-                      placeholder="CVE"
-                      value={priceMin}
-                      onChange={(e) => setPriceMin(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
-                    <input
-                      type="number"
-                      placeholder="CVE"
-                      value={priceMax}
-                      onChange={(e) => setPriceMax(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    />
-                  </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setListingType("buy")}
+                    className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                      listingType === "buy" ? "text-white" : "text-white/50 hover:text-white/75"
+                    }`}
+                  >
+                    For Sale
+                    {listingType === "buy" && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setListingType("rent")}
+                    className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                      listingType === "rent" ? "text-white" : "text-white/50 hover:text-white/75"
+                    }`}
+                  >
+                    To Rent
+                    {listingType === "rent" && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
+                    )}
+                  </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Category</label>
-                    <select
-                      value={marketplaceCategory}
-                      onChange={(e) => setMarketplaceCategory(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    >
-                      {MARKETPLACE_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
-                    <input
-                      type="number"
-                      placeholder="CVE"
-                      value={priceMin}
-                      onChange={(e) => setPriceMin(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
-                    <input
-                      type="number"
-                      placeholder="CVE"
-                      value={priceMax}
-                      onChange={(e) => setPriceMax(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
-                    />
-                  </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setMarketplaceTab("goods")}
+                    className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                      marketplaceTab === "goods" ? "text-white" : "text-white/50 hover:text-white/75"
+                    }`}
+                  >
+                    Goods
+                    {marketplaceTab === "goods" && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setMarketplaceTab("services")}
+                    className={`relative px-5 py-2 text-[13px] font-semibold tracking-wide transition-colors ${
+                      marketplaceTab === "services" ? "text-white" : "text-white/50 hover:text-white/75"
+                    }`}
+                  >
+                    Local Services
+                    {marketplaceTab === "services" && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
+                    )}
+                  </button>
                 </div>
               )}
             </div>
-          )}
+
+            {/* Main Search Bar */}
+            <div className="w-full bg-white p-2 rounded-2xl shadow-2xl border border-white/20">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1 relative flex items-center">
+                  <MapPin className="absolute left-4 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={searchMode === "realestate"
+                      ? "Enter island or neighborhood (e.g., Palmarejo, Sal)..."
+                      : "Search items, services, or suppliers..."
+                    }
+                    className="w-full pl-12 pr-4 py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`flex items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-semibold transition-all border ${
+                      isFilterOpen
+                        ? "bg-blue-50 text-[#2563EB] border-blue-200"
+                        : "bg-gray-50 text-[#2563EB] border-gray-200 hover:bg-blue-50"
+                    }`}
+                  >
+                    {isFilterOpen ? <X className="h-3.5 w-3.5" /> : <SlidersHorizontal className="h-3.5 w-3.5" />}
+                    Filters
+                  </button>
+
+                  <button
+                    onClick={handleSearch}
+                    className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
+                  >
+                    <Search className="h-4 w-4" /> Search
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Absolute Floating Filter Overlay */}
+            {isFilterOpen && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-full z-30 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
+                {searchMode === "realestate" ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</label>
+                      <select
+                        value={propertyType}
+                        onChange={(e) => setPropertyType(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      >
+                        {PROPERTY_TYPES.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bedrooms</label>
+                      <select
+                        value={bedrooms}
+                        onChange={(e) => setBedrooms(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      >
+                        {BEDROOM_OPTIONS.map((opt) => (
+                          <option key={opt.value + opt.label} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
+                      <input
+                        type="number"
+                        placeholder="CVE"
+                        value={priceMin}
+                        onChange={(e) => setPriceMin(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
+                      <input
+                        type="number"
+                        placeholder="CVE"
+                        value={priceMax}
+                        onChange={(e) => setPriceMax(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Category</label>
+                      <select
+                        value={marketplaceCategory}
+                        onChange={(e) => setMarketplaceCategory(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      >
+                        {MARKETPLACE_CATEGORIES.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
+                      <input
+                        type="number"
+                        placeholder="CVE"
+                        value={priceMin}
+                        onChange={(e) => setPriceMin(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
+                      <input
+                        type="number"
+                        placeholder="CVE"
+                        value={priceMax}
+                        onChange={(e) => setPriceMax(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
