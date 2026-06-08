@@ -28,6 +28,7 @@ export default function HeroSection() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchMode, setSearchMode] = useState<SearchMode>("properties");
   const [listingType, setListingType] = useState<"buy" | "rent">("buy");
+  const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
   const [propertyType, setPropertyType] = useState("All");
   const [bedrooms, setBedrooms] = useState("Studio");
   const [priceMin, setPriceMin] = useState("");
@@ -58,6 +59,7 @@ export default function HeroSection() {
       if (priceMax) params.set("priceMax", priceMax);
     } else {
       params.set("mode", "marketplace");
+      params.set("tab", marketplaceTab);
       if (marketplaceCategory !== "All") params.set("category", marketplaceCategory.toLowerCase());
       if (priceMin) params.set("priceMin", priceMin);
       if (priceMax) params.set("priceMax", priceMax);
@@ -73,7 +75,7 @@ export default function HeroSection() {
     >
       <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
 
-      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 text-center text-white space-y-6">
+      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 text-center text-white space-y-5">
         <div className="space-y-2">
           <h1 className="text-3xl md:text-5xl font-black tracking-tight drop-shadow-md">
             Find Your Space in Cape Verde
@@ -83,61 +85,86 @@ export default function HeroSection() {
           </p>
         </div>
 
+        {/* Global Mode Switcher - minimal text links */}
+        <div className="flex justify-center gap-6">
+          <button
+            onClick={() => setSearchMode("properties")}
+            className={`text-xs font-medium uppercase tracking-wider transition-all pb-1 border-b-2 ${
+              searchMode === "properties"
+                ? "text-white border-white"
+                : "text-white/50 border-transparent hover:text-white/70"
+            }`}
+          >
+            Properties
+          </button>
+          <button
+            onClick={() => setSearchMode("marketplace")}
+            className={`text-xs font-medium uppercase tracking-wider transition-all pb-1 border-b-2 ${
+              searchMode === "marketplace"
+                ? "text-white border-white"
+                : "text-white/50 border-transparent hover:text-white/70"
+            }`}
+          >
+            Marketplace & Services
+          </button>
+        </div>
+
         {/* Search Box + Filter Drawer Container */}
         <div className="w-full space-y-0">
-          {/* Mode Toggle */}
-          <div className="flex justify-center mb-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-full p-0.5 flex">
-              <button
-                onClick={() => setSearchMode("properties")}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  searchMode === "properties"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                Properties
-              </button>
-              <button
-                onClick={() => setSearchMode("marketplace")}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  searchMode === "marketplace"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                Marketplace & Services
-              </button>
-            </div>
-          </div>
-
-          {/* Buy/Rent Switch (Properties mode only) */}
-          {searchMode === "properties" && (
-            <div className="flex justify-center mb-3">
-              <div className="flex gap-1">
+          {/* Property24-Style Floating Tabs with Red Underline */}
+          <div className="flex justify-start pl-4 mb-0">
+            {searchMode === "properties" ? (
+              <div className="flex gap-0 relative">
                 <button
                   onClick={() => setListingType("buy")}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    listingType === "buy"
-                      ? "bg-[#2563EB] text-white"
-                      : "bg-white/20 text-white/80 hover:bg-white/30"
+                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
+                    listingType === "buy" ? "text-white" : "text-white/60 hover:text-white/80"
                   }`}
                 >
-                  Buy
+                  For Sale
+                  {listingType === "buy" && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                  )}
                 </button>
                 <button
                   onClick={() => setListingType("rent")}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    listingType === "rent"
-                      ? "bg-[#2563EB] text-white"
-                      : "bg-white/20 text-white/80 hover:bg-white/30"
+                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
+                    listingType === "rent" ? "text-white" : "text-white/60 hover:text-white/80"
                   }`}
                 >
-                  Rent
+                  To Rent
+                  {listingType === "rent" && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                  )}
                 </button>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex gap-0 relative">
+                <button
+                  onClick={() => setMarketplaceTab("goods")}
+                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
+                    marketplaceTab === "goods" ? "text-white" : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Goods
+                  {marketplaceTab === "goods" && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setMarketplaceTab("services")}
+                  className={`relative px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
+                    marketplaceTab === "services" ? "text-white" : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Local Services
+                  {marketplaceTab === "services" && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-20px)] h-[3px] bg-[#EF4444] rounded-t-full" />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Main Search Bar */}
           <div className="w-full bg-white p-2 rounded-2xl shadow-2xl border border-white/20">
@@ -181,10 +208,9 @@ export default function HeroSection() {
 
             {/* Expanding Filter Drawer */}
             {isFilterOpen && (
-              <div className="mt-2 pt-3 border-t border-gray-100 pb-1 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="mt-2 pt-3 border-t border-gray-100 pb-1 space-y-3">
                 {searchMode === "properties" ? (
                   <>
-                    {/* Property Type Selector */}
                     <div>
                       <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Property Type</label>
                       <div className="flex flex-wrap gap-1.5">
@@ -204,7 +230,6 @@ export default function HeroSection() {
                       </div>
                     </div>
 
-                    {/* Bedrooms Track */}
                     <div>
                       <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Bedrooms</label>
                       <div className="flex flex-wrap gap-1.5">
@@ -224,7 +249,6 @@ export default function HeroSection() {
                       </div>
                     </div>
 
-                    {/* Price Range */}
                     <div>
                       <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Price Range (CVE)</label>
                       <div className="flex gap-2">
@@ -247,7 +271,6 @@ export default function HeroSection() {
                   </>
                 ) : (
                   <>
-                    {/* Marketplace Category */}
                     <div>
                       <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Category</label>
                       <div className="flex flex-wrap gap-1.5">
@@ -267,7 +290,6 @@ export default function HeroSection() {
                       </div>
                     </div>
 
-                    {/* Price Range */}
                     <div>
                       <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 text-left">Price Range (CVE)</label>
                       <div className="flex gap-2">
