@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -102,11 +101,10 @@ export default function VerifiedPropertyCard({
       >
         {/* Property Image */}
         <div className="relative h-48 sm:h-56 overflow-hidden">
-          <Image
+          <img
             src={property.images[0] || "/api/placeholder/400/300"}
             alt={property.title}
-            fill
-            className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
+            className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
               isImageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setIsImageLoaded(true)}
