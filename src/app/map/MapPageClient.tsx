@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User } from 'lucide-react';
+import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User, X } from 'lucide-react';
 import Header from '@/components/Header';
 
 const SafeLeafletMap = dynamic(
@@ -140,6 +140,8 @@ export default function MapPageClient({
   const [priceMaxInput, setPriceMaxInput] = useState(initialPriceMax || '');
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [hoveredProperty, setHoveredProperty] = useState<any>(null);
+  const [isMobileMapActive, setIsMobileMapActive] = useState(false);
+  const [activeMobileItem, setActiveMobileItem] = useState<any>(null);
 
   const priceMin = priceMinInput ? Number(priceMinInput) : 0;
   const priceMax = priceMaxInput ? Number(priceMaxInput) : Infinity;
@@ -156,128 +158,147 @@ export default function MapPageClient({
 
   const activeMapItem = selectedProperty || hoveredProperty;
 
+  function handlePinClick(item: any) {
+    if (window.innerWidth < 768) {
+      setActiveMobileItem(item);
+    } else {
+      setSelectedProperty(item);
+    }
+  }
+
   return (
     <>
       <Header />
-      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-white">
 
-        <aside className="w-full md:w-[450px] lg:w-[500px] border-r border-gray-200 flex flex-col h-[50vh] md:h-full overflow-y-auto bg-white z-10 shadow-md md:shadow-none border-t md:border-t-0">
+      {/* Filter strip - full width across both panels */}
+      <div className="w-full bg-white border-b border-gray-100 px-4 py-2.5 flex flex-wrap items-center gap-2 sticky top-16 z-30">
+        <div className="relative flex items-center flex-1 min-w-[140px] max-w-xs">
+          <Search className="absolute left-3 h-3.5 w-3.5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Neighborhood..."
+            className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+            value={searchArea}
+            onChange={(e) => setSearchArea(e.target.value)}
+          />
+        </div>
 
+        <select
+          className="border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+          value={listingType}
+          onChange={(e) => setListingType(e.target.value)}
+        >
+          <option value="all">All Types</option>
+          <option value="buy">For Sale</option>
+          <option value="rent">For Rent</option>
+        </select>
+
+        <select
+          className="border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+          value={propertyType}
+          onChange={(e) => setPropertyType(e.target.value)}
+        >
+          <option value="all">All Units</option>
+          <option value="apartment">Apartment</option>
+          <option value="house">House</option>
+          <option value="villa">Villa</option>
+          <option value="land">Land</option>
+        </select>
+
+        <select
+          className="border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+          value={minBedrooms}
+          onChange={(e) => setMinBedrooms(Number(e.target.value))}
+        >
+          <option value="0">Any Beds</option>
+          <option value="0.5">Studio</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+        </select>
+
+        <div className="hidden sm:flex items-center gap-1.5">
+          <input
+            type="number"
+            placeholder="Min CVE"
+            value={priceMinInput}
+            onChange={(e) => setPriceMinInput(e.target.value)}
+            className="w-20 border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+          />
+          <span className="text-gray-300 text-xs">-</span>
+          <input
+            type="number"
+            placeholder="Max CVE"
+            value={priceMaxInput}
+            onChange={(e) => setPriceMaxInput(e.target.value)}
+            className="w-20 border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+          />
+        </div>
+
+        {/* Mobile view toggle button */}
+        <button
+          onClick={() => { setIsMobileMapActive(!isMobileMapActive); setActiveMobileItem(null); }}
+          className="md:hidden ml-auto px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs font-semibold text-gray-700 transition flex items-center gap-1.5"
+        >
+          {isMobileMapActive ? (
+            <><span aria-hidden>&#x1F4CB;</span> List View</>
+          ) : (
+            <><span aria-hidden>&#x1F5FA;&#xFE0F;</span> Map View</>
+          )}
+        </button>
+      </div>
+
+      {/* Main split container */}
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px-46px)] w-full overflow-hidden bg-white">
+
+        {/* LEFT FEED PANEL - hidden on mobile when map is active */}
+        <aside className={`${isMobileMapActive ? 'hidden' : 'flex flex-col'} md:flex md:flex-col w-full md:w-[450px] lg:w-[500px] h-full overflow-y-auto bg-white border-r border-gray-200`}>
           {!selectedProperty ? (
-            <>
-              <div className="p-4 border-b border-gray-100 space-y-3">
-                <div className="relative flex items-center">
-                  <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by neighborhood (e.g., Palmarejo)..."
-                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
-                    value={searchArea}
-                    onChange={(e) => setSearchArea(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <select
-                    className="border border-gray-200 rounded-md px-2.5 py-1.5 bg-white font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
-                    value={listingType}
-                    onChange={(e) => setListingType(e.target.value)}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="buy">For Sale</option>
-                    <option value="rent">For Rent</option>
-                  </select>
-
-                  <select
-                    className="border border-gray-200 rounded-md px-2.5 py-1.5 bg-white font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
-                    value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
-                  >
-                    <option value="all">All Units</option>
-                    <option value="apartment">Apartment</option>
-                    <option value="house">House</option>
-                    <option value="villa">Villa</option>
-                    <option value="land">Land</option>
-                  </select>
-
-                  <select
-                    className="border border-gray-200 rounded-md px-2.5 py-1.5 bg-white font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
-                    value={minBedrooms}
-                    onChange={(e) => setMinBedrooms(Number(e.target.value))}
-                  >
-                    <option value="0">Any Beds</option>
-                    <option value="0.5">Studio</option>
-                    <option value="1">1+</option>
-                    <option value="2">2+</option>
-                    <option value="3">3+</option>
-                    <option value="4">4+</option>
-                  </select>
-
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      placeholder="Min CVE"
-                      value={priceMinInput}
-                      onChange={(e) => setPriceMinInput(e.target.value)}
-                      className="w-20 border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
-                    />
-                    <span className="text-gray-300">-</span>
-                    <input
-                      type="number"
-                      placeholder="Max CVE"
-                      value={priceMaxInput}
-                      onChange={(e) => setPriceMaxInput(e.target.value)}
-                      className="w-20 border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
-                    />
-                  </div>
-                </div>
+            <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
+              <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">
+                Available Spaces ({filteredProperties.length})
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50">
-                <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">
-                  Available Spaces ({filteredProperties.length})
-                </div>
-
-                <div className="columns-2 gap-2 w-full block">
-                  {filteredProperties.map((property, index) => (
-                    <div key={property.id} className="break-inside-avoid inline-block w-full mb-3">
-                      <div
-                        onClick={() => setSelectedProperty(property)}
-                        onMouseEnter={() => setHoveredProperty(property)}
-                        onMouseLeave={() => setHoveredProperty(null)}
-                        className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border ${
-                          hoveredProperty?.id === property.id
-                            ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
-                            : 'border-gray-200 hover:border-blue-400 hover:shadow-md'
-                        }`}
-                      >
-                        <img
-                          src={property.image_url}
-                          alt={property.title}
-                          className={`w-full object-cover rounded-t-lg ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
-                        />
-                        <div className="p-2">
-                          <span className="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider">
-                            {property.listing_type === 'buy' ? 'Sale' : 'Rent'} &bull; {property.neighborhood}
-                          </span>
-                          <h3 className="font-bold text-xs text-gray-900 line-clamp-2 mt-0.5 leading-tight">{property.title}</h3>
-                          <p className="font-extrabold text-sm text-gray-800 mt-1">
-                            CVE {property.price.toLocaleString()}
-                          </p>
-                          <p className="text-[10px] text-gray-400 mt-0.5 truncate">{property.neighborhood}</p>
-                        </div>
+              <div className="columns-2 gap-2 w-full block">
+                {filteredProperties.map((property, index) => (
+                  <div key={property.id} className="break-inside-avoid inline-block w-full mb-3">
+                    <div
+                      onClick={() => setSelectedProperty(property)}
+                      onMouseEnter={() => setHoveredProperty(property)}
+                      onMouseLeave={() => setHoveredProperty(null)}
+                      className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border ${
+                        hoveredProperty?.id === property.id
+                          ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
+                          : 'border-gray-200 hover:border-blue-400 hover:shadow-md'
+                      }`}
+                    >
+                      <img
+                        src={property.image_url}
+                        alt={property.title}
+                        className={`w-full object-cover rounded-t-lg ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
+                      />
+                      <div className="p-2">
+                        <span className="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider">
+                          {property.listing_type === 'buy' ? 'Sale' : 'Rent'} &bull; {property.neighborhood}
+                        </span>
+                        <h3 className="font-bold text-xs text-gray-900 line-clamp-2 mt-0.5 leading-tight">{property.title}</h3>
+                        <p className="font-extrabold text-sm text-gray-800 mt-1">
+                          CVE {property.price.toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 truncate">{property.neighborhood}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                {filteredProperties.length === 0 && (
-                  <div className="text-center py-8 text-gray-400 text-sm">
-                    No properties match your filters.
                   </div>
-                )}
+                ))}
               </div>
-            </>
+
+              {filteredProperties.length === 0 && (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  No properties match your filters.
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col h-full bg-white overflow-y-auto">
               <div className="p-4 pb-0">
@@ -380,14 +401,77 @@ export default function MapPageClient({
           )}
         </aside>
 
-        <div className="w-full md:flex-1 h-[50vh] md:h-full relative bg-gray-100 z-0">
+        {/* RIGHT MAP PANEL - full screen on mobile when map toggled */}
+        <div className={`${isMobileMapActive ? 'block' : 'hidden'} md:block w-full md:flex-1 h-full relative bg-gray-100 z-0`}>
           <SafeLeafletMap
             items={filteredProperties}
             activeItem={activeMapItem}
-            onPinClick={setSelectedProperty}
+            onPinClick={handlePinClick}
           />
-        </div>
 
+          {/* Mobile backdrop tap to dismiss drawer */}
+          {activeMobileItem && (
+            <div
+              className="block md:hidden absolute inset-0 z-30"
+              onClick={() => setActiveMobileItem(null)}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Bottom Drawer - only visible on mobile */}
+      <div
+        className={`block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white shadow-2xl rounded-t-2xl p-3 transform transition-transform duration-300 w-full max-w-md mx-auto ${
+          activeMobileItem ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        {activeMobileItem && (
+          <>
+            <div className="flex justify-end mb-1">
+              <button
+                onClick={() => setActiveMobileItem(null)}
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <Link
+              href={`/property/${activeMobileItem.id}`}
+              className="flex items-center gap-3"
+            >
+              <img
+                src={activeMobileItem.image_url}
+                alt={activeMobileItem.title}
+                className="w-20 h-20 rounded-xl object-cover flex-shrink-0 bg-gray-100"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-base text-gray-900">
+                  CVE {activeMobileItem.price?.toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500 truncate mt-0.5">
+                  {activeMobileItem.neighborhood}
+                </p>
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
+                  <span className="flex items-center gap-0.5">
+                    <Bed className="h-3 w-3 text-gray-400" />
+                    {activeMobileItem.bedrooms}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <Bath className="h-3 w-3 text-gray-400" />
+                    {activeMobileItem.bathrooms}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <MapPin className="h-3 w-3 text-gray-400" />
+                    {activeMobileItem.listing_type === 'buy' ? 'Sale' : 'Rent'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#2563EB] font-semibold mt-1">
+                  Tap for details
+                </p>
+              </div>
+            </Link>
+          </>
+        )}
       </div>
     </>
   );
