@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import PropertyListings from '@/components/PropertyListings';
 import ResultsFilterStrip from '@/components/ResultsFilterStrip';
-import ResultsSplitView from '@/components/ResultsSplitView';
 import MarketsView from '@/components/MarketsView';
 import Footer from '@/components/Footer';
 import { useSearchMode } from '@/contexts/SearchModeContext';
@@ -36,14 +35,17 @@ export default function HomeContent() {
 
   const [hasScrolledPastHero, setHasScrolledPastHero] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
+  const scrollTriggeredRef = useRef(false);
 
   useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY;
-      if (scrollY > 150 && !hasScrolledPastHero) {
+      if (scrollY > 150 && !scrollTriggeredRef.current) {
+        scrollTriggeredRef.current = true;
         setHasScrolledPastHero(true);
         setIsResultsViewActive(true);
-      } else if (scrollY <= 10 && hasScrolledPastHero) {
+      } else if (scrollY <= 10 && scrollTriggeredRef.current) {
+        scrollTriggeredRef.current = false;
         setHasScrolledPastHero(false);
         setIsResultsViewActive(false);
         setShowMapView(false);
@@ -51,7 +53,7 @@ export default function HomeContent() {
     }
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasScrolledPastHero, setIsResultsViewActive]);
+  }, [setIsResultsViewActive]);
 
   const filteredProperties = useMemo(() => {
     return capeVerdeProperties.filter(property => {
@@ -74,24 +76,35 @@ export default function HomeContent() {
     }));
   }, [filteredProperties, listingType]);
 
-  // Markets mode with results active (either from search or scroll)
-  if (isResultsViewActive && searchMode === "markets") {
+  const scrolledActive = hasScrolledPastHero || isResultsViewActive;
+
+  // Markets mode fully active (user searched or scrolled)
+  if (scrolledActive && searchMode === "markets") {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
+        {/* Filter strip with fade-in animation */}
+        <div className={`transition-all duration-500 ease-in-out transform ${
+          scrolledActive ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}>
+          <ResultsFilterStrip />
+        </div>
         <MarketsView />
       </div>
     );
   }
 
-  // Real estate results active with map toggled ON
-  if (isResultsViewActive && showMapView) {
+  // Real estate with map view toggled ON
+  if (scrolledActive && showMapView) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
-        <ResultsFilterStrip />
+        <div className={`transition-all duration-500 ease-in-out transform ${
+          scrolledActive ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}>
+          <ResultsFilterStrip />
+        </div>
         <div className="flex flex-col md:flex-row h-[calc(100vh-64px-44px)] w-full overflow-hidden">
-          {/* Left listing feed */}
           <div className="w-full md:w-[400px] lg:w-[440px] h-[50vh] md:h-full overflow-y-auto border-r border-gray-100 bg-white">
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
@@ -134,7 +147,6 @@ export default function HomeContent() {
               </div>
             </div>
           </div>
-          {/* Right map panel */}
           <div className="w-full md:flex-1 h-[50vh] md:h-full relative bg-gray-100">
             <SafeLeafletMap items={mapMarkers} activeItem={null} onPinClick={() => {}} />
           </div>
@@ -143,80 +155,108 @@ export default function HomeContent() {
     );
   }
 
-  // Real estate results active - masonry grid (no map by default)
-  if (isResultsViewActive) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <ResultsFilterStrip />
-        <div className="relative w-full max-w-7xl mx-auto px-3 pt-4 pb-10">
-          {/* Floating map toggle pill */}
-          <div className="flex justify-center mb-4 sticky top-28 z-20">
-            <button
-              onClick={() => setShowMapView(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-full shadow-lg transition transform hover:scale-105"
-            >
-              <Map className="h-4 w-4" />
-              View on Map
-            </button>
-          </div>
-
-          {/* Properties count */}
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            {filteredProperties.length} Available Properties
-          </p>
-
-          {/* Masonry grid */}
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
-            {filteredProperties.slice(0, 24).map((property, index) => (
-              <Link
-                key={property.id}
-                href={`/property/${property.id}`}
-                className="break-inside-avoid inline-block w-full mb-3"
-              >
-                <div className="rounded-xl bg-white overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-lg transition cursor-pointer group">
-                  <div className="relative">
-                    <img
-                      src={property.images[0]}
-                      alt={property.title}
-                      className={`w-full object-cover group-hover:scale-[1.02] transition-transform duration-200 ${
-                        index % 3 === 0 ? 'h-48' : index % 3 === 1 ? 'h-56' : 'h-40'
-                      }`}
-                    />
-                    <span className="absolute top-2 left-2 text-[9px] font-bold bg-white/90 backdrop-blur-sm text-[#2563EB] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      {listingType === 'rent' ? 'Rent' : 'Sale'}
-                    </span>
-                  </div>
-                  <div className="p-2.5">
-                    <p className="font-extrabold text-sm text-gray-900">{formatPrice(property.price)}</p>
-                    <h3 className="font-medium text-xs text-gray-700 line-clamp-1 mt-0.5">{property.title}</h3>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-1">
-                      <MapPin className="h-2.5 w-2.5" /> {property.location}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-500">
-                      <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>
-                      <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>
-                      {property.totalArea > 0 && (
-                        <span>{property.totalArea}m&sup2;</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default: Hero landing page
+  // Unified layout: Hero (with transitions) + Listing Feed
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <HeroSection />
-      <PropertyListings />
-      <Footer />
+
+      {/* Hero section with smooth collapse */}
+      <div className={`relative overflow-hidden transition-all duration-700 ease-in-out will-change-[max-height,opacity] ${
+        scrolledActive
+          ? 'max-h-0 opacity-0'
+          : 'max-h-[80vh] opacity-100'
+      }`}>
+        <HeroSection />
+      </div>
+
+      {/* Filter strip - fades in from above when scrolled */}
+      <div className={`transition-all duration-500 ease-in-out transform will-change-[opacity,transform] ${
+        scrolledActive
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 -translate-y-3 pointer-events-none h-0 overflow-hidden'
+      }`}>
+        <ResultsFilterStrip />
+      </div>
+
+      {/* Content area with smooth padding transition */}
+      <div className={`transition-all duration-500 ease-in-out ${
+        scrolledActive ? 'pt-2' : 'pt-0'
+      }`}>
+        {/* Masonry listing grid - shown when scrolled past hero in real estate mode */}
+        <div className={`transition-all duration-500 ease-in-out will-change-[opacity,transform] ${
+          scrolledActive && searchMode === 'realestate'
+            ? 'opacity-100 translate-y-0'
+            : scrolledActive ? 'opacity-0 translate-y-4 h-0 overflow-hidden pointer-events-none' : 'opacity-0 h-0 overflow-hidden pointer-events-none'
+        }`}>
+          <div className="relative w-full max-w-7xl mx-auto px-3 pt-4 pb-10">
+            {/* Floating map toggle pill */}
+            <div className="flex justify-center mb-4 sticky top-28 z-20">
+              <button
+                onClick={() => setShowMapView(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-full shadow-lg transition transform hover:scale-105"
+              >
+                <Map className="h-4 w-4" />
+                View on Map
+              </button>
+            </div>
+
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              {filteredProperties.length} Available Properties
+            </p>
+
+            {/* Masonry grid */}
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
+              {filteredProperties.slice(0, 24).map((property, index) => (
+                <Link
+                  key={property.id}
+                  href={`/property/${property.id}`}
+                  className="break-inside-avoid inline-block w-full mb-3"
+                >
+                  <div className="rounded-xl bg-white overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={property.images[0]}
+                        alt={property.title}
+                        className={`w-full object-cover group-hover:scale-[1.03] transition-transform duration-300 ${
+                          index % 3 === 0 ? 'h-48' : index % 3 === 1 ? 'h-56' : 'h-40'
+                        }`}
+                      />
+                      <span className="absolute top-2 left-2 text-[9px] font-bold bg-white/90 backdrop-blur-sm text-[#2563EB] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        {listingType === 'rent' ? 'Rent' : 'Sale'}
+                      </span>
+                    </div>
+                    <div className="p-2.5">
+                      <p className="font-extrabold text-sm text-gray-900">{formatPrice(property.price)}</p>
+                      <h3 className="font-medium text-xs text-gray-700 line-clamp-1 mt-0.5">{property.title}</h3>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-1">
+                        <MapPin className="h-2.5 w-2.5" /> {property.location}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-500">
+                        <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>
+                        <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>
+                        {property.totalArea > 0 && (
+                          <span>{property.totalArea}m&sup2;</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Default property listings - shown on hero landing */}
+        <div className={`transition-all duration-500 ease-in-out ${
+          scrolledActive ? 'opacity-0 h-0 overflow-hidden pointer-events-none' : 'opacity-100'
+        }`}>
+          <PropertyListings />
+          <Footer />
+        </div>
+      </div>
     </div>
   );
 }
+
+
+export default HomeContent
