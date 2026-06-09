@@ -20,12 +20,12 @@ function formatPriceShort(price: number): string {
 function createPriceIcon(price: number, isActive = false): L.DivIcon {
   const priceLabel = formatPriceShort(price);
   const pinClasses = isActive
-    ? 'bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl scale-110 z-50'
-    : 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-[#0044FF] hover:text-white transition-colors';
+    ? 'bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl'
+    : 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md';
 
   return L.divIcon({
-    className: 'custom-price-marker',
-    html: `<div class="${pinClasses}" style="cursor:pointer;transition:all 0.2s ease;">${priceLabel}</div>`,
+    className: `custom-price-marker ${isActive ? 'active-marker' : ''}`,
+    html: `<div class="${pinClasses}" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.15)' : 'scale(1)'};">${priceLabel}</div>`,
     iconSize: isActive ? [48, 48] : [44, 44],
     iconAnchor: isActive ? [24, 24] : [22, 22],
     popupAnchor: [0, -24],
@@ -44,7 +44,7 @@ function MapController({ activeItem }: { activeItem: any }) {
           duration: 0.8,
         });
       } else {
-        map.panTo(targetLatLng, { animate: true, duration: 0.4 });
+        map.panTo(targetLatLng, { animate: true, duration: 0.5 });
       }
     }
   }, [activeItem, map]);
@@ -60,8 +60,8 @@ const popupStyles = `
   }
   .leaflet-popup-content {
     margin: 0 !important;
-    width: 180px !important;
-    min-width: 180px !important;
+    width: 200px !important;
+    min-width: 200px !important;
   }
   .leaflet-popup-tip { background: white !important; }
   .custom-price-marker {
@@ -70,6 +70,9 @@ const popupStyles = `
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+  }
+  .active-marker {
+    z-index: 999 !important;
   }
 `;
 
@@ -131,65 +134,60 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
               key={item.id}
               position={[item.latitude, item.longitude]}
               icon={createPriceIcon(item.price, isActive)}
+              zIndexOffset={isActive ? 1000 : 0}
               eventHandlers={{
                 mouseover: (e) => {
                   e.target.setIcon(createPriceIcon(item.price, true));
                   e.target.openPopup();
                 },
                 mouseout: (e) => {
-                  e.target.setIcon(createPriceIcon(item.price, isActive));
+                  if (!isActive) {
+                    e.target.setIcon(createPriceIcon(item.price, false));
+                  }
                 },
                 click: () => onPinClick(item),
               }}
             >
               <Popup closeButton={false} autoPan={false}>
-                <div className="cursor-pointer w-[180px]" onClick={() => onPinClick(item)}>
+                <div className="cursor-pointer w-[200px]" onClick={() => onPinClick(item)}>
                   {item.image_url && (
                     <img
                       src={item.image_url}
-                      className="w-full h-24 object-cover rounded-t-lg"
+                      className="w-full h-28 object-cover"
                       alt="preview"
                     />
                   )}
-                  <div className="p-2.5 space-y-0.5 bg-white rounded-b-lg">
-                    <p className="text-base font-black text-gray-900 leading-tight">
+                  <div className="p-2.5 space-y-1 bg-white">
+                    <p className="text-sm font-black text-gray-900 leading-tight">
                       CVE {item.price?.toLocaleString()}
                     </p>
-                    {item.listing_type === 'marketplace' ? (
-                      <>
-                        <p className="text-[11px] font-medium text-gray-700 truncate">
-                          {item.title || 'Market Item'}
-                        </p>
-                        <p className="text-[10px] text-gray-500 truncate">
-                          {item.neighborhood || ''}
-                        </p>
-                        <a
-                          href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in: ${item.title}`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block mt-1.5 text-center text-[10px] font-bold text-white bg-emerald-500 rounded-md py-1 px-2 hover:bg-emerald-600 transition"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          WhatsApp Seller
-                        </a>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                          <span className="flex items-center gap-0.5">
-                            <Bed className="h-3.5 w-3.5 text-gray-400" />
-                            {item.bedrooms || 0}
-                          </span>
-                          <span className="text-gray-300">|</span>
-                          <span className="flex items-center gap-0.5">
-                            <Bath className="h-3.5 w-3.5 text-gray-400" />
-                            {item.bathrooms || 0}
-                          </span>
-                        </div>
-                        <p className="text-[11px] font-normal text-gray-500 truncate mt-0.5">
-                          {item.neighborhood || item.title || 'Cape Verde'}
-                        </p>
-                      </>
+                    <p className="text-[11px] font-medium text-gray-700 truncate">
+                      {item.title || 'Property'}
+                    </p>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-600">
+                      <span className="flex items-center gap-0.5">
+                        <Bed className="h-3.5 w-3.5 text-gray-400" />
+                        {item.bedrooms || 0}
+                      </span>
+                      <span className="text-gray-300">|</span>
+                      <span className="flex items-center gap-0.5">
+                        <Bath className="h-3.5 w-3.5 text-gray-400" />
+                        {item.bathrooms || 0}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 truncate">
+                      {item.neighborhood || 'Cape Verde'}
+                    </p>
+                    {item.seller_phone && (
+                      <a
+                        href={`https://wa.me/${item.seller_phone.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${item.title}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1.5 text-center text-[10px] font-bold text-white bg-emerald-500 rounded-md py-1 px-2 hover:bg-emerald-600 transition"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        WhatsApp Seller
+                      </a>
                     )}
                   </div>
                 </div>
