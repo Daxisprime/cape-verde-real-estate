@@ -47,15 +47,50 @@ export default function Header() {
     setSearchMode("realestate");
   }
 
+  const tabsElement = (
+    <nav className="hidden sm:flex items-center gap-1">
+      <button
+        onClick={() => setSearchMode("realestate")}
+        className="relative px-3 py-1.5 text-sm font-medium transition-all"
+      >
+        <span className={
+          isMarkets
+            ? "text-white/60 hover:text-white"
+            : "text-slate-800"
+        }>
+          Real Estate
+        </span>
+        {!isMarkets && (
+          <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#2563EB] rounded-full" />
+        )}
+      </button>
+      <button
+        onClick={() => setSearchMode("markets")}
+        className="relative px-3 py-1.5 text-sm font-medium transition-all"
+      >
+        <span className={
+          isMarkets
+            ? "text-white"
+            : "text-slate-400 hover:text-slate-700"
+        }>
+          Markets
+        </span>
+        {isMarkets && (
+          <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-white rounded-full" />
+        )}
+      </button>
+    </nav>
+  );
+
   return (
     <header className={`sticky top-0 z-50 border-b shadow-sm transition-colors duration-300 ${
       isMarkets
         ? "bg-[#2563EB] border-blue-700"
         : "bg-white border-gray-200"
     }`}>
-      <div className="w-full flex items-center justify-between px-4 h-16">
-        {/* LEFT: Burger + Logo */}
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="w-full flex items-center px-4 h-16 relative">
+        {/* LEFT: Burger + Logo + (Search when results active) */}
+        <div className="flex items-center gap-3 min-w-0 flex-shrink-0">
           {/* Hamburger */}
           <div className="relative flex-shrink-0" ref={navRef}>
             <button
@@ -147,7 +182,7 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* CENTER-LEFT: Search bar */}
+          {/* Search bar - only when results view active */}
           {isResultsViewActive && (
             <div className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0">
               <div className="relative">
@@ -170,41 +205,16 @@ export default function Header() {
           )}
         </div>
 
-        {/* RIGHT: Mode Tabs + Profile */}
-        <div className="flex items-center gap-4 flex-shrink-0">
-          {/* Mode text links - ALWAYS visible, flat, no borders/backgrounds */}
-          <nav className="hidden sm:flex items-center gap-1">
-            <button
-              onClick={() => setSearchMode("realestate")}
-              className="relative px-3 py-1.5 text-sm font-medium transition-all"
-            >
-              <span className={
-                isMarkets
-                  ? (!isMarkets ? "text-white" : "text-white/60 hover:text-white")
-                  : (!isMarkets ? "text-slate-800" : "text-slate-400 hover:text-slate-700")
-              }>
-                Real Estate
-              </span>
-              {!isMarkets && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#2563EB] rounded-full" />
-              )}
-            </button>
-            <button
-              onClick={() => setSearchMode("markets")}
-              className="relative px-3 py-1.5 text-sm font-medium transition-all"
-            >
-              <span className={
-                isMarkets
-                  ? "text-white"
-                  : "text-slate-400 hover:text-slate-700"
-              }>
-                Markets
-              </span>
-              {isMarkets && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-white rounded-full" />
-              )}
-            </button>
-          </nav>
+        {/* CENTER: Tabs when home view (absolute center positioning) */}
+        {!isResultsViewActive && (
+          <div className="absolute left-1/2 -translate-x-1/2">
+            {tabsElement}
+          </div>
+        )}
+
+        {/* RIGHT: (Tabs when results active) + Profile */}
+        <div className="flex items-center gap-4 ml-auto flex-shrink-0">
+          {isResultsViewActive && tabsElement}
 
           {/* Profile Avatar - FAR RIGHT */}
           <div className="relative" ref={dropdownRef}>
@@ -261,9 +271,9 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile: search + mode tabs (below main bar) */}
+      {/* Mobile: search bar when results active */}
       {isResultsViewActive && (
-        <div className="sm:hidden px-4 pb-3">
+        <div className="sm:hidden px-4 pb-2">
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
               isMarkets ? "text-white/50" : "text-gray-400"
@@ -284,7 +294,7 @@ export default function Header() {
       )}
 
       {/* Mobile mode tabs - always visible */}
-      <div className="sm:hidden flex items-center gap-1 px-4 pb-2">
+      <div className="sm:hidden flex items-center justify-center gap-1 px-4 pb-2">
         <button
           onClick={() => setSearchMode("realestate")}
           className="relative px-3 py-1 text-xs font-medium transition-all"

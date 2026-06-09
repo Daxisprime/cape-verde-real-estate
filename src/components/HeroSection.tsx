@@ -92,29 +92,6 @@ export default function HeroSection() {
     >
       <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
 
-      {/* Global Mode Tabs - floating at top of hero, just below navbar edge */}
-      <div className="relative z-10 flex justify-center gap-8 pt-4 pb-2">
-        <button
-          onClick={() => setSearchMode("realestate")}
-          className={`text-xs font-semibold uppercase tracking-widest transition-all pb-1.5 border-b-2 ${
-            searchMode === "realestate"
-              ? "text-white border-white"
-              : "text-white/45 border-transparent hover:text-white/70"
-          }`}
-        >
-          Real Estate
-        </button>
-        <button
-          onClick={() => setSearchMode("markets")}
-          className={`text-xs font-semibold uppercase tracking-widest transition-all pb-1.5 border-b-2 ${
-            searchMode === "markets"
-              ? "text-white border-white"
-              : "text-white/45 border-transparent hover:text-white/70"
-          }`}
-        >
-          Markets
-        </button>
-      </div>
 
       {/* Centered content area */}
       <div className="relative z-10 flex-1 flex items-center justify-center">
