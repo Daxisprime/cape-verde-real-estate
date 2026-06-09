@@ -302,49 +302,53 @@ export default function MarketsView() {
 
       {/* Left Sidebar - Jiji-Style Nested Category Selector */}
       <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative z-40">
-        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-visible bg-white border-r border-gray-200 p-4">
-          <div className="mb-5 pb-4 border-b border-slate-100">
-            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-            >
-              {MUNICIPALITIES.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
+        <div className="sticky top-28 h-[calc(100vh-120px)] flex flex-col bg-white border-r border-gray-200">
+          {/* Top Fixed Controls - Location & Price (never scrolls) */}
+          <div className="w-full p-4 pb-0 flex-shrink-0">
+            <div className="pb-4 mb-4 border-b border-slate-100">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
+              >
+                {MUNICIPALITIES.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="mb-5 pb-4 border-b border-slate-100">
-            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-              />
+            <div className="pb-4 mb-4 border-b border-slate-100">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
+                />
+              </div>
             </div>
           </div>
 
-          <div>
+          {/* Independent Scrolling Categories Track */}
+          <div className="w-full flex-1 overflow-y-auto max-h-[calc(100vh-320px)] px-4 pb-4 pr-2">
             <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Categories</h3>
-            <div className="flex flex-col relative">
+            <div className="flex flex-col">
               <button
                 onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
                 className={`flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors text-left ${
                   !selectedCategory
                     ? "bg-blue-50 text-[#0044FF] font-semibold"
-                    : "text-gray-700 hover:bg-gray-50"
+                    : "text-gray-700 hover:bg-slate-50"
                 }`}
               >
                 <span>All Categories</span>
@@ -359,10 +363,10 @@ export default function MarketsView() {
                 >
                   <button
                     onClick={() => handleCategorySelect(cat.label)}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors text-left ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-left group cursor-pointer ${
                       selectedCategory === cat.label
                         ? "bg-blue-50 text-[#0044FF] font-semibold"
-                        : "text-gray-700 hover:bg-gray-50"
+                        : "text-gray-700 hover:bg-slate-50"
                     }`}
                   >
                     <span className="flex items-center gap-2 min-w-0">
@@ -374,7 +378,7 @@ export default function MarketsView() {
 
                   {/* Flyout subcategory panel */}
                   {hoveredCategoryId === cat.id && (
-                    <div className="absolute left-full top-0 bg-white shadow-2xl rounded-r-xl border border-slate-200 p-4 w-56 z-50 min-h-[120px]">
+                    <div className="absolute left-full top-0 ml-1 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-50 min-h-[120px]">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
                       {cat.subcategories.map(sub => (
                         <button
@@ -386,7 +390,7 @@ export default function MarketsView() {
                           className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
                             selectedSubcategory === sub
                               ? "bg-blue-50 text-[#0044FF] font-semibold"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
                           }`}
                         >
                           {sub}
