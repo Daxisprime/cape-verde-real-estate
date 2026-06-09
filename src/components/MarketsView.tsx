@@ -164,6 +164,7 @@ export default function MarketsView() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [isMarketMapActive, setIsMarketMapActive] = useState(false);
+  const [activeMarketItem, setActiveMarketItem] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     return MARKETPLACE_ITEMS.filter(item => {
@@ -188,9 +189,19 @@ export default function MarketsView() {
       longitude: item.coordinates[0],
       price: item.price,
       title: item.title,
+      image_url: item.image,
       listing_type: "marketplace" as const,
+      neighborhood: item.location,
     }));
   }, [filteredItems]);
+
+  function handleMapPinClick(markerItem: any) {
+    setActiveMarketItem(markerItem.id);
+    const el = document.getElementById(`market-item-${markerItem.id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 
   return (
     <div className="relative flex min-h-[calc(100vh-64px)]">
@@ -313,14 +324,18 @@ export default function MarketsView() {
 
             {/* Masonry Grid - 2-col all devices */}
             <div className="columns-2 gap-2 w-full block">
-              {filteredItems.map((item) => (
-                <div key={item.id} className="break-inside-avoid inline-block w-full mb-2">
-                  <div className="rounded-xl bg-white cursor-pointer transition overflow-hidden border border-gray-100 hover:border-[#2563EB]/30 hover:shadow-lg group">
+              {filteredItems.map((item, index) => (
+                <div key={item.id} id={`market-item-${item.id}`} className="break-inside-avoid inline-block w-full mb-3">
+                  <div className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border group ${
+                    activeMarketItem === item.id
+                      ? 'border-[#2563EB] shadow-lg ring-2 ring-blue-100'
+                      : 'border-gray-100 hover:border-[#2563EB]/30 hover:shadow-lg'
+                  }`}>
                     <div className="relative overflow-hidden">
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-full aspect-[4/3] object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-300"
+                        className={`w-full object-cover rounded-t-lg bg-gray-100 group-hover:scale-105 transition-transform duration-300 ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
                       />
                       <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-1.5 py-0.5 rounded-full">
                         {item.category.split(" ")[0]}
@@ -355,8 +370,8 @@ export default function MarketsView() {
           <div className="w-full md:w-1/2 h-[50vh] md:h-[calc(100vh-64px)] border-l border-gray-200">
             <SafeLeafletMap
               items={mapMarkers}
-              activeItem={null}
-              onPinClick={() => {}}
+              activeItem={mapMarkers.find(m => m.id === activeMarketItem) || null}
+              onPinClick={handleMapPinClick}
             />
           </div>
         )}

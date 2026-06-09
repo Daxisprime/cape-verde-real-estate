@@ -134,12 +134,15 @@ export default function MapPageClient({
   const [properties] = useState(MOCK_DATA);
   const [searchArea, setSearchArea] = useState(initialQuery);
   const [listingType, setListingType] = useState(initialType === 'buy' || initialType === 'rent' ? initialType : 'all');
+  const [propertyType, setPropertyType] = useState(initialPropertyType || 'all');
   const [minBedrooms, setMinBedrooms] = useState(Number(initialBeds) || 0);
+  const [priceMinInput, setPriceMinInput] = useState(initialPriceMin || '');
+  const [priceMaxInput, setPriceMaxInput] = useState(initialPriceMax || '');
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [hoveredProperty, setHoveredProperty] = useState<any>(null);
 
-  const priceMin = initialPriceMin ? Number(initialPriceMin) : 0;
-  const priceMax = initialPriceMax ? Number(initialPriceMax) : Infinity;
+  const priceMin = priceMinInput ? Number(priceMinInput) : 0;
+  const priceMax = priceMaxInput ? Number(priceMaxInput) : Infinity;
 
   const filteredProperties = properties.filter((item) => {
     const matchesArea = searchArea === '' ||
@@ -174,9 +177,9 @@ export default function MapPageClient({
                   />
                 </div>
 
-                <div className="flex gap-2 text-xs">
+                <div className="flex flex-wrap gap-2 text-xs">
                   <select
-                    className="border rounded-md px-2 py-1.5 bg-white font-medium text-gray-700 outline-none"
+                    className="border border-gray-200 rounded-md px-2.5 py-1.5 bg-white font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
                     value={listingType}
                     onChange={(e) => setListingType(e.target.value)}
                   >
@@ -186,15 +189,47 @@ export default function MapPageClient({
                   </select>
 
                   <select
-                    className="border rounded-md px-2 py-1.5 bg-white font-medium text-gray-700 outline-none"
+                    className="border border-gray-200 rounded-md px-2.5 py-1.5 bg-white font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+                    value={propertyType}
+                    onChange={(e) => setPropertyType(e.target.value)}
+                  >
+                    <option value="all">All Units</option>
+                    <option value="apartment">Apartment</option>
+                    <option value="house">House</option>
+                    <option value="villa">Villa</option>
+                    <option value="land">Land</option>
+                  </select>
+
+                  <select
+                    className="border border-gray-200 rounded-md px-2.5 py-1.5 bg-white font-medium text-gray-700 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
                     value={minBedrooms}
                     onChange={(e) => setMinBedrooms(Number(e.target.value))}
                   >
                     <option value="0">Any Beds</option>
-                    <option value="1">1+ Beds</option>
-                    <option value="2">2+ Beds</option>
-                    <option value="3">3+ Beds</option>
+                    <option value="0.5">Studio</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                    <option value="4">4+</option>
                   </select>
+
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      placeholder="Min CVE"
+                      value={priceMinInput}
+                      onChange={(e) => setPriceMinInput(e.target.value)}
+                      className="w-20 border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+                    />
+                    <span className="text-gray-300">-</span>
+                    <input
+                      type="number"
+                      placeholder="Max CVE"
+                      value={priceMaxInput}
+                      onChange={(e) => setPriceMaxInput(e.target.value)}
+                      className="w-20 border border-gray-200 rounded-md px-2 py-1.5 bg-white text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -204,8 +239,8 @@ export default function MapPageClient({
                 </div>
 
                 <div className="columns-2 gap-2 w-full block">
-                  {filteredProperties.map((property) => (
-                    <div key={property.id} className="break-inside-avoid inline-block w-full mb-2">
+                  {filteredProperties.map((property, index) => (
+                    <div key={property.id} className="break-inside-avoid inline-block w-full mb-3">
                       <div
                         onClick={() => setSelectedProperty(property)}
                         onMouseEnter={() => setHoveredProperty(property)}
@@ -219,7 +254,7 @@ export default function MapPageClient({
                         <img
                           src={property.image_url}
                           alt={property.title}
-                          className="w-full aspect-[4/3] object-cover bg-gray-100"
+                          className={`w-full object-cover rounded-t-lg ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
                         />
                         <div className="p-2">
                           <span className="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider">
@@ -357,3 +392,6 @@ export default function MapPageClient({
     </>
   );
 }
+
+
+export default MapPageClient

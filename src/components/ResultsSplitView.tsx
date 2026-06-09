@@ -56,8 +56,8 @@ export default function ResultsSplitView() {
 
           {/* 2-column masonry - all devices */}
           <div className="columns-2 gap-2 w-full block">
-            {listings.map((item: Property) => (
-              <div key={item.id} className="break-inside-avoid inline-block w-full mb-2">
+            {listings.map((item: Property, index: number) => (
+              <div key={item.id} className="break-inside-avoid inline-block w-full mb-3">
                 <div
                   onMouseEnter={() => setHoveredId(item.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -70,7 +70,7 @@ export default function ResultsSplitView() {
                   <img
                     src={item.images?.[0]}
                     alt={item.title}
-                    className="w-full aspect-[4/3] object-cover bg-gray-100"
+                    className={`w-full object-cover rounded-t-lg bg-gray-100 ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
                   />
                   <div className="p-2">
                     <span className="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider">

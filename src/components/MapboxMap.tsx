@@ -149,20 +149,42 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
                     <p className="text-base font-black text-gray-900 leading-tight">
                       CVE {item.price?.toLocaleString()}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                      <span className="flex items-center gap-0.5">
-                        <Bed className="h-3.5 w-3.5 text-gray-400" />
-                        {item.bedrooms || 0}
-                      </span>
-                      <span className="text-gray-300">|</span>
-                      <span className="flex items-center gap-0.5">
-                        <Bath className="h-3.5 w-3.5 text-gray-400" />
-                        {item.bathrooms || 0}
-                      </span>
-                    </div>
-                    <p className="text-[11px] font-normal text-gray-500 truncate mt-0.5">
-                      {item.neighborhood || item.title || 'Cape Verde'}
-                    </p>
+                    {item.listing_type === 'marketplace' ? (
+                      <>
+                        <p className="text-[11px] font-medium text-gray-700 truncate">
+                          {item.title || 'Market Item'}
+                        </p>
+                        <p className="text-[10px] text-gray-500 truncate">
+                          {item.neighborhood || ''}
+                        </p>
+                        <a
+                          href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in: ${item.title}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block mt-1.5 text-center text-[10px] font-bold text-white bg-emerald-500 rounded-md py-1 px-2 hover:bg-emerald-600 transition"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          WhatsApp Seller
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                          <span className="flex items-center gap-0.5">
+                            <Bed className="h-3.5 w-3.5 text-gray-400" />
+                            {item.bedrooms || 0}
+                          </span>
+                          <span className="text-gray-300">|</span>
+                          <span className="flex items-center gap-0.5">
+                            <Bath className="h-3.5 w-3.5 text-gray-400" />
+                            {item.bathrooms || 0}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-normal text-gray-500 truncate mt-0.5">
+                          {item.neighborhood || item.title || 'Cape Verde'}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </Popup>
