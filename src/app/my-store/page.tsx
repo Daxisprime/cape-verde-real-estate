@@ -277,11 +277,11 @@ export default function MyStorePage() {
               )}
             </div>
           ) : (
-            <div className="columns-2 gap-2 w-full">
+            <div className="columns-2 gap-2 w-full block">
               {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
-                  className="break-inside-avoid mb-2 w-full inline-block"
+                  className="break-inside-avoid inline-block w-full mb-2"
                 >
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden relative group">
                   {/* Reviewing Badge */}

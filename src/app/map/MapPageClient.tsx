@@ -203,11 +203,13 @@ export default function MapPageClient({
                   Available Spaces ({filteredProperties.length})
                 </div>
 
-                <div className="columns-2 gap-2 md:hidden w-full">
+                <div className="columns-2 gap-2 w-full block">
                   {filteredProperties.map((property) => (
-                    <div key={property.id} className="break-inside-avoid mb-2 w-full inline-block">
+                    <div key={property.id} className="break-inside-avoid inline-block w-full mb-2">
                       <div
                         onClick={() => setSelectedProperty(property)}
+                        onMouseEnter={() => setHoveredProperty(property)}
+                        onMouseLeave={() => setHoveredProperty(null)}
                         className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border ${
                           hoveredProperty?.id === property.id
                             ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
@@ -219,47 +221,16 @@ export default function MapPageClient({
                           alt={property.title}
                           className="w-full aspect-[4/3] object-cover bg-gray-100"
                         />
-                        <div className="p-2.5">
-                          <span className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider">
-                            {property.listing_type === 'buy' ? 'Sale' : 'Rent'}
+                        <div className="p-2">
+                          <span className="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider">
+                            {property.listing_type === 'buy' ? 'Sale' : 'Rent'} &bull; {property.neighborhood}
                           </span>
-                          <h3 className="font-bold text-xs text-gray-900 line-clamp-2 mt-0.5">{property.title}</h3>
+                          <h3 className="font-bold text-xs text-gray-900 line-clamp-2 mt-0.5 leading-tight">{property.title}</h3>
                           <p className="font-extrabold text-sm text-gray-800 mt-1">
                             CVE {property.price.toLocaleString()}
                           </p>
                           <p className="text-[10px] text-gray-400 mt-0.5 truncate">{property.neighborhood}</p>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="hidden md:block space-y-3">
-                  {filteredProperties.map((property) => (
-                    <div
-                      key={property.id}
-                      onClick={() => setSelectedProperty(property)}
-                      onMouseEnter={() => setHoveredProperty(property)}
-                      onMouseLeave={() => setHoveredProperty(null)}
-                      className={`p-3 border rounded-xl bg-white cursor-pointer transition flex gap-4 ${
-                        hoveredProperty?.id === property.id
-                          ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
-                          : 'border-gray-200 hover:border-blue-400 hover:shadow-md'
-                      }`}
-                    >
-                      <img
-                        src={property.image_url}
-                        alt={property.title}
-                        className="w-24 h-20 object-cover rounded-lg bg-gray-100 flex-shrink-0"
-                      />
-                      <div className="flex flex-col justify-center min-w-0">
-                        <span className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider">
-                          {property.listing_type === 'buy' ? 'For Sale' : 'To Rent'} • {property.neighborhood}
-                        </span>
-                        <h3 className="font-bold text-sm text-gray-900 truncate mt-0.5">{property.title}</h3>
-                        <p className="font-extrabold text-sm text-gray-800 mt-1">
-                          CVE {property.price.toLocaleString()}
-                        </p>
                       </div>
                     </div>
                   ))}

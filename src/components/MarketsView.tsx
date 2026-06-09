@@ -268,9 +268,9 @@ export default function MarketsView() {
           </p>
 
           {/* Masonry Grid - 2-col all devices */}
-          <div className="columns-2 gap-2 w-full">
+          <div className="columns-2 gap-2 w-full block">
             {filteredItems.map((item) => (
-              <div key={item.id} className="break-inside-avoid mb-2 w-full inline-block">
+              <div key={item.id} className="break-inside-avoid inline-block w-full mb-2">
                 <div className="rounded-xl bg-white cursor-pointer transition overflow-hidden border border-gray-100 hover:border-[#2563EB]/30 hover:shadow-lg group">
                   <div className="relative overflow-hidden">
                     <img

@@ -55,9 +55,9 @@ export default function ResultsSplitView() {
           </p>
 
           {/* 2-column masonry - all devices */}
-          <div className="columns-2 gap-2 w-full">
+          <div className="columns-2 gap-2 w-full block">
             {listings.map((item: Property) => (
-              <div key={item.id} className="break-inside-avoid mb-2 w-full inline-block">
+              <div key={item.id} className="break-inside-avoid inline-block w-full mb-2">
                 <div
                   onMouseEnter={() => setHoveredId(item.id)}
                   onMouseLeave={() => setHoveredId(null)}
