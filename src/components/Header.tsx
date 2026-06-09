@@ -54,7 +54,7 @@ export default function Header() {
         : "bg-white border-gray-200"
     }`}>
       <div className="w-full flex items-center justify-between px-4 h-16">
-        {/* FAR LEFT: Burger + Logo + Search */}
+        {/* LEFT: Burger + Logo */}
         <div className="flex items-center gap-3 min-w-0">
           {/* Hamburger */}
           <div className="relative flex-shrink-0" ref={navRef}>
@@ -147,9 +147,9 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Search bar - close to logo (results view, desktop) */}
+          {/* CENTER-LEFT: Search bar */}
           {isResultsViewActive && (
-            <div className="hidden sm:block w-48 md:w-56 lg:w-64 ml-3 flex-shrink min-w-0">
+            <div className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0">
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
                   isMarkets ? "text-white/50" : "text-gray-400"
@@ -170,35 +170,43 @@ export default function Header() {
           )}
         </div>
 
-        {/* FAR RIGHT: Toggles + Profile */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Context toggles - borderless flat text */}
-          {isResultsViewActive && (
-            <div className="hidden sm:flex items-center gap-1">
-              <button
-                onClick={() => setSearchMode("realestate")}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  !isMarkets
-                    ? (isMarkets ? "text-white bg-white/20" : "text-[#2563EB] bg-blue-50")
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
+        {/* RIGHT: Mode Tabs + Profile */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+          {/* Mode text links - ALWAYS visible, flat, no borders/backgrounds */}
+          <nav className="hidden sm:flex items-center gap-1">
+            <button
+              onClick={() => setSearchMode("realestate")}
+              className="relative px-3 py-1.5 text-sm font-medium transition-all"
+            >
+              <span className={
+                isMarkets
+                  ? (!isMarkets ? "text-white" : "text-white/60 hover:text-white")
+                  : (!isMarkets ? "text-slate-800" : "text-slate-400 hover:text-slate-700")
+              }>
                 Real Estate
-              </button>
-              <button
-                onClick={() => setSearchMode("markets")}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  isMarkets
-                    ? "text-white bg-white/20"
-                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                }`}
-              >
+              </span>
+              {!isMarkets && (
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#2563EB] rounded-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setSearchMode("markets")}
+              className="relative px-3 py-1.5 text-sm font-medium transition-all"
+            >
+              <span className={
+                isMarkets
+                  ? "text-white"
+                  : "text-slate-400 hover:text-slate-700"
+              }>
                 Markets
-              </button>
-            </div>
-          )}
+              </span>
+              {isMarkets && (
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-white rounded-full" />
+              )}
+            </button>
+          </nav>
 
-          {/* Profile Avatar - pinned far right */}
+          {/* Profile Avatar - FAR RIGHT */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -253,39 +261,61 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile search bar (results view only) */}
+      {/* Mobile: search + mode tabs (below main bar) */}
       {isResultsViewActive && (
         <div className="sm:hidden px-4 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+              isMarkets ? "text-white/50" : "text-gray-400"
+            }`} />
             <input
               type="text"
               placeholder="Search location..."
               value={headerSearchQuery}
               onChange={(e) => setHeaderSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-full text-sm bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 outline-none"
+              className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
+                isMarkets
+                  ? "bg-white/15 border border-white/20 text-white placeholder-white/50"
+                  : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400"
+              }`}
             />
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <button
-              onClick={() => setSearchMode("realestate")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                !isMarkets ? "text-[#2563EB] bg-blue-50" : "text-gray-500"
-              }`}
-            >
-              Real Estate
-            </button>
-            <button
-              onClick={() => setSearchMode("markets")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                isMarkets ? "text-[#2563EB] bg-blue-50" : "text-gray-500"
-              }`}
-            >
-              Markets
-            </button>
           </div>
         </div>
       )}
+
+      {/* Mobile mode tabs - always visible */}
+      <div className="sm:hidden flex items-center gap-1 px-4 pb-2">
+        <button
+          onClick={() => setSearchMode("realestate")}
+          className="relative px-3 py-1 text-xs font-medium transition-all"
+        >
+          <span className={
+            isMarkets
+              ? "text-white/60"
+              : "text-slate-800"
+          }>
+            Real Estate
+          </span>
+          {!isMarkets && (
+            <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#2563EB] rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setSearchMode("markets")}
+          className="relative px-3 py-1 text-xs font-medium transition-all"
+        >
+          <span className={
+            isMarkets
+              ? "text-white"
+              : "text-slate-400"
+          }>
+            Markets
+          </span>
+          {isMarkets && (
+            <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-white rounded-full" />
+          )}
+        </button>
+      </div>
     </header>
   );
 }
