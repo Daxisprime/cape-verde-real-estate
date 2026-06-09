@@ -301,14 +301,14 @@ export default function MarketsView() {
       </button>
 
       {/* Left Sidebar - Jiji-Style Nested Category Selector */}
-      <aside className="hidden md:block w-64 lg:w-72 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0">
-        <div className="p-4">
-          <div className="mb-5">
+      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0">
+        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto bg-white border-r border-gray-200 p-4">
+          <div className="mb-5 pb-4 border-b border-slate-100">
             <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 focus:border-[#0044FF] focus:ring-1 focus:ring-blue-100 outline-none"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
             >
               {MUNICIPALITIES.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -316,7 +316,7 @@ export default function MarketsView() {
             </select>
           </div>
 
-          <div className="mb-5">
+          <div className="mb-5 pb-4 border-b border-slate-100">
             <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
             <div className="flex gap-2">
               <input
@@ -324,14 +324,14 @@ export default function MarketsView() {
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-1 focus:ring-blue-100 outline-none"
+                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
               />
               <input
                 type="number"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-1 focus:ring-blue-100 outline-none"
+                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
               />
             </div>
           </div>
@@ -374,7 +374,7 @@ export default function MarketsView() {
 
                   {/* Flyout subcategory panel */}
                   {hoveredCategoryId === cat.id && (
-                    <div className="absolute left-full top-0 ml-1 bg-white shadow-xl rounded-r-xl border border-slate-100 p-3 z-40 w-48 animate-in fade-in slide-in-from-left-1 duration-150">
+                    <div className="absolute left-full top-0 ml-1 bg-white shadow-2xl rounded-r-xl border border-slate-100 p-4 w-56 z-[100] pointer-events-auto">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
                       {cat.subcategories.map(sub => (
                         <button
