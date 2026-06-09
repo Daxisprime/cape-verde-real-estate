@@ -487,6 +487,3 @@ export default function MarketsView() {
     </div>
   );
 }
-
-
-export default MarketsView
