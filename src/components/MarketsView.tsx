@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
-import { MapPin, ChevronRight } from 'lucide-react';
+import { MapPin, ChevronRight, Home } from 'lucide-react';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
@@ -224,7 +224,7 @@ const MUNICIPALITIES = [
 ];
 
 export default function MarketsView() {
-  const { headerSearchQuery } = useSearchMode();
+  const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -287,18 +287,54 @@ export default function MarketsView() {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-64px)]">
-      {/* Floating Top-Center Pill Toggle */}
-      <button
-        onClick={() => setIsMarketMapActive(!isMarketMapActive)}
-        className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
-      >
-        {isMarketMapActive ? (
-          <><span aria-hidden="true">&#x1F4E6;</span> List View</>
-        ) : (
-          <><span aria-hidden="true">&#x1F5FA;&#xFE0F;</span> Map View</>
+    <div className="relative flex flex-col min-h-[calc(100vh-64px)]">
+      {/* Jiji-Style Breadcrumb Navigation Trail */}
+      <div className="w-full bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 z-20 relative">
+        <button
+          onClick={() => { setIsResultsViewActive(false); }}
+          className="flex items-center gap-1 hover:text-[#0044FF] transition-colors"
+        >
+          <Home className="h-3 w-3" />
+          <span>Home</span>
+        </button>
+        <ChevronRight className="h-3 w-3 text-slate-300" />
+        <button
+          onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
+          className="hover:text-[#0044FF] transition-colors"
+        >
+          Markets
+        </button>
+        {selectedCategory && (
+          <>
+            <ChevronRight className="h-3 w-3 text-slate-300" />
+            <button
+              onClick={() => { setSelectedSubcategory(null); }}
+              className="hover:text-[#0044FF] transition-colors text-slate-700"
+            >
+              {selectedCategory}
+            </button>
+          </>
         )}
-      </button>
+        {selectedSubcategory && (
+          <>
+            <ChevronRight className="h-3 w-3 text-slate-300" />
+            <span className="text-slate-700 font-semibold">{selectedSubcategory}</span>
+          </>
+        )}
+      </div>
+
+      <div className="relative flex flex-1">
+        {/* Floating Top-Center Pill Toggle */}
+        <button
+          onClick={() => setIsMarketMapActive(!isMarketMapActive)}
+          className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
+        >
+          {isMarketMapActive ? (
+            <><span aria-hidden="true">&#x1F4E6;</span> List View</>
+          ) : (
+            <><span aria-hidden="true">&#x1F5FA;&#xFE0F;</span> Map View</>
+          )}
+        </button>
 
       {/* Left Sidebar - Jiji-Style Nested Category Selector */}
       <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative z-40">
@@ -366,7 +402,7 @@ export default function MarketsView() {
 
                   {/* Flyout subcategory panel */}
                   {hoveredCategoryId === cat.id && (
-                    <div className="absolute left-full top-0 ml-1 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-50 min-h-[120px]">
+                    <div className="absolute left-full top-0 ml-1 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-50 min-h-[250px] pointer-events-auto">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
                       {cat.subcategories.map(sub => (
                         <button
@@ -483,6 +519,7 @@ export default function MarketsView() {
             />
           </div>
         )}
+      </div>
       </div>
     </div>
   );

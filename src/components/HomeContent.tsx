@@ -91,7 +91,6 @@ export default function HomeContent() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <ResultsFilterStrip />
         <MarketsView />
       </div>
     );
