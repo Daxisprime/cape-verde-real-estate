@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Store, PlusCircle, ChevronDown, Search } from 'lucide-react';
+import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut } from 'lucide-react';
 import { mockProfiles } from '@/lib/mockProfiles';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 
@@ -11,7 +11,11 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { searchMode, isResultsViewActive, headerSearchQuery, setHeaderSearchQuery } = useSearchMode();
+  const {
+    searchMode, setSearchMode,
+    isResultsViewActive, setIsResultsViewActive,
+    headerSearchQuery, setHeaderSearchQuery,
+  } = useSearchMode();
 
   const isMarkets = searchMode === "markets";
   const vendor = mockProfiles[0];
@@ -26,6 +30,19 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  function handleLogoClick() {
+    setIsResultsViewActive(false);
+    setHeaderSearchQuery("");
+    setSearchMode("realestate");
+  }
+
+  function handleSignOut() {
+    setIsProfileOpen(false);
+    setIsResultsViewActive(false);
+    setHeaderSearchQuery("");
+    setSearchMode("realestate");
+  }
+
   return (
     <header className={`sticky top-0 z-50 border-b shadow-sm transition-colors duration-300 ${
       isMarkets
@@ -33,38 +50,65 @@ export default function Header() {
         : "bg-white border-gray-200"
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 gap-4">
-          {/* Logo */}
+        <div className="flex items-center h-16 gap-4">
+          {/* Logo - Far Left */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <Link href="/" onClick={handleLogoClick} className="flex items-center">
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight leading-none">
                 <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
-                <span className="text-red-600">.</span>
+                <span className="text-red-600 inline-flex items-center relative" style={{ fontSize: '0.6em', lineHeight: 0, verticalAlign: 'middle' }}>&#x2022;</span>
                 <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>cv</span>
               </span>
             </Link>
           </div>
 
-          {/* Center: Compact search bar (Results View only) */}
+          {/* Results View: Search left, Toggles center-right */}
           {isResultsViewActive ? (
-            <div className="flex-1 max-w-md mx-auto hidden sm:block">
-              <div className="relative">
-                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                  isMarkets ? "text-white/50" : "text-gray-400"
-                }`} />
-                <input
-                  type="text"
-                  placeholder="Search location..."
-                  value={headerSearchQuery}
-                  onChange={(e) => setHeaderSearchQuery(e.target.value)}
-                  className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
-                    isMarkets
-                      ? "bg-white/15 border border-white/30 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/60"
-                      : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                  }`}
-                />
+            <>
+              {/* Search bar - Center-left */}
+              <div className="flex-1 max-w-sm hidden sm:block">
+                <div className="relative">
+                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                    isMarkets ? "text-white/50" : "text-gray-400"
+                  }`} />
+                  <input
+                    type="text"
+                    placeholder="Search location..."
+                    value={headerSearchQuery}
+                    onChange={(e) => setHeaderSearchQuery(e.target.value)}
+                    className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
+                      isMarkets
+                        ? "bg-white/15 border border-white/30 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/60"
+                        : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    }`}
+                  />
+                </div>
               </div>
-            </div>
+
+              {/* Context toggles - Center-right */}
+              <div className="hidden sm:flex items-center gap-2 ml-auto mr-4">
+                <button
+                  onClick={() => setSearchMode("realestate")}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    !isMarkets
+                      ? "bg-[#2563EB] text-white shadow-sm"
+                      : "bg-white/15 text-white/80 hover:bg-white/25 border border-white/30"
+                  }`}
+                >
+                  Real Estate
+                </button>
+                <button
+                  onClick={() => setSearchMode("markets")}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    isMarkets
+                      ? "bg-white text-[#2563EB] shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+                  }`}
+                >
+                  Markets
+                </button>
+              </div>
+            </>
           ) : (
             <nav className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
               <Link href="/map?type=buy" className={`font-medium transition-colors ${
@@ -90,8 +134,8 @@ export default function Header() {
             </nav>
           )}
 
-          {/* Right side: Profile Avatar Dropdown */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Right side: Profile Avatar Dropdown - Far Right */}
+          <div className={`flex items-center gap-3 flex-shrink-0 ${!isResultsViewActive ? '' : ''}`}>
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -131,6 +175,15 @@ export default function Header() {
                     <PlusCircle className="h-4 w-4 text-gray-400" />
                     Post an Ad
                   </Link>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <LogOut className="h-4 w-4 text-red-400" />
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -151,18 +204,38 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className={`lg:hidden py-4 border-t ${isMarkets ? "border-white/20" : "border-gray-200"}`}>
             {isResultsViewActive && (
-              <div className="mb-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search location..."
-                    value={headerSearchQuery}
-                    onChange={(e) => setHeaderSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-full text-sm bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 outline-none"
-                  />
+              <>
+                <div className="mb-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search location..."
+                      value={headerSearchQuery}
+                      onChange={(e) => setHeaderSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-full text-sm bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 outline-none"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <button
+                    onClick={() => setSearchMode("realestate")}
+                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      !isMarkets ? "bg-[#2563EB] text-white" : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    Real Estate
+                  </button>
+                  <button
+                    onClick={() => setSearchMode("markets")}
+                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      isMarkets ? "bg-[#2563EB] text-white" : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    Markets
+                  </button>
+                </div>
+              </>
             )}
             <div className="flex flex-col space-y-4">
               <Link href="/map?type=buy" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
@@ -176,12 +249,6 @@ export default function Header() {
               </Link>
               <Link href="/map" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
                 Map
-              </Link>
-              <Link href="/my-store" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                My Store
-              </Link>
-              <Link href="/sell" className={`font-medium ${isMarkets ? "text-white/80" : "text-gray-700 hover:text-[#2563EB]"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                Post an Ad
               </Link>
             </div>
           </div>
