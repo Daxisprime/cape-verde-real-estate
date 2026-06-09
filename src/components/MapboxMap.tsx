@@ -20,14 +20,14 @@ function formatPriceShort(price: number): string {
 function createPriceIcon(price: number, isActive = false): L.DivIcon {
   const priceLabel = formatPriceShort(price);
   const pinClasses = isActive
-    ? 'bg-[#2563EB] text-white border-2 border-white font-black text-[11px] w-11 h-11 rounded-full flex items-center justify-center shadow-2xl'
-    : 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-[#2563EB] hover:text-white transition-colors';
+    ? 'bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl scale-110 z-50'
+    : 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:bg-[#0044FF] hover:text-white transition-colors';
 
   return L.divIcon({
     className: 'custom-price-marker',
-    html: `<div class="${pinClasses}" style="cursor:pointer;">${priceLabel}</div>`,
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
+    html: `<div class="${pinClasses}" style="cursor:pointer;transition:all 0.2s ease;">${priceLabel}</div>`,
+    iconSize: isActive ? [48, 48] : [44, 44],
+    iconAnchor: isActive ? [24, 24] : [22, 22],
     popupAnchor: [0, -24],
   });
 }
@@ -36,10 +36,16 @@ function MapController({ activeItem }: { activeItem: any }) {
   const map = useMap();
   useEffect(() => {
     if (activeItem?.latitude && activeItem?.longitude) {
-      map.flyTo([activeItem.latitude, activeItem.longitude], 15, {
-        animate: true,
-        duration: 1.5,
-      });
+      const targetLatLng = L.latLng(activeItem.latitude, activeItem.longitude);
+      const bounds = map.getBounds();
+      if (!bounds.contains(targetLatLng)) {
+        map.flyTo(targetLatLng, map.getZoom(), {
+          animate: true,
+          duration: 0.8,
+        });
+      } else {
+        map.panTo(targetLatLng, { animate: true, duration: 0.4 });
+      }
     }
   }, [activeItem, map]);
   return null;

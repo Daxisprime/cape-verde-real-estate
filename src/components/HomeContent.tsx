@@ -11,7 +11,7 @@ import MarketsView from '@/components/MarketsView';
 import Footer from '@/components/Footer';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { capeVerdeProperties } from '@/data/cape-verde-properties';
-import { MapPin, Bed, Bath, Map, LayoutGrid } from 'lucide-react';
+import { MapPin, Bed, Bath } from 'lucide-react';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
@@ -33,10 +33,10 @@ export default function HomeContent() {
     searchMode, listingType, headerSearchQuery,
   } = useSearchMode();
 
-  const [showMapView, setShowMapView] = useState(false);
-  const scrollListenerAttached = useRef(false);
+  const [isMapViewActive, setIsMapViewActive] = useState(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  // One-way gate: once triggered, remove listener permanently
+  // One-way gate scroll listener: removed once triggered
   useEffect(() => {
     if (isResultsViewActive) return;
 
@@ -47,13 +47,16 @@ export default function HomeContent() {
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    scrollListenerAttached.current = true;
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      scrollListenerAttached.current = false;
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [isResultsViewActive, setIsResultsViewActive]);
+
+  // Reset map view when results view is deactivated (logo click)
+  useEffect(() => {
+    if (!isResultsViewActive) {
+      setIsMapViewActive(false);
+      setHoveredId(null);
+    }
+  }, [isResultsViewActive]);
 
   const filteredProperties = useMemo(() => {
     return capeVerdeProperties.filter(property => {
@@ -76,7 +79,12 @@ export default function HomeContent() {
     }));
   }, [filteredProperties, listingType]);
 
-  // === LOCKED RESULTS VIEW (one-way gate active) ===
+  const hoveredMapItem = useMemo(() => {
+    if (!hoveredId) return null;
+    return mapMarkers.find(m => m.id === hoveredId) || null;
+  }, [hoveredId, mapMarkers]);
+
+  // === LOCKED RESULTS VIEW ===
 
   // Markets mode
   if (isResultsViewActive && searchMode === "markets") {
@@ -90,32 +98,39 @@ export default function HomeContent() {
   }
 
   // Real estate with map view toggled ON
-  if (isResultsViewActive && showMapView) {
+  if (isResultsViewActive && isMapViewActive) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <ResultsFilterStrip />
+
+        {/* Floating toggle pill */}
+        <button
+          onClick={() => setIsMapViewActive(false)}
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer font-medium text-sm text-slate-800"
+        >
+          <span aria-hidden>&#x1F4CB;</span> List
+        </button>
+
         <div className="flex flex-col md:flex-row h-[calc(100vh-64px-44px)] w-full overflow-hidden">
+          {/* Left listing feed */}
           <div className="w-full md:w-[400px] lg:w-[440px] h-[50vh] md:h-full overflow-y-auto border-r border-gray-100 bg-white">
             <div className="p-3">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  {filteredProperties.length} Properties
-                </p>
-                <button
-                  onClick={() => setShowMapView(false)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs font-semibold text-gray-700 transition"
-                >
-                  <LayoutGrid className="h-3.5 w-3.5" />
-                  Grid View
-                </button>
-              </div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                {filteredProperties.length} Properties
+              </p>
               <div className="space-y-2">
                 {filteredProperties.slice(0, 20).map(property => (
                   <Link
                     key={property.id}
                     href={`/property/${property.id}`}
-                    className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-gray-100"
+                    className={`flex gap-3 p-2 rounded-lg transition border ${
+                      hoveredId === property.id
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
+                        : 'border-gray-100 hover:bg-gray-50'
+                    }`}
+                    onMouseEnter={() => setHoveredId(property.id)}
+                    onMouseLeave={() => setHoveredId(null)}
                   >
                     <img
                       src={property.images[0]}
@@ -138,32 +153,31 @@ export default function HomeContent() {
               </div>
             </div>
           </div>
+          {/* Right map panel */}
           <div className="w-full md:flex-1 h-[50vh] md:h-full relative bg-gray-100">
-            <SafeLeafletMap items={mapMarkers} activeItem={null} onPinClick={() => {}} />
+            <SafeLeafletMap items={mapMarkers} activeItem={hoveredMapItem} onPinClick={() => {}} />
           </div>
         </div>
       </div>
     );
   }
 
-  // Real estate masonry grid (default results view)
+  // Real estate masonry grid (default results view, no map)
   if (isResultsViewActive) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <ResultsFilterStrip />
-        <div className="relative w-full max-w-7xl mx-auto px-3 pt-4 pb-10">
-          {/* Floating map toggle pill */}
-          <div className="flex justify-center mb-4 sticky top-28 z-20">
-            <button
-              onClick={() => setShowMapView(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-full shadow-lg transition transform hover:scale-105"
-            >
-              <Map className="h-4 w-4" />
-              View on Map
-            </button>
-          </div>
 
+        {/* Floating toggle pill */}
+        <button
+          onClick={() => setIsMapViewActive(true)}
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer font-medium text-sm text-slate-800"
+        >
+          <span aria-hidden>&#x1F5FA;&#xFE0F;</span> Map
+        </button>
+
+        <div className="relative w-full max-w-7xl mx-auto px-3 pt-16 pb-10">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             {filteredProperties.length} Available Properties
           </p>
@@ -175,8 +189,14 @@ export default function HomeContent() {
                 key={property.id}
                 href={`/property/${property.id}`}
                 className="break-inside-avoid inline-block w-full mb-3"
+                onMouseEnter={() => setHoveredId(property.id)}
+                onMouseLeave={() => setHoveredId(null)}
               >
-                <div className="rounded-xl bg-white overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group">
+                <div className={`rounded-xl bg-white overflow-hidden border transition-all duration-200 cursor-pointer group ${
+                  hoveredId === property.id
+                    ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
+                    : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
+                }`}>
                   <div className="relative overflow-hidden">
                     <img
                       src={property.images[0]}
