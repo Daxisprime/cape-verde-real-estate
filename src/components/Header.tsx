@@ -38,6 +38,7 @@ export default function Header() {
     setHeaderSearchQuery("");
     setSearchMode("realestate");
     setIsNavOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleSignOut() {
