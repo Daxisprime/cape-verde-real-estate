@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag } from 'lucide-react';
 import { mockProfiles } from '@/lib/mockProfiles';
 import { useSearchMode } from '@/contexts/SearchModeContext';
@@ -54,9 +53,10 @@ export default function Header() {
         ? "bg-[#2563EB] border-blue-700"
         : "bg-white border-gray-200"
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 gap-3">
-          {/* Hamburger - Far Left */}
+      <div className="w-full flex items-center justify-between px-4 h-16">
+        {/* FAR LEFT: Burger + Logo + Search */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Hamburger */}
           <div className="relative flex-shrink-0" ref={navRef}>
             <button
               onClick={() => setIsNavOpen(!isNavOpen)}
@@ -138,20 +138,18 @@ export default function Header() {
             )}
           </div>
 
-          {/* Logo - Next to burger */}
-          <div className="flex-shrink-0">
-            <Link href="/" onClick={handleLogoClick} className="flex items-center">
-              <span className="text-2xl sm:text-3xl font-bold tracking-tight leading-none">
-                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
-                <span className="text-red-600 inline-block" style={{ verticalAlign: 'middle', lineHeight: 0, fontSize: '0.7em', margin: '0 1px' }}>&#x2022;</span>
-                <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>cv</span>
-              </span>
-            </Link>
-          </div>
+          {/* Logo */}
+          <Link href="/" onClick={handleLogoClick} className="flex items-center flex-shrink-0">
+            <span className="text-2xl sm:text-3xl font-bold tracking-tight leading-none">
+              <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>pro</span>
+              <span className="text-red-600 inline-block" style={{ verticalAlign: 'middle', lineHeight: 0, fontSize: '0.7em', margin: '0 1px' }}>&#x2022;</span>
+              <span className={isMarkets ? "text-white" : "text-[#2563EB]"}>cv</span>
+            </span>
+          </Link>
 
-          {/* Search bar - pushed left close to logo (results view only) */}
+          {/* Search bar - close to logo (results view, desktop) */}
           {isResultsViewActive && (
-            <div className="flex-1 max-w-xs hidden sm:block ml-2">
+            <div className="hidden sm:block w-48 md:w-56 lg:w-64 ml-3 flex-shrink min-w-0">
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
                   isMarkets ? "text-white/50" : "text-gray-400"
@@ -161,7 +159,7 @@ export default function Header() {
                   placeholder="Search location..."
                   value={headerSearchQuery}
                   onChange={(e) => setHeaderSearchQuery(e.target.value)}
-                  className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
+                  className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
                     isMarkets
                       ? "bg-white/15 border border-white/20 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/50"
                       : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
@@ -170,18 +168,18 @@ export default function Header() {
               </div>
             </div>
           )}
+        </div>
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Context toggles - borderless flat text (results view) */}
+        {/* FAR RIGHT: Toggles + Profile */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Context toggles - borderless flat text */}
           {isResultsViewActive && (
-            <div className="hidden sm:flex items-center gap-1 mr-3">
+            <div className="hidden sm:flex items-center gap-1">
               <button
                 onClick={() => setSearchMode("realestate")}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                   !isMarkets
-                    ? isMarkets ? "text-white bg-white/20" : "text-[#2563EB] bg-blue-50"
+                    ? (isMarkets ? "text-white bg-white/20" : "text-[#2563EB] bg-blue-50")
                     : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
@@ -200,96 +198,94 @@ export default function Header() {
             </div>
           )}
 
-          {/* Profile Avatar Dropdown - Far Right */}
-          <div className="flex items-center flex-shrink-0">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className={`flex items-center gap-2 rounded-full border p-1 pr-3 hover:shadow-md transition-shadow ${
-                  isMarkets ? "border-white/30" : "border-gray-200"
-                }`}
-              >
-                <img
-                  src={vendor.avatar_url}
-                  alt={vendor.full_name}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${
-                  isMarkets ? "text-white/70" : "text-gray-500"
-                } ${isProfileOpen ? 'rotate-180' : ''}`} />
-              </button>
+          {/* Profile Avatar - pinned far right */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className={`flex items-center gap-2 rounded-full border p-1 pr-3 hover:shadow-md transition-shadow ${
+                isMarkets ? "border-white/30" : "border-gray-200"
+              }`}
+            >
+              <img
+                src={vendor.avatar_url}
+                alt={vendor.full_name}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${
+                isMarkets ? "text-white/70" : "text-gray-500"
+              } ${isProfileOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-              {isProfileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-gray-100 shadow-lg py-2 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{vendor.full_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{vendor.company}</p>
-                  </div>
-                  <Link
-                    href="/my-store"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <Store className="h-4 w-4 text-gray-400" />
-                    My Store
-                  </Link>
-                  <Link
-                    href="/sell"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <PlusCircle className="h-4 w-4 text-gray-400" />
-                    Post an Ad
-                  </Link>
-                  <div className="border-t border-gray-100 mt-1 pt-1">
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                    >
-                      <LogOut className="h-4 w-4 text-red-400" />
-                      Sign Out
-                    </button>
-                  </div>
+            {isProfileOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-gray-100 shadow-lg py-2 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{vendor.full_name}</p>
+                  <p className="text-xs text-gray-500 truncate">{vendor.company}</p>
                 </div>
-              )}
-            </div>
+                <Link
+                  href="/my-store"
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Store className="h-4 w-4 text-gray-400" />
+                  My Store
+                </Link>
+                <Link
+                  href="/sell"
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <PlusCircle className="h-4 w-4 text-gray-400" />
+                  Post an Ad
+                </Link>
+                <div className="border-t border-gray-100 mt-1 pt-1">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                  >
+                    <LogOut className="h-4 w-4 text-red-400" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Mobile search bar (results view only) */}
-        {isResultsViewActive && (
-          <div className="sm:hidden pb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search location..."
-                value={headerSearchQuery}
-                onChange={(e) => setHeaderSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-full text-sm bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 outline-none"
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <button
-                onClick={() => setSearchMode("realestate")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  !isMarkets ? "text-[#2563EB] bg-blue-50" : "text-gray-500"
-                }`}
-              >
-                Real Estate
-              </button>
-              <button
-                onClick={() => setSearchMode("markets")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  isMarkets ? "text-[#2563EB] bg-blue-50" : "text-gray-500"
-                }`}
-              >
-                Markets
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Mobile search bar (results view only) */}
+      {isResultsViewActive && (
+        <div className="sm:hidden px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search location..."
+              value={headerSearchQuery}
+              onChange={(e) => setHeaderSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-full text-sm bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 outline-none"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={() => setSearchMode("realestate")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                !isMarkets ? "text-[#2563EB] bg-blue-50" : "text-gray-500"
+              }`}
+            >
+              Real Estate
+            </button>
+            <button
+              onClick={() => setSearchMode("markets")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                isMarkets ? "text-[#2563EB] bg-blue-50" : "text-gray-500"
+              }`}
+            >
+              Markets
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

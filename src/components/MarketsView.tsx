@@ -267,10 +267,10 @@ export default function MarketsView() {
             {selectedCategory && <span className="text-[#2563EB]"> in {selectedCategory}</span>}
           </p>
 
-          {/* Masonry Grid */}
-          <div className="columns-2 sm:columns-2 lg:columns-3 xl:columns-4 gap-3">
+          {/* Masonry Grid - 2-col all devices */}
+          <div className="columns-2 gap-2 w-full">
             {filteredItems.map((item) => (
-              <div key={item.id} className="break-inside-avoid mb-3 inline-block w-full">
+              <div key={item.id} className="break-inside-avoid mb-2 w-full inline-block">
                 <div className="rounded-xl bg-white cursor-pointer transition overflow-hidden border border-gray-100 hover:border-[#2563EB]/30 hover:shadow-lg group">
                   <div className="relative overflow-hidden">
                     <img
@@ -278,20 +278,20 @@ export default function MarketsView() {
                       alt={item.title}
                       className="w-full aspect-[4/3] object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-300"
                     />
-                    <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[10px] font-bold text-gray-700 px-2 py-0.5 rounded-full">
+                    <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-1.5 py-0.5 rounded-full">
                       {item.category.split(" ")[0]}
                     </span>
                   </div>
-                  <div className="p-3">
-                    <h3 className="font-bold text-sm text-gray-900 line-clamp-2 leading-tight">{item.title}</h3>
-                    <p className="font-extrabold text-base text-gray-900 mt-1.5">
-                      {item.price.toLocaleString()} <span className="text-xs font-medium text-gray-500">CVE</span>
+                  <div className="p-2">
+                    <h3 className="font-bold text-xs text-gray-900 line-clamp-2 leading-tight">{item.title}</h3>
+                    <p className="font-extrabold text-sm text-gray-900 mt-1">
+                      {item.price.toLocaleString()} <span className="text-[10px] font-medium text-gray-500">CVE</span>
                     </p>
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <MapPin className="h-3 w-3 text-gray-400" />
-                      <p className="text-xs text-gray-500 truncate">{item.location}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <MapPin className="h-2.5 w-2.5 text-gray-400" />
+                      <p className="text-[10px] text-gray-500 truncate">{item.location}</p>
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-1">{item.posted}</p>
+                    <p className="text-[9px] text-gray-400 mt-0.5">{item.posted}</p>
                   </div>
                 </div>
               </div>

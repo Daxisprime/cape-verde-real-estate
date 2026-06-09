@@ -277,12 +277,13 @@ export default function MyStorePage() {
               )}
             </div>
           ) : (
-            <div className="columns-2 gap-2 md:block md:space-y-4">
+            <div className="columns-2 gap-2 w-full">
               {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
-                  className="break-inside-avoid mb-2 md:mb-0 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden relative group"
+                  className="break-inside-avoid mb-2 w-full inline-block"
                 >
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden relative group">
                   {/* Reviewing Badge */}
                   {listing.status === "reviewing" && (
                     <div className="absolute top-2 left-2 z-10">
@@ -373,6 +374,7 @@ export default function MyStorePage() {
                       </div>
                     )}
                   </div>
+                </div>
                 </div>
               ))}
             </div>
