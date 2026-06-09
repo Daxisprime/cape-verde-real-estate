@@ -13,6 +13,69 @@ const SafeLeafletMap = dynamic(
   }
 );
 
+const CATEGORY_TREE = [
+  {
+    id: "vehicles",
+    label: "Vehicles & Automotive",
+    icon: "\uD83D\uDE97",
+    subcategories: ["Cars", "Motorbikes", "Parts & Accessories"],
+  },
+  {
+    id: "electronics",
+    label: "Electronics & Computers",
+    icon: "\uD83D\uDCF1",
+    subcategories: ["Smartphones", "Laptops", "TV & Audio"],
+  },
+  {
+    id: "home",
+    label: "Home, Furniture & Appliances",
+    icon: "\uD83D\uDECB\uFE0F",
+    subcategories: ["Beds & Sofas", "Kitchen Appliances", "Decor"],
+  },
+  {
+    id: "building",
+    label: "Building Materials & Tools",
+    icon: "\uD83E\uDDF1",
+    subcategories: ["Cement & Tiles", "Hand Tools", "Electrical Supplies"],
+  },
+  {
+    id: "restaurants",
+    label: "Restaurants & Menus",
+    icon: "\uD83C\uDF7D\uFE0F",
+    subcategories: ["Local Restaurants", "Takeaway/Menus", "Cafes"],
+  },
+  {
+    id: "fashion",
+    label: "Fashion & Retail",
+    icon: "\uD83D\uDC5F",
+    subcategories: ["Shoes", "Apparel", "Bags"],
+  },
+  {
+    id: "babies",
+    label: "Babies & Kids Items",
+    icon: "\uD83D\uDC76",
+    subcategories: ["Toys", "Clothing", "Strollers"],
+  },
+  {
+    id: "pets",
+    label: "Pets",
+    icon: "\uD83D\uDC3E",
+    subcategories: ["Pet Food", "Accessories"],
+  },
+  {
+    id: "maintenance",
+    label: "Maintenance & Repair Services",
+    icon: "\uD83D\uDD27",
+    subcategories: ["Plumbing", "Electricians", "AC Repair"],
+  },
+  {
+    id: "professional",
+    label: "Professional Services",
+    icon: "\uD83D\uDCBC",
+    subcategories: ["Developers", "Photography", "Legal"],
+  },
+];
+
 const MARKETPLACE_ITEMS = [
   {
     id: "mkt-001",
@@ -20,6 +83,7 @@ const MARKETPLACE_ITEMS = [
     price: 850,
     location: "Praia, Santiago",
     category: "Building Materials & Tools",
+    subcategory: "Cement & Tiles",
     image: "https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=400&h=300&fit=crop",
     posted: "2 hours ago",
     coordinates: [-23.5133, 14.9177] as [number, number],
@@ -30,6 +94,7 @@ const MARKETPLACE_ITEMS = [
     price: 65000,
     location: "Santa Maria, Sal",
     category: "Electronics & Computers",
+    subcategory: "TV & Audio",
     image: "https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?w=400&h=300&fit=crop",
     posted: "5 hours ago",
     coordinates: [-22.9, 16.73] as [number, number],
@@ -40,6 +105,7 @@ const MARKETPLACE_ITEMS = [
     price: 3500,
     location: "Mindelo, Sao Vicente",
     category: "Maintenance & Repair Services",
+    subcategory: "Plumbing",
     image: "https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?w=400&h=300&fit=crop",
     posted: "1 day ago",
     coordinates: [-24.98, 16.87] as [number, number],
@@ -50,6 +116,7 @@ const MARKETPLACE_ITEMS = [
     price: 185000,
     location: "Espargos, Sal",
     category: "Home, Furniture & Appliances",
+    subcategory: "Kitchen Appliances",
     image: "https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?w=400&h=300&fit=crop",
     posted: "3 hours ago",
     coordinates: [-22.93, 16.74] as [number, number],
@@ -60,6 +127,7 @@ const MARKETPLACE_ITEMS = [
     price: 15000,
     location: "Praia, Santiago",
     category: "Professional Services",
+    subcategory: "Legal",
     image: "https://images.pexels.com/photos/5668882/pexels-photo-5668882.jpeg?w=400&h=300&fit=crop",
     posted: "6 hours ago",
     coordinates: [-23.51, 14.92] as [number, number],
@@ -70,6 +138,7 @@ const MARKETPLACE_ITEMS = [
     price: 4500,
     location: "Santa Maria, Sal",
     category: "Fashion & Retail",
+    subcategory: "Apparel",
     image: "https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=400&h=300&fit=crop",
     posted: "12 hours ago",
     coordinates: [-22.9, 16.73] as [number, number],
@@ -80,6 +149,7 @@ const MARKETPLACE_ITEMS = [
     price: 12500,
     location: "Praia, Santiago",
     category: "Building Materials & Tools",
+    subcategory: "Hand Tools",
     image: "https://images.pexels.com/photos/1249611/pexels-photo-1249611.jpeg?w=400&h=300&fit=crop",
     posted: "4 hours ago",
     coordinates: [-23.52, 14.91] as [number, number],
@@ -90,6 +160,7 @@ const MARKETPLACE_ITEMS = [
     price: 145000,
     location: "Mindelo, Sao Vicente",
     category: "Electronics & Computers",
+    subcategory: "Smartphones",
     image: "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?w=400&h=300&fit=crop",
     posted: "30 min ago",
     coordinates: [-24.97, 16.88] as [number, number],
@@ -100,6 +171,7 @@ const MARKETPLACE_ITEMS = [
     price: 8000,
     location: "Sal Rei, Boa Vista",
     category: "Maintenance & Repair Services",
+    subcategory: "AC Repair",
     image: "https://images.pexels.com/photos/5463576/pexels-photo-5463576.jpeg?w=400&h=300&fit=crop",
     posted: "1 day ago",
     coordinates: [-22.79, 16.18] as [number, number],
@@ -110,6 +182,7 @@ const MARKETPLACE_ITEMS = [
     price: 95000,
     location: "Praia, Santiago",
     category: "Home, Furniture & Appliances",
+    subcategory: "Beds & Sofas",
     image: "https://images.pexels.com/photos/1866149/pexels-photo-1866149.jpeg?w=400&h=300&fit=crop",
     posted: "8 hours ago",
     coordinates: [-23.51, 14.93] as [number, number],
@@ -120,6 +193,7 @@ const MARKETPLACE_ITEMS = [
     price: 20000,
     location: "Praia, Santiago",
     category: "Professional Services",
+    subcategory: "Legal",
     image: "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?w=400&h=300&fit=crop",
     posted: "2 days ago",
     coordinates: [-23.50, 14.92] as [number, number],
@@ -130,19 +204,11 @@ const MARKETPLACE_ITEMS = [
     price: 3200,
     location: "Santa Maria, Sal",
     category: "Fashion & Retail",
+    subcategory: "Bags",
     image: "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg?w=400&h=300&fit=crop",
     posted: "5 hours ago",
     coordinates: [-22.91, 16.72] as [number, number],
   },
-];
-
-const CATEGORIES = [
-  "Building Materials & Tools",
-  "Home, Furniture & Appliances",
-  "Electronics & Computers",
-  "Maintenance & Repair Services",
-  "Professional Services",
-  "Fashion & Retail",
 ];
 
 const MUNICIPALITIES = [
@@ -160,15 +226,18 @@ const MUNICIPALITIES = [
 export default function MarketsView() {
   const { headerSearchQuery } = useSearchMode();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [isMarketMapActive, setIsMarketMapActive] = useState(false);
   const [activeMarketItem, setActiveMarketItem] = useState<string | null>(null);
+  const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     return MARKETPLACE_ITEMS.filter(item => {
       if (selectedCategory && item.category !== selectedCategory) return false;
+      if (selectedSubcategory && item.subcategory !== selectedSubcategory) return false;
       if (selectedLocation !== "All Locations" && item.location !== selectedLocation) return false;
       if (minPrice && item.price < parseInt(minPrice)) return false;
       if (maxPrice && item.price > parseInt(maxPrice)) return false;
@@ -180,7 +249,7 @@ export default function MarketsView() {
       }
       return true;
     });
-  }, [selectedCategory, selectedLocation, minPrice, maxPrice, headerSearchQuery]);
+  }, [selectedCategory, selectedSubcategory, selectedLocation, minPrice, maxPrice, headerSearchQuery]);
 
   const mapMarkers = useMemo(() => {
     return filteredItems.map(item => ({
@@ -203,6 +272,20 @@ export default function MarketsView() {
     }
   }
 
+  function handleCategorySelect(label: string) {
+    if (selectedCategory === label) {
+      setSelectedCategory(null);
+      setSelectedSubcategory(null);
+    } else {
+      setSelectedCategory(label);
+      setSelectedSubcategory(null);
+    }
+  }
+
+  function handleSubcategorySelect(sub: string) {
+    setSelectedSubcategory(sub === selectedSubcategory ? null : sub);
+  }
+
   return (
     <div className="relative flex min-h-[calc(100vh-64px)]">
       {/* Floating Top-Center Pill Toggle */}
@@ -217,15 +300,15 @@ export default function MarketsView() {
         )}
       </button>
 
-      {/* Left Sidebar - Jiji Filter Rail */}
+      {/* Left Sidebar - Jiji-Style Nested Category Selector */}
       <aside className="hidden md:block w-64 lg:w-72 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0">
         <div className="p-4">
           <div className="mb-5">
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Location</h3>
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100 outline-none"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 focus:border-[#0044FF] focus:ring-1 focus:ring-blue-100 outline-none"
             >
               {MUNICIPALITIES.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -234,59 +317,91 @@ export default function MarketsView() {
           </div>
 
           <div className="mb-5">
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
             <div className="flex gap-2">
               <input
                 type="number"
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100 outline-none"
+                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-1 focus:ring-blue-100 outline-none"
               />
               <input
                 type="number"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:border-[#2563EB] focus:ring-1 focus:ring-blue-100 outline-none"
+                className="w-1/2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-1 focus:ring-blue-100 outline-none"
               />
             </div>
           </div>
 
           <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Categories</h3>
-            <div className="flex flex-col">
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Categories</h3>
+            <div className="flex flex-col relative">
               <button
-                onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-colors text-left ${
+                onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
+                className={`flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors text-left ${
                   !selectedCategory
-                    ? "bg-blue-50 text-[#2563EB] font-semibold"
+                    ? "bg-blue-50 text-[#0044FF] font-semibold"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <span>All Categories</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-40" />
               </button>
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-colors text-left ${
-                    selectedCategory === cat
-                      ? "bg-blue-50 text-[#2563EB] font-semibold"
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
+
+              {CATEGORY_TREE.map(cat => (
+                <div
+                  key={cat.id}
+                  className="relative"
+                  onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                  onMouseLeave={() => setHoveredCategoryId(null)}
                 >
-                  <span className="line-clamp-1">{cat}</span>
-                  <ChevronRight className="h-3.5 w-3.5 opacity-40 flex-shrink-0" />
-                </button>
+                  <button
+                    onClick={() => handleCategorySelect(cat.label)}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors text-left ${
+                      selectedCategory === cat.label
+                        ? "bg-blue-50 text-[#0044FF] font-semibold"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm flex-shrink-0">{cat.icon}</span>
+                      <span className="truncate text-xs">{cat.label}</span>
+                    </span>
+                    <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
+                  </button>
+
+                  {/* Flyout subcategory panel */}
+                  {hoveredCategoryId === cat.id && (
+                    <div className="absolute left-full top-0 ml-1 bg-white shadow-xl rounded-r-xl border border-slate-100 p-3 z-40 w-48 animate-in fade-in slide-in-from-left-1 duration-150">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
+                      {cat.subcategories.map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => {
+                            setSelectedCategory(cat.label);
+                            handleSubcategorySelect(sub);
+                          }}
+                          className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
+                            selectedSubcategory === sub
+                              ? "bg-blue-50 text-[#0044FF] font-semibold"
+                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area - Dual Layout Engine */}
+      {/* Main Content Area */}
       <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden`}>
         {/* Product Grid */}
         <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-auto' : 'flex-1'}`}>
@@ -301,17 +416,17 @@ export default function MarketsView() {
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
-            {CATEGORIES.map(cat => (
+            {CATEGORY_TREE.slice(0, 6).map(cat => (
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
+                key={cat.id}
+                onClick={() => handleCategorySelect(cat.label)}
                 className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${
-                  selectedCategory === cat
-                    ? "bg-[#2563EB] text-white"
+                  selectedCategory === cat.label
+                    ? "bg-[#0044FF] text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {cat.split(" ")[0]}
+                {cat.icon} {cat.label.split(" ")[0]}
               </button>
             ))}
           </div>
@@ -319,17 +434,18 @@ export default function MarketsView() {
           <div className="p-3 sm:p-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
               {filteredItems.length} items found
-              {selectedCategory && <span className="text-[#2563EB]"> in {selectedCategory}</span>}
+              {selectedCategory && <span className="text-[#0044FF]"> in {selectedCategory}</span>}
+              {selectedSubcategory && <span className="text-gray-500"> / {selectedSubcategory}</span>}
             </p>
 
-            {/* Masonry Grid - 2-col all devices */}
+            {/* Masonry Grid */}
             <div className="columns-2 gap-2 w-full block">
               {filteredItems.map((item, index) => (
                 <div key={item.id} id={`market-item-${item.id}`} className="break-inside-avoid inline-block w-full mb-3">
                   <div className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border group ${
                     activeMarketItem === item.id
-                      ? 'border-[#2563EB] shadow-lg ring-2 ring-blue-100'
-                      : 'border-gray-100 hover:border-[#2563EB]/30 hover:shadow-lg'
+                      ? 'border-[#0044FF] shadow-lg ring-2 ring-blue-100'
+                      : 'border-gray-100 hover:border-[#0044FF]/30 hover:shadow-lg'
                   }`}>
                     <div className="relative overflow-hidden">
                       <img
@@ -338,7 +454,7 @@ export default function MarketsView() {
                         className={`w-full object-cover rounded-t-lg bg-gray-100 group-hover:scale-105 transition-transform duration-300 ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
                       />
                       <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-1.5 py-0.5 rounded-full">
-                        {item.category.split(" ")[0]}
+                        {item.subcategory || item.category.split(" ")[0]}
                       </span>
                     </div>
                     <div className="p-2">
@@ -365,7 +481,7 @@ export default function MarketsView() {
           </div>
         </div>
 
-        {/* Lazy Map Pane - only mounts when toggled on */}
+        {/* Map Pane */}
         {isMarketMapActive && (
           <div className="w-full md:w-1/2 h-[50vh] md:h-[calc(100vh-64px)] border-l border-gray-200">
             <SafeLeafletMap

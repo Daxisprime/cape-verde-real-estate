@@ -7,6 +7,19 @@ import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 
 type AdMode = "real_estate" | "item_service";
 
+const MARKET_CATEGORIES = [
+  { id: "vehicles", label: "Vehicles & Automotive" },
+  { id: "electronics", label: "Electronics & Computers" },
+  { id: "home", label: "Home, Furniture & Appliances" },
+  { id: "building", label: "Building Materials & Tools" },
+  { id: "restaurants", label: "Restaurants & Menus" },
+  { id: "fashion", label: "Fashion & Retail" },
+  { id: "babies", label: "Babies & Kids Items" },
+  { id: "pets", label: "Pets" },
+  { id: "maintenance", label: "Maintenance & Repair Services" },
+  { id: "professional", label: "Professional Services" },
+];
+
 interface FormData {
   title: string;
   price: string;
@@ -17,6 +30,7 @@ interface FormData {
   bedrooms: string;
   bathrooms: string;
   squareMeters: string;
+  marketCategory: string;
 }
 
 export interface CreatedAd {
@@ -44,11 +58,15 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
     bedrooms: "",
     bathrooms: "",
     squareMeters: "",
+    marketCategory: "",
   });
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [menuImages, setMenuImages] = useState<File[]>([]);
+  const [menuPreviews, setMenuPreviews] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
+  const menuFileRef = useRef<HTMLInputElement>(null);
 
   const updateField = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -69,6 +87,23 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMenuImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 2 - menuImages.length;
+    const selected = files.slice(0, remaining);
+    setMenuImages((prev) => [...prev, ...selected]);
+    selected.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => setMenuPreviews((p) => [...p, reader.result as string]);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeMenuImage = (index: number) => {
+    setMenuImages((prev) => prev.filter((_, i) => i !== index));
+    setMenuPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,9 +162,11 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
       });
 
       setStatus("success");
-      setForm({ title: "", price: "", description: "", island: "", zone: "", address: "", bedrooms: "", bathrooms: "", squareMeters: "" });
+      setForm({ title: "", price: "", description: "", island: "", zone: "", address: "", bedrooms: "", bathrooms: "", squareMeters: "", marketCategory: "" });
       setImages([]);
       setPreviews([]);
+      setMenuImages([]);
+      setMenuPreviews([]);
     } catch {
       setStatus("error");
     }
@@ -251,12 +288,67 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
               />
               <input
                 type="number"
-                placeholder="m²"
+                placeholder="m\u00B2"
                 min="0"
                 value={form.squareMeters}
                 onChange={(e) => updateField("squareMeters", e.target.value)}
                 className={inputCls}
               />
+            </div>
+          )}
+
+          {/* Conditional: Item/Service Category Selector */}
+          {mode === "item_service" && (
+            <div className="space-y-3">
+              <select
+                value={form.marketCategory}
+                onChange={(e) => updateField("marketCategory", e.target.value)}
+                className={inputCls}
+              >
+                <option value="">Select Category</option>
+                {MARKET_CATEGORIES.map(cat => (
+                  <option key={cat.id} value={cat.label}>{cat.label}</option>
+                ))}
+              </select>
+
+              {/* Menu photo upload for Restaurants & Menus */}
+              {form.marketCategory === "Restaurants & Menus" && (
+                <div>
+                  <p className="text-xs text-gray-600 font-medium mb-1.5">Menu Booklet Photos ({menuImages.length}/2)</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {menuPreviews.map((src, i) => (
+                      <div key={i} className="relative w-20 h-24 rounded-lg overflow-hidden border border-gray-200">
+                        <img src={src} alt="menu" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeMenuImage(i)}
+                          className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                    {menuImages.length < 2 && (
+                      <button
+                        type="button"
+                        onClick={() => menuFileRef.current?.click()}
+                        className="w-20 h-24 rounded-lg border-2 border-dashed border-amber-300 flex flex-col items-center justify-center text-amber-500 hover:border-amber-400 hover:text-amber-600 transition-colors gap-0.5"
+                      >
+                        <ImagePlus className="h-5 w-5" />
+                        <span className="text-[9px] font-medium">Menu</span>
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    ref={menuFileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleMenuImageSelect}
+                  />
+                </div>
+              )}
             </div>
           )}
 
