@@ -301,8 +301,8 @@ export default function MarketsView() {
       </button>
 
       {/* Left Sidebar - Jiji-Style Nested Category Selector */}
-      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0">
-        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto bg-white border-r border-gray-200 p-4">
+      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative z-40">
+        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-visible bg-white border-r border-gray-200 p-4">
           <div className="mb-5 pb-4 border-b border-slate-100">
             <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
             <select
@@ -374,7 +374,7 @@ export default function MarketsView() {
 
                   {/* Flyout subcategory panel */}
                   {hoveredCategoryId === cat.id && (
-                    <div className="absolute left-full top-0 ml-1 bg-white shadow-2xl rounded-r-xl border border-slate-100 p-4 w-56 z-[100] pointer-events-auto">
+                    <div className="absolute left-full top-0 bg-white shadow-2xl rounded-r-xl border border-slate-200 p-4 w-56 z-50 min-h-[120px]">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
                       {cat.subcategories.map(sub => (
                         <button
@@ -402,7 +402,7 @@ export default function MarketsView() {
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden`}>
+      <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden relative z-10`}>
         {/* Product Grid */}
         <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-auto' : 'flex-1'}`}>
           {/* Mobile filter bar */}
