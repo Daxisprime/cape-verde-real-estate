@@ -159,43 +159,42 @@ export default function HeroSection() {
             </div>
 
             {/* Main Search Bar */}
-            <div className="w-full bg-white p-2 rounded-2xl shadow-2xl border border-white/20">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 relative flex items-center">
-                  <MapPin className="absolute left-4 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder={searchMode === "realestate"
-                      ? "Enter island or neighborhood (e.g., Palmarejo, Sal)..."
-                      : "Search items, services, or suppliers..."
-                    }
-                    className="w-full pl-12 pr-4 py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                </div>
+            <div className="w-full flex items-center bg-white rounded-xl md:rounded-2xl shadow-2xl border border-slate-200 p-1.5 md:p-2 max-w-xl md:max-w-none mx-auto">
+              <div className="flex-1 relative flex items-center min-w-0">
+                <MapPin className="absolute left-3 md:left-4 h-4 w-4 md:h-5 md:w-5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder={searchMode === "realestate"
+                    ? "Island or neighborhood..."
+                    : "Search items or services..."
+                  }
+                  className="w-full pl-9 md:pl-12 pr-2 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`flex items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-semibold transition-all border ${
-                      isFilterOpen
-                        ? "bg-blue-50 text-[#2563EB] border-blue-200"
-                        : "bg-gray-50 text-[#2563EB] border-gray-200 hover:bg-blue-50"
-                    }`}
-                  >
-                    {isFilterOpen ? <X className="h-3.5 w-3.5" /> : <SlidersHorizontal className="h-3.5 w-3.5" />}
-                    Filters
-                  </button>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className={`flex items-center gap-1.5 p-2.5 md:px-3 md:py-2.5 rounded-lg md:rounded-xl text-xs font-semibold transition-all border ${
+                    isFilterOpen
+                      ? "bg-blue-50 text-[#2563EB] border-blue-200"
+                      : "bg-gray-50 text-[#2563EB] border-gray-200 hover:bg-blue-50"
+                  }`}
+                >
+                  {isFilterOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
+                  <span className="hidden md:inline">Filters</span>
+                </button>
 
-                  <button
-                    onClick={handleSearch}
-                    className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
-                  >
-                    <Search className="h-4 w-4" /> Search
-                  </button>
-                </div>
+                <button
+                  onClick={handleSearch}
+                  className="bg-[#0044FF] hover:bg-[#0033CC] text-white font-bold p-2.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="hidden md:inline">Search</span>
+                </button>
               </div>
             </div>
 
