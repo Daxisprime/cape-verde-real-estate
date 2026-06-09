@@ -476,6 +476,3 @@ export default function MapPageClient({
     </>
   );
 }
-
-
-export default MapPageClient
