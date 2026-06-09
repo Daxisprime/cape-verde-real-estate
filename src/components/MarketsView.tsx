@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { MapPin, ChevronRight, Home } from 'lucide-react';
+import { useListings } from '@/hooks/useListings';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
@@ -225,6 +226,7 @@ const MUNICIPALITIES = [
 
 export default function MarketsView() {
   const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
+  const { listings: liveItems, isLive } = useListings('item_service');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -234,8 +236,27 @@ export default function MarketsView() {
   const [activeMarketItem, setActiveMarketItem] = useState<string | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
 
+  // Merge live data with mock fallback
+  const allItems = useMemo(() => {
+    const liveFormatted = liveItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      location: `${item.zone || ''}, ${item.island}`.replace(/^, /, ''),
+      category: item.market_category || 'Other',
+      subcategory: null as string | null,
+      image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
+      posted: new Date(item.created_at).toLocaleDateString(),
+      coordinates: [0, 0] as [number, number],
+    }));
+    if (isLive && liveFormatted.length > 0) {
+      return [...liveFormatted, ...MARKETPLACE_ITEMS];
+    }
+    return MARKETPLACE_ITEMS;
+  }, [liveItems, isLive]);
+
   const filteredItems = useMemo(() => {
-    return MARKETPLACE_ITEMS.filter(item => {
+    return allItems.filter(item => {
       if (selectedCategory && item.category !== selectedCategory) return false;
       if (selectedSubcategory && item.subcategory !== selectedSubcategory) return false;
       if (selectedLocation !== "All Locations" && item.location !== selectedLocation) return false;

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { submitInquiry } from "@/app/actions/sendNotification";
 
 export interface SimilarProperty {
   id: string;
@@ -162,20 +163,33 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
 
     setInquiryStatus("sending");
     try {
-      const supabase = createSupabaseBrowserClient();
-      if (supabase) {
-        const { error } = await supabase.from("property_inquiries" as never).insert({
-          property_id: property.id,
-          full_name: inquiryForm.fullName,
-          phone: inquiryForm.phone || null,
-          email: inquiryForm.email,
-          message: inquiryForm.message,
-        } as never);
-        if (error) throw error;
-      }
+      const result = await submitInquiry({
+        property_id: property.id,
+        seller_id: property.id,
+        full_name: inquiryForm.fullName,
+        email: inquiryForm.email,
+        phone: inquiryForm.phone || undefined,
+        message: inquiryForm.message,
+      });
+      if (result.error) throw new Error(result.error);
       setInquiryStatus("sent");
     } catch {
-      setInquiryStatus("error");
+      // Fallback: try direct client insert
+      try {
+        const supabase = createSupabaseBrowserClient();
+        if (supabase) {
+          await supabase.from("property_inquiries" as never).insert({
+            property_id: property.id,
+            full_name: inquiryForm.fullName,
+            phone: inquiryForm.phone || null,
+            email: inquiryForm.email,
+            message: inquiryForm.message,
+          } as never);
+        }
+        setInquiryStatus("sent");
+      } catch {
+        setInquiryStatus("error");
+      }
     }
   };
 

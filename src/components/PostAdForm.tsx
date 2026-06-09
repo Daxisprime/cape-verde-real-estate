@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { Home, Package, ImagePlus, X, Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 
 type AdMode = "real_estate" | "item_service";
 
@@ -47,6 +48,7 @@ export interface CreatedAd {
 }
 
 export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: string; onAdCreated?: (ad: CreatedAd) => void }) {
+  const { user } = useSupabaseAuth();
   const [mode, setMode] = useState<AdMode>("real_estate");
   const [form, setForm] = useState<FormData>({
     title: "",
@@ -127,8 +129,11 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
         }
       }
 
+      const sellerId = user?.id || vendorId;
+      if (!sellerId) throw new Error("You must be signed in to post an ad");
+
       const payload: Record<string, unknown> = {
-        vendor_id: vendorId,
+        vendor_id: sellerId,
         mode,
         title: form.title,
         price: parseFloat(form.price),
@@ -137,6 +142,7 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
         zone: form.zone || null,
         address: form.address || null,
         images: imageUrls,
+        market_category: mode === "item_service" ? form.marketCategory || null : null,
       };
 
       if (mode === "real_estate") {

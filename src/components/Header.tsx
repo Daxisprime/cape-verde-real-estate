@@ -2,9 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag } from 'lucide-react';
-import { mockProfiles } from '@/lib/mockProfiles';
+import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 export default function Header() {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -17,9 +17,9 @@ export default function Header() {
     headerSearchQuery, setHeaderSearchQuery,
     listingType, setListingType,
   } = useSearchMode();
+  const { isAuthenticated, profile, signOut: supabaseSignOut, user } = useSupabaseAuth();
 
   const isMarkets = searchMode === "markets";
-  const vendor = mockProfiles[0];
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -43,6 +43,7 @@ export default function Header() {
   }
 
   function handleSignOut() {
+    supabaseSignOut();
     setIsProfileOpen(false);
     setIsResultsViewActive(false);
     setHeaderSearchQuery("");
@@ -228,54 +229,75 @@ export default function Header() {
 
           {/* Profile Avatar - FAR RIGHT */}
           <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`flex items-center gap-2 rounded-full border p-1 pr-3 hover:shadow-md transition-shadow ${
-                isMarkets ? "border-white/30" : "border-gray-200"
-              }`}
-            >
-              <img
-                src={vendor.avatar_url}
-                alt={vendor.full_name}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${
-                isMarkets ? "text-white/70" : "text-gray-500"
-              } ${isProfileOpen ? 'rotate-180' : ''}`} />
-            </button>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className={`flex items-center gap-2 rounded-full border p-1 pr-3 hover:shadow-md transition-shadow ${
+                    isMarkets ? "border-white/30" : "border-gray-200"
+                  }`}
+                >
+                  {profile?.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt={profile.name || 'User'}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-[#0044FF] flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${
+                    isMarkets ? "text-white/70" : "text-gray-500"
+                  } ${isProfileOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-            {isProfileOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-gray-100 shadow-lg py-2 z-50">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{vendor.full_name}</p>
-                  <p className="text-xs text-gray-500 truncate">{vendor.company}</p>
-                </div>
-                <Link
-                  href="/my-store"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Store className="h-4 w-4 text-gray-400" />
-                  My Store
-                </Link>
-                <Link
-                  href="/sell"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <PlusCircle className="h-4 w-4 text-gray-400" />
-                  Post an Ad
-                </Link>
-                <div className="border-t border-gray-100 mt-1 pt-1">
-                  <button
-                    onClick={handleSignOut}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                  >
-                    <LogOut className="h-4 w-4 text-red-400" />
-                    Sign Out
-                  </button>
-                </div>
-              </div>
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-gray-100 shadow-lg py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'User'}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                    <Link
+                      href="/my-store"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Store className="h-4 w-4 text-gray-400" />
+                      My Store
+                    </Link>
+                    <Link
+                      href="/sell"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <PlusCircle className="h-4 w-4 text-gray-400" />
+                      Post an Ad
+                    </Link>
+                    <div className="border-t border-gray-100 mt-1 pt-1">
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                      >
+                        <LogOut className="h-4 w-4 text-red-400" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Link
+                href="/auth"
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  isMarkets
+                    ? "bg-white text-[#0044FF] hover:bg-white/90"
+                    : "bg-[#0044FF] text-white hover:bg-[#0033CC]"
+                }`}
+              >
+                Sign In
+              </Link>
             )}
           </div>
         </div>

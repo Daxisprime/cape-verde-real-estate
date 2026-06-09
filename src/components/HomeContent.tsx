@@ -11,6 +11,7 @@ import MarketsView from '@/components/MarketsView';
 import Footer from '@/components/Footer';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { capeVerdeProperties } from '@/data/cape-verde-properties';
+import { useListings } from '@/hooks/useListings';
 import { MapPin, Bed, Bath } from 'lucide-react';
 
 const SafeLeafletMap = dynamic(
@@ -33,6 +34,7 @@ export default function HomeContent() {
     searchMode, listingType, headerSearchQuery,
   } = useSearchMode();
 
+  const { listings: liveRealEstate, isLive } = useListings('real_estate');
   const [isMapViewActive, setIsMapViewActive] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -59,14 +61,34 @@ export default function HomeContent() {
   }, [isResultsViewActive]);
 
   const filteredProperties = useMemo(() => {
-    return capeVerdeProperties.filter(property => {
+    // Merge live listings with mock data
+    const liveMapped = liveRealEstate.map(item => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      location: item.zone || item.island,
+      island: item.island,
+      type: 'apartment' as const,
+      bedrooms: item.bedrooms || 0,
+      bathrooms: item.bathrooms || 0,
+      area: item.square_meters || 0,
+      image: item.images?.[0] || 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?w=800',
+      images: item.images || [],
+      coordinates: [0, 0] as [number, number],
+      featured: false,
+    }));
+    const base = isLive && liveMapped.length > 0
+      ? [...liveMapped, ...capeVerdeProperties]
+      : capeVerdeProperties;
+
+    return base.filter(property => {
       const matchesQuery = !headerSearchQuery ||
         property.location.toLowerCase().includes(headerSearchQuery.toLowerCase()) ||
         property.island.toLowerCase().includes(headerSearchQuery.toLowerCase()) ||
         property.title.toLowerCase().includes(headerSearchQuery.toLowerCase());
       return matchesQuery;
     });
-  }, [headerSearchQuery]);
+  }, [headerSearchQuery, liveRealEstate, isLive]);
 
   const mapMarkers = useMemo(() => {
     return filteredProperties.map(p => ({

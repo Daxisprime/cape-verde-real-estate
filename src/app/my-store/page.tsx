@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useMyListings } from "@/hooks/useListings";
 import {
   Phone,
   MessageCircle,
@@ -33,22 +35,51 @@ const STATUS_TABS: { key: ListingStatus; label: string }[] = [
 ];
 
 export default function MyStorePage() {
-  const [vendor, setVendor] = useState(mockProfiles[0]);
+  const { isAuthenticated, profile, user } = useSupabaseAuth();
+  const { listings: liveListings, loading: listingsLoading } = useMyListings();
+  const fallbackVendor = mockProfiles[0];
+
+  const vendorName = profile?.name || fallbackVendor.full_name;
+  const vendorAvatar = profile?.avatar || fallbackVendor.avatar_url;
+  const vendorPhone = profile?.phone || fallbackVendor.phone;
+  const vendorEmail = user?.email || '';
+
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    bio: vendor.bio,
-    phone: vendor.phone,
-    whatsapp: vendor.whatsapp,
-    facebook_url: vendor.facebook_url,
-    instagram_url: vendor.instagram_url,
-    facebook_shop_url: vendor.facebook_shop_url || "",
+    bio: fallbackVendor.bio,
+    phone: vendorPhone,
+    whatsapp: fallbackVendor.whatsapp,
+    facebook_url: fallbackVendor.facebook_url,
+    instagram_url: fallbackVendor.instagram_url,
+    facebook_shop_url: fallbackVendor.facebook_shop_url || "",
   });
+
+  // Merge live listings with mock fallback
   const [listings, setListings] = useState<ManagedListing[]>(() =>
-    vendor.listings.map((l, i) => ({
+    fallbackVendor.listings.map((l, i) => ({
       ...l,
       status: i === 0 ? "active" : i === 1 ? "reviewing" : "active",
     }))
   );
+
+  useEffect(() => {
+    if (liveListings.length > 0) {
+      const live: ManagedListing[] = liveListings.map(item => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        island: item.island,
+        zone: item.zone || '',
+        image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400',
+        bedrooms: item.bedrooms || undefined,
+        bathrooms: item.bathrooms || undefined,
+        squareMeters: item.square_meters || undefined,
+        status: (item.status === 'sold' ? 'closed' : item.status === 'draft' ? 'reviewing' : 'active') as ListingStatus,
+      }));
+      setListings(live);
+    }
+  }, [liveListings]);
+
   const [activeTab, setActiveTab] = useState<ListingStatus>("active");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
@@ -61,15 +92,6 @@ export default function MyStorePage() {
   };
 
   const handleSaveProfile = () => {
-    setVendor((prev) => ({
-      ...prev,
-      bio: editForm.bio,
-      phone: editForm.phone,
-      whatsapp: editForm.whatsapp,
-      facebook_url: editForm.facebook_url,
-      instagram_url: editForm.instagram_url,
-      facebook_shop_url: editForm.facebook_shop_url,
-    }));
     setIsEditing(false);
   };
 
@@ -87,8 +109,8 @@ export default function MyStorePage() {
   };
 
   const handleWhatsApp = () => {
-    const phone = vendor.whatsapp.replace(/\D/g, "");
-    window.open(`https://wa.me/${phone}`, "_blank");
+    const phone = (editForm.whatsapp || vendorPhone || '').replace(/\D/g, "");
+    if (phone) window.open(`https://wa.me/${phone}`, "_blank");
   };
 
   return (
@@ -100,16 +122,16 @@ export default function MyStorePage() {
         <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
             <img
-              src={vendor.avatar_url}
-              alt={vendor.full_name}
+              src={vendorAvatar}
+              alt={vendorName}
               className="h-20 w-20 rounded-full object-cover shrink-0 ring-2 ring-gray-100"
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">{vendor.full_name}</h1>
-                  {vendor.company && (
-                    <p className="text-sm text-gray-500 mt-0.5">{vendor.company}</p>
+                  <h1 className="text-xl font-bold text-gray-900">{vendorName}</h1>
+                  {vendorEmail && (
+                    <p className="text-sm text-gray-500 mt-0.5">{vendorEmail}</p>
                   )}
                 </div>
                 <button
@@ -129,7 +151,7 @@ export default function MyStorePage() {
                   className="mt-3 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 resize-none"
                 />
               ) : (
-                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{vendor.bio}</p>
+                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{editForm.bio}</p>
               )}
 
               <div className="flex flex-wrap gap-2 mt-4">
@@ -155,7 +177,7 @@ export default function MyStorePage() {
                 ) : (
                   <>
                     <a
-                      href={`tel:${vendor.phone}`}
+                      href={`tel:${vendorPhone}`}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-[#1D4ED8] transition-colors"
                     >
                       <Phone className="h-3.5 w-3.5" />
@@ -205,20 +227,20 @@ export default function MyStorePage() {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-4">
-                    {vendor.facebook_url && (
-                      <a href={vendor.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-[#2563EB] hover:underline">
+                    {editForm.facebook_url && (
+                      <a href={editForm.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-[#2563EB] hover:underline">
                         <ExternalLink className="h-3.5 w-3.5" />
                         Facebook Group
                       </a>
                     )}
-                    {vendor.facebook_shop_url && (
-                      <a href={vendor.facebook_shop_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-[#2563EB] hover:underline">
+                    {editForm.facebook_shop_url && (
+                      <a href={editForm.facebook_shop_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-[#2563EB] hover:underline">
                         <ExternalLink className="h-3.5 w-3.5" />
                         Facebook Shop
                       </a>
                     )}
-                    {vendor.instagram_url && (
-                      <a href={vendor.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-pink-600 hover:underline">
+                    {editForm.instagram_url && (
+                      <a href={editForm.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-pink-600 hover:underline">
                         <ExternalLink className="h-3.5 w-3.5" />
                         Instagram
                       </a>
