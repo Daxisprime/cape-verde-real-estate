@@ -208,7 +208,7 @@ export default function MarketsView() {
       {/* Floating Top-Center Pill Toggle */}
       <button
         onClick={() => setIsMarketMapActive(!isMarketMapActive)}
-        className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer font-medium text-sm text-slate-800"
+        className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
       >
         {isMarketMapActive ? (
           <><span aria-hidden="true">&#x1F4E6;</span> List View</>
