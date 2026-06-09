@@ -341,19 +341,7 @@ export default function MarketsView() {
 
           {/* Independent Scrolling Categories Track */}
           <div className="w-full flex-1 overflow-y-auto max-h-[calc(100vh-320px)] px-4 pb-4 pr-2">
-            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Categories</h3>
             <div className="flex flex-col">
-              <button
-                onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
-                className={`flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors text-left ${
-                  !selectedCategory
-                    ? "bg-blue-50 text-[#0044FF] font-semibold"
-                    : "text-gray-700 hover:bg-slate-50"
-                }`}
-              >
-                <span>All Categories</span>
-              </button>
-
               {CATEGORY_TREE.map(cat => (
                 <div
                   key={cat.id}
@@ -499,3 +487,6 @@ export default function MarketsView() {
     </div>
   );
 }
+
+
+export default MarketsView
