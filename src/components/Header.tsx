@@ -15,6 +15,7 @@ export default function Header() {
     searchMode, setSearchMode,
     isResultsViewActive, setIsResultsViewActive,
     headerSearchQuery, setHeaderSearchQuery,
+    listingType, setListingType,
   } = useSearchMode();
 
   const isMarkets = searchMode === "markets";
@@ -120,22 +121,30 @@ export default function Header() {
                   <Home className="h-4 w-4 text-gray-400" />
                   Home
                 </Link>
-                <Link
-                  href="/map?type=buy"
-                  onClick={() => setIsNavOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                <button
+                  onClick={() => {
+                    setSearchMode("realestate");
+                    setListingType("buy");
+                    setIsResultsViewActive(true);
+                    setIsNavOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
                 >
                   <Tag className="h-4 w-4 text-gray-400" />
                   Buy
-                </Link>
-                <Link
-                  href="/map?type=rent"
-                  onClick={() => setIsNavOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                </button>
+                <button
+                  onClick={() => {
+                    setSearchMode("realestate");
+                    setListingType("rent");
+                    setIsResultsViewActive(true);
+                    setIsNavOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
                 >
                   <DollarSign className="h-4 w-4 text-gray-400" />
                   Rent
-                </Link>
+                </button>
                 <Link
                   href="/sell"
                   onClick={() => setIsNavOpen(false)}

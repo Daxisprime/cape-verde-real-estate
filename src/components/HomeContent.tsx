@@ -107,7 +107,7 @@ export default function HomeContent() {
         {/* Floating toggle pill */}
         <button
           onClick={() => setIsMapViewActive(false)}
-          className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer font-medium text-sm text-slate-800"
+          className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
         >
           <span aria-hidden>&#x1F4CB;</span> List
         </button>
@@ -172,7 +172,7 @@ export default function HomeContent() {
         {/* Floating toggle pill */}
         <button
           onClick={() => setIsMapViewActive(true)}
-          className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer font-medium text-sm text-slate-800"
+          className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
         >
           <span aria-hidden>&#x1F5FA;&#xFE0F;</span> Map
         </button>
