@@ -360,8 +360,8 @@ export default function MarketsView() {
         </button>
 
       {/* Left Sidebar - Jiji-Style Nested Category Selector */}
-      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative z-40" ref={sidebarRef}>
-        <div className="sticky top-28 h-[calc(100vh-120px)] flex flex-col bg-white border-r border-gray-200">
+      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 z-40 overflow-visible" ref={sidebarRef}>
+        <div className="sticky top-28 h-[calc(100vh-120px)] flex flex-col bg-white border-r border-gray-200 overflow-visible">
           {/* Top Fixed Controls - Location & Price (never scrolls) */}
           <div className="w-full p-4 pb-0 flex-shrink-0">
             <div className="pb-4 mb-4 border-b border-slate-100">
@@ -431,43 +431,45 @@ export default function MarketsView() {
             </div>
           </div>
 
-          {/* Flyout subcategory panel - fixed position aligned to hovered category */}
-          {hoveredCategoryId && (() => {
-            const cat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
-            if (!cat) return null;
-            const sidebarRight = sidebarRef.current?.getBoundingClientRect().right || 288;
-            return (
-              <div
-                className="fixed bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-[9999]"
-                style={{ top: `${flyoutTop}px`, left: `${sidebarRight + 4}px` }}
-                onMouseEnter={() => setHoveredCategoryId(cat.id)}
-                onMouseLeave={() => setHoveredCategoryId(null)}
-              >
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
-                {cat.subcategories.map(sub => (
-                  <button
-                    key={sub}
-                    onClick={() => {
-                      setSelectedCategory(cat.label);
-                      handleSubcategorySelect(sub);
-                    }}
-                    className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
-                      selectedSubcategory === sub
-                        ? "bg-blue-50 text-[#0044FF] font-semibold"
-                        : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+          {/* Flyout rendered via portal below */}
         </div>
       </aside>
 
+      {/* Flyout subcategory panel - rendered at root level to escape all stacking contexts */}
+      {hoveredCategoryId && (() => {
+        const cat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
+        if (!cat) return null;
+        const sidebarRight = sidebarRef.current?.getBoundingClientRect().right || 288;
+        return (
+          <div
+            className="fixed bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-[9999] pointer-events-auto"
+            style={{ top: `${flyoutTop}px`, left: `${sidebarRight + 4}px` }}
+            onMouseEnter={() => setHoveredCategoryId(cat.id)}
+            onMouseLeave={() => setHoveredCategoryId(null)}
+          >
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
+            {cat.subcategories.map(sub => (
+              <button
+                key={sub}
+                onClick={() => {
+                  setSelectedCategory(cat.label);
+                  handleSubcategorySelect(sub);
+                }}
+                className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
+                  selectedSubcategory === sub
+                    ? "bg-blue-50 text-[#0044FF] font-semibold"
+                    : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+                }`}
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Main Content Area */}
-      <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden relative z-10`}>
+      <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden relative z-0`}>
         {/* Product Grid */}
         <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-auto' : 'flex-1'}`}>
           {/* Mobile filter bar */}
@@ -506,7 +508,13 @@ export default function MarketsView() {
             {/* Masonry Grid */}
             <div className="columns-2 gap-2 w-full block">
               {filteredItems.map((item, index) => (
-                <div key={item.id} id={`market-item-${item.id}`} className="break-inside-avoid inline-block w-full mb-3">
+                <div
+                  key={item.id}
+                  id={`market-item-${item.id}`}
+                  className="break-inside-avoid inline-block w-full mb-3"
+                  onMouseEnter={() => setActiveMarketItem(item.id)}
+                  onMouseLeave={() => setActiveMarketItem(null)}
+                >
                   <div className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border group ${
                     activeMarketItem === item.id
                       ? 'border-[#0044FF] shadow-lg ring-2 ring-blue-100'
