@@ -402,7 +402,7 @@ export default function MarketsView() {
               {CATEGORY_TREE.map(cat => (
                 <div
                   key={cat.id}
-                  className="relative"
+                  className="relative group/cat"
                   onMouseEnter={() => setHoveredCategoryId(cat.id)}
                   onMouseLeave={() => setHoveredCategoryId(null)}
                 >
@@ -420,33 +420,41 @@ export default function MarketsView() {
                     </span>
                     <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
                   </button>
-
-                  {/* Flyout subcategory panel */}
-                  {hoveredCategoryId === cat.id && (
-                    <div className="absolute left-full top-0 ml-1 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-50 min-h-[250px] pointer-events-auto">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
-                      {cat.subcategories.map(sub => (
-                        <button
-                          key={sub}
-                          onClick={() => {
-                            setSelectedCategory(cat.label);
-                            handleSubcategorySelect(sub);
-                          }}
-                          className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
-                            selectedSubcategory === sub
-                              ? "bg-blue-50 text-[#0044FF] font-semibold"
-                              : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
-                          }`}
-                        >
-                          {sub}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Flyout subcategory panel - rendered outside overflow container with fixed positioning */}
+          {hoveredCategoryId && (() => {
+            const cat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
+            if (!cat) return null;
+            return (
+              <div
+                className="fixed left-[16.5rem] lg:left-[18.5rem] top-[12rem] bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-[9999] min-h-[200px]"
+                onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                onMouseLeave={() => setHoveredCategoryId(null)}
+              >
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
+                {cat.subcategories.map(sub => (
+                  <button
+                    key={sub}
+                    onClick={() => {
+                      setSelectedCategory(cat.label);
+                      handleSubcategorySelect(sub);
+                    }}
+                    className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
+                      selectedSubcategory === sub
+                        ? "bg-blue-50 text-[#0044FF] font-semibold"
+                        : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </aside>
 
