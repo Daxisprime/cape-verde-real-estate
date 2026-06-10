@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { MapPin, ChevronRight, Home } from 'lucide-react';
@@ -235,6 +235,8 @@ export default function MarketsView() {
   const [isMarketMapActive, setIsMarketMapActive] = useState(false);
   const [activeMarketItem, setActiveMarketItem] = useState<string | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
+  const [flyoutTop, setFlyoutTop] = useState(0);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Merge live data with mock fallback
   const allItems = useMemo(() => {
@@ -358,7 +360,7 @@ export default function MarketsView() {
         </button>
 
       {/* Left Sidebar - Jiji-Style Nested Category Selector */}
-      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative z-40">
+      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 relative z-40" ref={sidebarRef}>
         <div className="sticky top-28 h-[calc(100vh-120px)] flex flex-col bg-white border-r border-gray-200">
           {/* Top Fixed Controls - Location & Price (never scrolls) */}
           <div className="w-full p-4 pb-0 flex-shrink-0">
@@ -403,7 +405,11 @@ export default function MarketsView() {
                 <div
                   key={cat.id}
                   className="relative group/cat"
-                  onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                  onMouseEnter={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setFlyoutTop(rect.top);
+                    setHoveredCategoryId(cat.id);
+                  }}
                   onMouseLeave={() => setHoveredCategoryId(null)}
                 >
                   <button
@@ -425,13 +431,15 @@ export default function MarketsView() {
             </div>
           </div>
 
-          {/* Flyout subcategory panel - rendered outside overflow container with fixed positioning */}
+          {/* Flyout subcategory panel - fixed position aligned to hovered category */}
           {hoveredCategoryId && (() => {
             const cat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
             if (!cat) return null;
+            const sidebarRight = sidebarRef.current?.getBoundingClientRect().right || 288;
             return (
               <div
-                className="fixed left-[16.5rem] lg:left-[18.5rem] top-[12rem] bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-[9999] min-h-[200px]"
+                className="fixed bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-[9999]"
+                style={{ top: `${flyoutTop}px`, left: `${sidebarRight + 4}px` }}
                 onMouseEnter={() => setHoveredCategoryId(cat.id)}
                 onMouseLeave={() => setHoveredCategoryId(null)}
               >
