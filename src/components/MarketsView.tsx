@@ -310,9 +310,9 @@ export default function MarketsView() {
   }
 
   return (
-    <div className="relative flex flex-col min-h-[calc(100vh-64px)]">
+    <div className="w-full h-[calc(100vh-64px)] overflow-hidden flex flex-col bg-white">
       {/* Jiji-Style Breadcrumb Navigation Trail */}
-      <div className="w-full bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 z-20 relative">
+      <div className="w-full flex-shrink-0 bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 z-30 relative">
         <button
           onClick={() => { setIsResultsViewActive(false); }}
           className="flex items-center gap-1 hover:text-[#0044FF] transition-colors"
@@ -346,7 +346,8 @@ export default function MarketsView() {
         )}
       </div>
 
-      <div className="relative flex flex-1">
+      {/* Dual-column workspace */}
+      <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Floating Top-Center Pill Toggle */}
         <button
           onClick={() => setIsMarketMapActive(!isMarketMapActive)}
@@ -359,11 +360,11 @@ export default function MarketsView() {
           )}
         </button>
 
-      {/* Left Sidebar - Jiji-Style Nested Category Selector */}
-      <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 z-40 overflow-visible" ref={sidebarRef}>
-        <div className="sticky top-28 h-[calc(100vh-120px)] flex flex-col bg-white border-r border-gray-200 overflow-visible">
-          {/* Top Fixed Controls - Location & Price (never scrolls) */}
-          <div className="w-full p-4 pb-0 flex-shrink-0">
+        {/* Left Sidebar - Category Selector */}
+        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full z-40 overflow-visible" ref={sidebarRef}>
+          <div className="h-full flex flex-col bg-white border-r border-gray-200 overflow-visible">
+            {/* Top Fixed Controls - Location & Price */}
+            <div className="w-full p-4 pb-0 flex-shrink-0">
             <div className="pb-4 mb-4 border-b border-slate-100">
               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
               <select
@@ -398,13 +399,13 @@ export default function MarketsView() {
             </div>
           </div>
 
-          {/* Independent Scrolling Categories Track */}
-          <div className="w-full flex-1 overflow-y-auto max-h-[calc(100vh-320px)] px-4 pb-4 pr-2">
+          {/* Scrolling Categories Track */}
+          <div className="w-full flex-1 overflow-y-auto px-4 pb-4 pr-2">
             <div className="flex flex-col">
               {CATEGORY_TREE.map(cat => (
                 <div
                   key={cat.id}
-                  className="relative group/cat"
+                  className="relative"
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     setFlyoutTop(rect.top);
@@ -430,48 +431,51 @@ export default function MarketsView() {
               ))}
             </div>
           </div>
-
-          {/* Flyout rendered via portal below */}
         </div>
       </aside>
 
-      {/* Flyout subcategory panel - rendered at root level to escape all stacking contexts */}
+      {/* Flyout subcategory panel - flush against sidebar edge with hover bridge */}
       {hoveredCategoryId && (() => {
         const cat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
         if (!cat) return null;
-        const sidebarRight = sidebarRef.current?.getBoundingClientRect().right || 288;
+        const sidebarRight = sidebarRef.current?.getBoundingClientRect().right || 256;
         return (
           <div
-            className="fixed bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 z-[9999] pointer-events-auto"
-            style={{ top: `${flyoutTop}px`, left: `${sidebarRight + 4}px` }}
+            className="fixed z-[9999] pointer-events-auto"
+            style={{ top: `${flyoutTop - 8}px`, left: `${sidebarRight - 4}px` }}
             onMouseEnter={() => setHoveredCategoryId(cat.id)}
             onMouseLeave={() => setHoveredCategoryId(null)}
           >
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
-            {cat.subcategories.map(sub => (
-              <button
-                key={sub}
-                onClick={() => {
-                  setSelectedCategory(cat.label);
-                  handleSubcategorySelect(sub);
-                }}
-                className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
-                  selectedSubcategory === sub
-                    ? "bg-blue-50 text-[#0044FF] font-semibold"
-                    : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
+            {/* Invisible hover bridge to prevent gap disconnect */}
+            <div className="absolute left-0 top-0 w-3 h-full" />
+            <div className="ml-2 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 min-h-[200px]">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
+              {cat.subcategories.map(sub => (
+                <button
+                  key={sub}
+                  onClick={() => {
+                    setSelectedCategory(cat.label);
+                    handleSubcategorySelect(sub);
+                    setHoveredCategoryId(null);
+                  }}
+                  className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
+                    selectedSubcategory === sub
+                      ? "bg-blue-50 text-[#0044FF] font-semibold"
+                      : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
           </div>
         );
       })()}
 
       {/* Main Content Area */}
       <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden relative z-0`}>
-        {/* Product Grid */}
-        <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-auto' : 'flex-1'}`}>
+        {/* Product Grid - independent scroll */}
+        <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-full' : 'flex-1'} px-3 pt-4 pb-24`}>
           {/* Mobile filter bar */}
           <div className="md:hidden p-3 bg-white border-b border-gray-200 flex gap-2 overflow-x-auto">
             <select
@@ -554,9 +558,9 @@ export default function MarketsView() {
           </div>
         </div>
 
-        {/* Map Pane */}
+        {/* Map Pane - fixed to viewport */}
         {isMarketMapActive && (
-          <div className="w-full md:w-1/2 h-[50vh] md:h-[calc(100vh-64px)] border-l border-gray-200">
+          <div className="w-full md:flex-1 h-[50vh] md:h-full relative z-0 border-l border-gray-200">
             <SafeLeafletMap
               items={mapMarkers}
               activeItem={mapMarkers.find(m => m.id === activeMarketItem) || null}
