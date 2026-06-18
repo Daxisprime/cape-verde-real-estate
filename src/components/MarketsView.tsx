@@ -359,8 +359,8 @@ export default function MarketsView() {
         </button>
 
         {/* Left Sidebar - Category Selector */}
-        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full z-40 overflow-visible">
-          <div className="h-full flex flex-col bg-white border-r border-gray-200 overflow-visible">
+        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full bg-white border-r border-slate-100 relative isolate z-40 overflow-visible">
+          <div className="h-full flex flex-col overflow-visible">
             {/* Top Fixed Controls - Location & Price */}
             <div className="w-full p-4 pb-0 flex-shrink-0">
             <div className="pb-4 mb-4 border-b border-slate-100">
@@ -403,16 +403,16 @@ export default function MarketsView() {
               {CATEGORY_TREE.map(cat => (
                 <div
                   key={cat.id}
-                  className="relative group flex items-center justify-between py-0 rounded-lg cursor-pointer z-50 overflow-visible"
+                  className="relative group flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-slate-50 cursor-pointer z-50 overflow-visible"
                   onMouseEnter={() => setHoveredCategoryId(cat.id)}
                   onMouseLeave={() => setHoveredCategoryId(null)}
                 >
                   <button
                     onClick={() => handleCategorySelect(cat.label)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left cursor-pointer ${
+                    className={`w-full flex items-center justify-between rounded-lg transition-colors text-left cursor-pointer ${
                       selectedCategory === cat.label
                         ? "bg-blue-50 text-[#0044FF] font-semibold"
-                        : "text-gray-700 hover:bg-slate-50"
+                        : "text-gray-700"
                     }`}
                   >
                     <span className="flex items-center gap-2 min-w-0">
@@ -424,7 +424,7 @@ export default function MarketsView() {
                   {/* Subcategory flyout - flush against row right edge */}
                   {hoveredCategoryId === cat.id && (
                     <div
-                      className="absolute left-full top-0 w-60 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-4 z-[9999] pointer-events-auto block min-h-[200px]"
+                      className="absolute left-full top-0 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-4 w-60 z-[9999] pointer-events-auto block min-h-[200px]"
                       style={{ marginLeft: '-1px' }}
                     >
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
@@ -455,7 +455,7 @@ export default function MarketsView() {
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden relative z-0`}>
+      <div className={`flex-1 h-full bg-slate-50 relative z-10 overflow-hidden ${isMarketMapActive ? 'flex flex-col md:flex-row' : 'flex flex-col'}`}>
         {/* Product Grid - independent scroll */}
         <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-full' : 'flex-1'} px-3 pt-4 pb-24`}>
           {/* Mobile filter bar */}
