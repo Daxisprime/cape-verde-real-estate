@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle, X, ChevronLeft, ChevronRight, Facebook } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { submitInquiry } from "@/app/actions/sendNotification";
@@ -51,6 +51,7 @@ interface PropertyDetailClientProps {
       phone: string;
       email: string;
       avatar: string;
+      facebook_handle?: string;
     };
     coordinates: number[];
     priceHistory: Array<{ date: string; price: number }>;
@@ -417,6 +418,18 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
                   <MessageCircle className="h-3.5 w-3.5" />
                   WhatsApp
                 </button>
+                {property.agent.facebook_handle && (
+                  <a
+                    href={`fb://facewebmodal/f?href=https://facebook.com/${property.agent.facebook_handle}`}
+                    onClick={() => {
+                      setTimeout(() => { window.open(`https://facebook.com/${property.agent.facebook_handle}`, '_blank'); }, 500);
+                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium text-[#1877F2] hover:bg-blue-50 transition-colors"
+                  >
+                    <Facebook className="h-3.5 w-3.5" />
+                    Facebook
+                  </a>
+                )}
               </div>
             </div>
           </section>
@@ -543,6 +556,18 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
                 <MessageCircle className="h-3.5 w-3.5" />
                 WhatsApp
               </button>
+              {property.agent.facebook_handle && (
+                <a
+                  href={`fb://facewebmodal/f?href=https://facebook.com/${property.agent.facebook_handle}`}
+                  onClick={() => {
+                    setTimeout(() => { window.open(`https://facebook.com/${property.agent.facebook_handle}`, '_blank'); }, 500);
+                  }}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-xs font-medium text-[#1877F2] hover:bg-blue-50 transition-colors"
+                >
+                  <Facebook className="h-3.5 w-3.5" />
+                  Facebook
+                </a>
+              )}
             </div>
             </div>
           </aside>
@@ -563,7 +588,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           </div>
           <a
             href={`tel:${property.agent.phone}`}
-            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors shrink-0"
+            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#0044FF] text-white hover:bg-[#0033CC] transition-colors shrink-0"
             aria-label="Call agent"
           >
             <Phone className="h-4 w-4" />
@@ -575,6 +600,18 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           >
             <MessageCircle className="h-4 w-4" />
           </button>
+          {property.agent.facebook_handle && (
+            <a
+              href={`fb://facewebmodal/f?href=https://facebook.com/${property.agent.facebook_handle}`}
+              onClick={() => {
+                setTimeout(() => { window.open(`https://facebook.com/${property.agent.facebook_handle}`, '_blank'); }, 500);
+              }}
+              className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#1877F2] text-white hover:bg-[#166FE5] transition-colors shrink-0"
+              aria-label="Facebook profile"
+            >
+              <Facebook className="h-4 w-4" />
+            </a>
+          )}
         </div>
       </div>
 

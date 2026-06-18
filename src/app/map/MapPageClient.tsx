@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User, X, SlidersHorizontal, Home, ChevronRight } from 'lucide-react';
+import { Search, Bed, Bath, MapPin, ArrowLeft, Phone, MessageCircle, CheckCircle2, User, X, SlidersHorizontal, Home, ChevronRight, Facebook } from 'lucide-react';
 import Header from '@/components/Header';
 
 const SafeLeafletMap = dynamic(
@@ -30,6 +30,7 @@ const MOCK_DATA = [
     seller_name: 'Maria Santos',
     seller_phone: '+238 991 2345',
     seller_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    seller_facebook: 'maria.santos.cv',
     is_verified: true
   },
   {
@@ -47,6 +48,7 @@ const MOCK_DATA = [
     seller_name: 'Jo\u00e3o Silva',
     seller_phone: '+238 995 6789',
     seller_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    seller_facebook: 'joao.silva.praia',
     is_verified: true
   },
   {
@@ -64,6 +66,7 @@ const MOCK_DATA = [
     seller_name: 'Ana Ferreira',
     seller_phone: '+238 992 3456',
     seller_avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+    seller_facebook: 'ana.ferreira.realestate',
     is_verified: true
   },
   {
@@ -81,6 +84,7 @@ const MOCK_DATA = [
     seller_name: 'Carlos Mendes',
     seller_phone: '+238 997 8901',
     seller_avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+    seller_facebook: '',
     is_verified: false
   },
   {
@@ -98,6 +102,7 @@ const MOCK_DATA = [
     seller_name: 'Sofia Lopes',
     seller_phone: '+238 993 4567',
     seller_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    seller_facebook: 'sofia.lopes.cv',
     is_verified: true
   }
 ];
@@ -299,10 +304,10 @@ export default function MapPageClient({
         )}
       </div>
 
-      {/* Floating Map/List toggle pill - completely detached */}
+      {/* Floating Map/List toggle pill - bottom-center on mobile only */}
       <button
         onClick={() => { setIsMobileMapActive(!isMobileMapActive); setActiveMobileItem(null); }}
-        className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800 md:hidden"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95 md:hidden"
       >
         {isMobileMapActive ? (
           <><span aria-hidden>&#x1F4CB;</span> List</>
@@ -426,6 +431,18 @@ export default function MapPageClient({
                   >
                     <MessageCircle className="h-5 w-5" /> Message on WhatsApp
                   </a>
+
+                  {selectedProperty.seller_facebook && (
+                    <a
+                      href={`fb://facewebmodal/f?href=https://facebook.com/${selectedProperty.seller_facebook}`}
+                      onClick={(e) => {
+                        setTimeout(() => { window.open(`https://facebook.com/${selectedProperty.seller_facebook}`, '_blank'); }, 500);
+                      }}
+                      className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md"
+                    >
+                      <Facebook className="h-5 w-5" /> Facebook Profile
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -526,15 +543,29 @@ export default function MapPageClient({
                     {activeMobileItem.listing_type === 'buy' ? 'Sale' : 'Rent'}
                   </span>
                 </div>
-                <a
-                  href={`https://wa.me/${formatPhoneForWhatsApp(activeMobileItem.seller_phone || '+238000000')}?text=Hi, I'm interested in: ${encodeURIComponent(activeMobileItem.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold text-white bg-emerald-500 rounded-md py-1 px-2 hover:bg-emerald-600 transition"
-                >
-                  <MessageCircle className="h-3 w-3" /> WhatsApp
-                </a>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <a
+                    href={`https://wa.me/${formatPhoneForWhatsApp(activeMobileItem.seller_phone || '+238000000')}?text=Hi, I'm interested in: ${encodeURIComponent(activeMobileItem.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-emerald-500 rounded-md py-1 px-2 hover:bg-emerald-600 transition"
+                  >
+                    <MessageCircle className="h-3 w-3" /> WhatsApp
+                  </a>
+                  {activeMobileItem.seller_facebook && (
+                    <a
+                      href={`fb://facewebmodal/f?href=https://facebook.com/${activeMobileItem.seller_facebook}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTimeout(() => { window.open(`https://facebook.com/${activeMobileItem.seller_facebook}`, '_blank'); }, 500);
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-[#1877F2] rounded-md py-1 px-2 hover:bg-[#166FE5] transition"
+                    >
+                      <Facebook className="h-3 w-3" /> Facebook
+                    </a>
+                  )}
+                </div>
               </div>
             </Link>
           </>

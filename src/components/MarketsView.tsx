@@ -384,15 +384,15 @@ export default function MarketsView() {
           )}
         </aside>
 
-        {/* Floating View Toggle Pill - 48px touch target */}
+        {/* Floating View Toggle Pill - bottom-center on mobile, hidden on lg+ (uses permanent split) */}
         <div
           onClick={() => setIsMapViewActive(!isMapViewActive)}
-          className="fixed top-32 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-xs text-slate-800 touch-target active:scale-95"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95 lg:hidden"
         >
           {isMapViewActive ? (
-            <><LayoutGrid className="w-4 h-4" /> {t.listView}</>
+            <><LayoutGrid className="w-3.5 h-3.5" /> {t.listView}</>
           ) : (
-            <><MapPin className="w-4 h-4" /> {t.mapView}</>
+            <><MapPin className="w-3.5 h-3.5" /> {t.mapView}</>
           )}
         </div>
 
