@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { MapPin, ChevronRight, Home } from 'lucide-react';
@@ -235,8 +235,6 @@ export default function MarketsView() {
   const [isMarketMapActive, setIsMarketMapActive] = useState(false);
   const [activeMarketItem, setActiveMarketItem] = useState<string | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
-  const [flyoutTop, setFlyoutTop] = useState(0);
-  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Merge live data with mock fallback
   const allItems = useMemo(() => {
@@ -361,7 +359,7 @@ export default function MarketsView() {
         </button>
 
         {/* Left Sidebar - Category Selector */}
-        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full z-40 overflow-visible" ref={sidebarRef}>
+        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full z-40 overflow-visible">
           <div className="h-full flex flex-col bg-white border-r border-gray-200 overflow-visible">
             {/* Top Fixed Controls - Location & Price */}
             <div className="w-full p-4 pb-0 flex-shrink-0">
@@ -400,17 +398,13 @@ export default function MarketsView() {
           </div>
 
           {/* Scrolling Categories Track */}
-          <div className="w-full flex-1 overflow-y-auto px-4 pb-4 pr-2">
+          <div className="w-full flex-1 overflow-y-auto overflow-x-visible px-4 pb-4 pr-2">
             <div className="flex flex-col">
               {CATEGORY_TREE.map(cat => (
                 <div
                   key={cat.id}
                   className="relative"
-                  onMouseEnter={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setFlyoutTop(rect.top);
-                    setHoveredCategoryId(cat.id);
-                  }}
+                  onMouseEnter={() => setHoveredCategoryId(cat.id)}
                   onMouseLeave={() => setHoveredCategoryId(null)}
                 >
                   <button
@@ -427,50 +421,35 @@ export default function MarketsView() {
                     </span>
                     <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
                   </button>
+                  {/* Inline flyout - positioned absolute from this row */}
+                  {hoveredCategoryId === cat.id && (
+                    <div className="absolute left-full top-0 w-56 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 z-[9999] min-h-[200px] pointer-events-auto">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
+                      {cat.subcategories.map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => {
+                            setSelectedCategory(cat.label);
+                            handleSubcategorySelect(sub);
+                            setHoveredCategoryId(null);
+                          }}
+                          className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
+                            selectedSubcategory === sub
+                              ? "bg-blue-50 text-[#0044FF] font-semibold"
+                              : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </div>
       </aside>
-
-      {/* Flyout subcategory panel - flush against sidebar edge with hover bridge */}
-      {hoveredCategoryId && (() => {
-        const cat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
-        if (!cat) return null;
-        const sidebarRight = sidebarRef.current?.getBoundingClientRect().right || 256;
-        return (
-          <div
-            className="fixed z-[9999] pointer-events-auto"
-            style={{ top: `${flyoutTop - 8}px`, left: `${sidebarRight - 4}px` }}
-            onMouseEnter={() => setHoveredCategoryId(cat.id)}
-            onMouseLeave={() => setHoveredCategoryId(null)}
-          >
-            {/* Invisible hover bridge to prevent gap disconnect */}
-            <div className="absolute left-0 top-0 w-3 h-full" />
-            <div className="ml-2 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 w-56 min-h-[200px]">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
-              {cat.subcategories.map(sub => (
-                <button
-                  key={sub}
-                  onClick={() => {
-                    setSelectedCategory(cat.label);
-                    handleSubcategorySelect(sub);
-                    setHoveredCategoryId(null);
-                  }}
-                  className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
-                    selectedSubcategory === sub
-                      ? "bg-blue-50 text-[#0044FF] font-semibold"
-                      : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Main Content Area */}
       <div className={`flex-1 flex ${isMarketMapActive ? 'flex-col md:flex-row' : 'flex-col'} overflow-hidden relative z-0`}>

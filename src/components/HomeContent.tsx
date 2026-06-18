@@ -121,7 +121,7 @@ export default function HomeContent() {
   // Real estate with map view toggled ON
   if (isResultsViewActive && isMapViewActive) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="w-full h-screen overflow-hidden flex flex-col bg-white">
         <Header />
         <ResultsFilterStrip />
 
@@ -133,49 +133,47 @@ export default function HomeContent() {
           <span aria-hidden>&#x1F4CB;</span> List
         </button>
 
-        <div className="flex flex-col md:flex-row h-[calc(100vh-64px-44px)] w-full overflow-hidden">
+        <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden relative">
           {/* Left listing feed */}
-          <div className="w-full md:w-[400px] lg:w-[440px] h-[50vh] md:h-full overflow-y-auto border-r border-gray-100 bg-white">
-            <div className="p-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                {filteredProperties.length} Properties
-              </p>
-              <div className="space-y-2">
-                {filteredProperties.slice(0, 20).map(property => (
-                  <Link
-                    key={property.id}
-                    href={`/property/${property.id}`}
-                    className={`flex gap-3 p-2 rounded-lg transition border ${
-                      hoveredId === property.id
-                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
-                        : 'border-gray-100 hover:bg-gray-50'
-                    }`}
-                    onMouseEnter={() => setHoveredId(property.id)}
-                    onMouseLeave={() => setHoveredId(null)}
-                  >
-                    <img
-                      src={property.images[0]}
-                      alt={property.title}
-                      className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm text-gray-900 truncate">{property.title}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="h-3 w-3" /> {property.location}
-                      </p>
-                      <p className="font-black text-sm text-gray-800 mt-1">{formatPrice(property.price)}</p>
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-400">
-                        <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>
-                        <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>
-                      </div>
+          <div className="w-full md:w-[450px] lg:w-[500px] h-full overflow-y-auto z-10 px-3 pt-4 pb-24 border-r border-gray-100 bg-white">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              {filteredProperties.length} Properties
+            </p>
+            <div className="space-y-2">
+              {filteredProperties.slice(0, 20).map(property => (
+                <Link
+                  key={property.id}
+                  href={`/property/${property.id}`}
+                  className={`flex gap-3 p-2 rounded-lg transition border ${
+                    hoveredId === property.id
+                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
+                      : 'border-gray-100 hover:bg-gray-50'
+                  }`}
+                  onMouseEnter={() => setHoveredId(property.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                >
+                  <img
+                    src={property.images[0]}
+                    alt={property.title}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-gray-900 truncate">{property.title}</p>
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3 w-3" /> {property.location}
+                    </p>
+                    <p className="font-black text-sm text-gray-800 mt-1">{formatPrice(property.price)}</p>
+                    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-400">
+                      <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>
+                      <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>
                     </div>
-                  </Link>
-                ))}
-              </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
           {/* Right map panel */}
-          <div className="w-full md:flex-1 h-[50vh] md:h-full relative bg-gray-100">
+          <div className="w-full md:flex-1 h-full relative z-20">
             <SafeLeafletMap items={mapMarkers} activeItem={hoveredMapItem} onPinClick={() => {}} />
           </div>
         </div>
