@@ -359,100 +359,113 @@ export default function MarketsView() {
         </button>
 
         {/* Left Sidebar - Category Selector */}
-        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full bg-white border-r border-slate-100 relative isolate z-40 overflow-visible">
-          <div className="h-full flex flex-col overflow-visible">
+        <aside
+          className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full bg-white border-r border-slate-100 relative isolate z-40"
+          onMouseLeave={() => setHoveredCategoryId(null)}
+        >
+          <div className="h-full flex flex-col">
             {/* Top Fixed Controls - Location & Price */}
             <div className="w-full p-4 pb-0 flex-shrink-0">
-            <div className="pb-4 mb-4 border-b border-slate-100">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-              >
-                {MUNICIPALITIES.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+              <div className="pb-4 mb-4 border-b border-slate-100">
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
+                >
+                  {MUNICIPALITIES.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pb-4 mb-4 border-b border-slate-100">
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="pb-4 mb-4 border-b border-slate-100">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-                />
+            {/* Scrolling Categories Track */}
+            <div className="w-full flex-1 overflow-y-auto max-h-[calc(100vh-320px)] px-4 pb-4 pr-1">
+              <div className="flex flex-col">
+                {CATEGORY_TREE.map(cat => (
+                  <div
+                    key={cat.id}
+                    className="relative flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700 transition-colors"
+                    onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                  >
+                    <button
+                      onClick={() => handleCategorySelect(cat.label)}
+                      className={`w-full flex items-center justify-between rounded-lg transition-colors text-left cursor-pointer ${
+                        selectedCategory === cat.label
+                          ? "bg-blue-50 text-[#0044FF] font-semibold"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm flex-shrink-0">{cat.icon}</span>
+                        <span className="truncate text-xs">{cat.label}</span>
+                      </span>
+                      <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Scrolling Categories Track */}
-          <div className="w-full flex-1 overflow-y-auto px-4 pb-4 pr-2" style={{ overflowX: 'visible' }}>
-            <div className="flex flex-col">
-              {CATEGORY_TREE.map(cat => (
-                <div
-                  key={cat.id}
-                  className="relative group flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-slate-50 cursor-pointer z-50 overflow-visible"
-                  onMouseEnter={() => setHoveredCategoryId(cat.id)}
-                  onMouseLeave={() => setHoveredCategoryId(null)}
-                >
+          {/* Single flyout panel - positioned outside scrolling container */}
+          {hoveredCategoryId && (() => {
+            const activeCat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
+            const activeIndex = CATEGORY_TREE.findIndex(c => c.id === hoveredCategoryId);
+            if (!activeCat) return null;
+            return (
+              <div
+                className="absolute left-full bg-white border border-slate-200 shadow-2xl rounded-r-xl p-5 w-64 z-[100] pointer-events-auto block transition-all"
+                style={{
+                  top: `${activeIndex * 44 + 130}px`,
+                  marginLeft: '-1px',
+                }}
+                onMouseEnter={() => setHoveredCategoryId(hoveredCategoryId)}
+                onMouseLeave={() => setHoveredCategoryId(null)}
+              >
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">{activeCat.label}</p>
+                {activeCat.subcategories.map(sub => (
                   <button
-                    onClick={() => handleCategorySelect(cat.label)}
-                    className={`w-full flex items-center justify-between rounded-lg transition-colors text-left cursor-pointer ${
-                      selectedCategory === cat.label
+                    key={sub}
+                    onClick={() => {
+                      setSelectedCategory(activeCat.label);
+                      handleSubcategorySelect(sub);
+                      setHoveredCategoryId(null);
+                    }}
+                    className={`block w-full text-left px-3 py-2 text-xs rounded-md transition-colors ${
+                      selectedSubcategory === sub
                         ? "bg-blue-50 text-[#0044FF] font-semibold"
-                        : "text-gray-700"
+                        : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
                     }`}
                   >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm flex-shrink-0">{cat.icon}</span>
-                      <span className="truncate text-xs">{cat.label}</span>
-                    </span>
-                    <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
+                    {sub}
                   </button>
-                  {/* Subcategory flyout - flush against row right edge */}
-                  {hoveredCategoryId === cat.id && (
-                    <div
-                      className="absolute left-full top-0 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-4 w-60 z-[9999] pointer-events-auto block min-h-[200px]"
-                      style={{ marginLeft: '-1px' }}
-                    >
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
-                      {cat.subcategories.map(sub => (
-                        <button
-                          key={sub}
-                          onClick={() => {
-                            setSelectedCategory(cat.label);
-                            handleSubcategorySelect(sub);
-                            setHoveredCategoryId(null);
-                          }}
-                          className={`block w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors ${
-                            selectedSubcategory === sub
-                              ? "bg-blue-50 text-[#0044FF] font-semibold"
-                              : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
-                          }`}
-                        >
-                          {sub}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </aside>
+                ))}
+              </div>
+            );
+          })()}
+        </aside>
 
       {/* Main Content Area */}
       <div className={`flex-1 h-full bg-slate-50 relative z-10 overflow-hidden ${isMarketMapActive ? 'flex flex-col md:flex-row' : 'flex flex-col'}`}>
