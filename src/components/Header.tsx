@@ -23,6 +23,22 @@ export default function Header() {
 
   const isMarkets = searchMode === "markets";
 
+  const marketKeywords = ['cement', 'block', 'tile', 'tool', 'car', 'moto', 'tv', 'phone', 'iphone', 'sofa', 'fridge', 'plumber', 'electrician', 'repair', 'service', 'menu', 'food', 'restaurant', 'clothes', 'shoes'];
+
+  function handleSearchSubmit(query: string) {
+    const isMarketIntent = marketKeywords.some(keyword => query.toLowerCase().includes(keyword));
+    if (isMarketIntent && searchMode !== "markets") {
+      setSearchMode("markets");
+    }
+    setIsResultsViewActive(true);
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      handleSearchSubmit(headerSearchQuery);
+    }
+  }
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -207,6 +223,7 @@ export default function Header() {
                   placeholder={t.searchPlaceholder}
                   value={headerSearchQuery}
                   onChange={(e) => setHeaderSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
                   className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
                     isMarkets
                       ? "bg-white/15 border border-white/20 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/50"
@@ -338,6 +355,7 @@ export default function Header() {
               placeholder={t.searchPlaceholder}
               value={headerSearchQuery}
               onChange={(e) => setHeaderSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
                 isMarkets
                   ? "bg-white/15 border border-white/20 text-white placeholder-white/50"

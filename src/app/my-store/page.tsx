@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Archive,
+  Facebook,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -178,7 +179,7 @@ export default function MyStorePage() {
                   <>
                     <a
                       href={`tel:${vendorPhone}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-[#1D4ED8] transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0044FF] text-white text-sm font-medium hover:bg-[#0033CC] transition-colors"
                     >
                       <Phone className="h-3.5 w-3.5" />
                       Call
@@ -190,6 +191,18 @@ export default function MyStorePage() {
                       <MessageCircle className="h-3.5 w-3.5" />
                       WhatsApp
                     </button>
+                    {editForm.facebook_url && (
+                      <a
+                        href={`fb://facewebmodal/f?href=${editForm.facebook_url}`}
+                        onClick={() => {
+                          setTimeout(() => { window.open(editForm.facebook_url, '_blank'); }, 500);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1877F2] text-white text-sm font-medium hover:bg-[#166FE5] transition-colors"
+                      >
+                        <Facebook className="h-3.5 w-3.5" />
+                        Facebook
+                      </a>
+                    )}
                   </>
                 )}
               </div>
