@@ -39,7 +39,9 @@ export default function SettingsPage() {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
-    avatar: user?.avatar || ""
+    avatar: user?.avatar || "",
+    facebookHandle: "",
+    instagramHandle: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -330,6 +332,42 @@ export default function SettingsPage() {
                       value={new Date(user.createdAt).toLocaleDateString()}
                       disabled
                     />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Social Handles */}
+                <div>
+                  <Label className="text-base font-semibold mb-3 block">Social Profiles</Label>
+                  <p className="text-sm text-gray-500 mb-4">Link your social accounts for visibility on your public profile.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="facebookHandle">Facebook Page Handle</Label>
+                      <Input
+                        id="facebookHandle"
+                        value={profileData.facebookHandle}
+                        onChange={(e) => setProfileData(prev => ({
+                          ...prev,
+                          facebookHandle: e.target.value.replace(/^https?:\/\/(www\.)?(facebook\.com|fb\.com)\/?/i, '').replace(/^@/, '').replace(/\/$/, '')
+                        }))}
+                        placeholder="yourpage"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Just the handle, no URL needed</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="instagramHandle">Instagram Username</Label>
+                      <Input
+                        id="instagramHandle"
+                        value={profileData.instagramHandle}
+                        onChange={(e) => setProfileData(prev => ({
+                          ...prev,
+                          instagramHandle: e.target.value.replace(/^https?:\/\/(www\.)?instagram\.com\/?/i, '').replace(/^@/, '').replace(/\/$/, '')
+                        }))}
+                        placeholder="yourusername"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Just the username, no @ needed</p>
+                    </div>
                   </div>
                 </div>
 

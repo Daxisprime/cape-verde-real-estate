@@ -19,6 +19,9 @@ export interface LiveListing {
   vendor_id: string;
   status: string;
   created_at: string;
+  is_featured: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export function useListings(mode?: 'real_estate' | 'item_service') {
@@ -44,6 +47,7 @@ export function useListings(mode?: 'real_estate' | 'item_service') {
           .from('vendor_ads' as never)
           .select('*')
           .eq('status', 'active')
+          .order('is_featured', { ascending: false })
           .order('created_at', { ascending: false });
 
         if (mode) {

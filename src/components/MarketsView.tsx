@@ -78,6 +78,7 @@ const MARKETPLACE_ITEMS = [
     image: "https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=400&h=300&fit=crop",
     posted: "2 hours ago",
     coordinates: [14.9177, -23.5133] as [number, number],
+    is_featured: true,
   },
   {
     id: "mkt-002",
@@ -89,6 +90,7 @@ const MARKETPLACE_ITEMS = [
     image: "https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?w=400&h=300&fit=crop",
     posted: "5 hours ago",
     coordinates: [16.73, -22.9] as [number, number],
+    is_featured: true,
   },
   {
     id: "mkt-003",
@@ -100,6 +102,7 @@ const MARKETPLACE_ITEMS = [
     image: "https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?w=400&h=300&fit=crop",
     posted: "1 day ago",
     coordinates: [16.87, -24.98] as [number, number],
+    is_featured: false,
   },
   {
     id: "mkt-004",
@@ -111,6 +114,7 @@ const MARKETPLACE_ITEMS = [
     image: "https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?w=400&h=300&fit=crop",
     posted: "3 hours ago",
     coordinates: [16.74, -22.93] as [number, number],
+    is_featured: false,
   },
   {
     id: "mkt-005",
@@ -122,6 +126,7 @@ const MARKETPLACE_ITEMS = [
     image: "https://images.pexels.com/photos/5668882/pexels-photo-5668882.jpeg?w=400&h=300&fit=crop",
     posted: "6 hours ago",
     coordinates: [14.92, -23.51] as [number, number],
+    is_featured: false,
   },
   {
     id: "mkt-006",
@@ -133,6 +138,7 @@ const MARKETPLACE_ITEMS = [
     image: "https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=400&h=300&fit=crop",
     posted: "12 hours ago",
     coordinates: [16.73, -22.9] as [number, number],
+    is_featured: false,
   },
 ];
 
@@ -168,6 +174,7 @@ export default function MarketsView() {
       image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
       posted: new Date(item.created_at).toLocaleDateString(),
       coordinates: [0, 0] as [number, number],
+      is_featured: item.is_featured || false,
     }));
     if (isLive && liveFormatted.length > 0) {
       return [...liveFormatted, ...MARKETPLACE_ITEMS];
@@ -176,7 +183,7 @@ export default function MarketsView() {
   }, [liveItems, isLive]);
 
   const filteredItems = useMemo(() => {
-    return itemsPool.filter(item => {
+    const filtered = itemsPool.filter(item => {
       const matchSearch = headerSearchQuery
         ? item.title.toLowerCase().includes(headerSearchQuery.toLowerCase())
         : true;
@@ -187,6 +194,7 @@ export default function MarketsView() {
       const matchMax = maxPrice ? item.price <= parseFloat(maxPrice) : true;
       return matchSearch && matchCat && matchSub && matchLoc && matchMin && matchMax;
     });
+    return filtered.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
   }, [itemsPool, headerSearchQuery, selectedCategory, selectedSubcategory, selectedLocation, minPrice, maxPrice]);
 
   const activeSubcategories = useMemo(() => {
@@ -204,6 +212,7 @@ export default function MarketsView() {
       image_url: item.image,
       listing_type: "marketplace" as const,
       neighborhood: item.location,
+      is_featured: item.is_featured,
     }));
   }, [filteredItems]);
 
@@ -362,7 +371,7 @@ export default function MarketsView() {
                     className="break-inside-avoid inline-block w-full mb-3"
                   >
                     <div className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden cursor-pointer ${
-                      activeHoverId === item.id ? 'border-[#0044FF] ring-2 ring-blue-100' : 'border-slate-100'
+                      activeHoverId === item.id ? 'border-[#0044FF] ring-2 ring-blue-100' : item.is_featured ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-100'
                     }`}>
                       <div className="relative overflow-hidden">
                         <img
@@ -378,6 +387,11 @@ export default function MarketsView() {
                         <span className="absolute top-2 right-2 bg-[#0044FF]/90 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full">
                           {item.subcategory || item.category.split(" ")[0]}
                         </span>
+                        {item.is_featured && (
+                          <span className="absolute bottom-2 left-2 bg-amber-500 text-[8px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                            Featured
+                          </span>
+                        )}
                       </div>
                       <div className="p-2.5">
                         <h3 className="font-bold text-xs text-slate-900 line-clamp-2 leading-tight">{item.title}</h3>

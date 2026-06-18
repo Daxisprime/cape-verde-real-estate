@@ -17,17 +17,25 @@ function formatPriceShort(price: number): string {
   return price.toString();
 }
 
-function createPriceIcon(price: number, isActive = false): L.DivIcon {
+function createPriceIcon(price: number, isActive = false, isFeatured = false): L.DivIcon {
   const priceLabel = formatPriceShort(price);
-  const pinClasses = isActive
-    ? 'bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl'
-    : 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md';
+  let pinClasses: string;
+  if (isActive) {
+    pinClasses = 'bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl';
+  } else if (isFeatured) {
+    pinClasses = 'bg-amber-500 text-white border-2 border-amber-300 font-black text-[10px] w-11 h-11 rounded-full flex items-center justify-center shadow-lg';
+  } else {
+    pinClasses = 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md';
+  }
+
+  const size = isActive ? 48 : isFeatured ? 44 : 44;
+  const anchor = isActive ? 24 : isFeatured ? 22 : 22;
 
   return L.divIcon({
-    className: `custom-price-marker ${isActive ? 'active-marker' : ''}`,
-    html: `<div class="${pinClasses}" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.15)' : 'scale(1)'};">${priceLabel}</div>`,
-    iconSize: isActive ? [48, 48] : [44, 44],
-    iconAnchor: isActive ? [24, 24] : [22, 22],
+    className: `custom-price-marker ${isActive ? 'active-marker' : ''} ${isFeatured ? 'featured-marker' : ''}`,
+    html: `<div class="${pinClasses}" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.15)' : isFeatured ? 'scale(1.05)' : 'scale(1)'};">${priceLabel}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [anchor, anchor],
     popupAnchor: [0, -24],
   });
 }
@@ -128,21 +136,22 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
         {items.map((item) => {
           if (!item.latitude || !item.longitude) return null;
           const isActive = item.id === activeItem?.id;
+          const isFeatured = item.is_featured || false;
 
           return (
             <Marker
               key={item.id}
               position={[item.latitude, item.longitude]}
-              icon={createPriceIcon(item.price, isActive)}
-              zIndexOffset={isActive ? 1000 : 0}
+              icon={createPriceIcon(item.price, isActive, isFeatured)}
+              zIndexOffset={isActive ? 1000 : isFeatured ? 500 : 0}
               eventHandlers={{
                 mouseover: (e) => {
-                  e.target.setIcon(createPriceIcon(item.price, true));
+                  e.target.setIcon(createPriceIcon(item.price, true, isFeatured));
                   e.target.openPopup();
                 },
                 mouseout: (e) => {
                   if (!isActive) {
-                    e.target.setIcon(createPriceIcon(item.price, false));
+                    e.target.setIcon(createPriceIcon(item.price, false, isFeatured));
                   }
                 },
                 click: () => onPinClick(item),
