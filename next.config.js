@@ -12,6 +12,7 @@ const nextConfig = {
     unoptimized: true,
   },
   skipTrailingSlashRedirect: true,
+  transpilePackages: ['leaflet.markercluster'],
 };
 
 module.exports = nextConfig;

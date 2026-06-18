@@ -4,9 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet.markercluster';
 
 function formatPriceShort(price: number): string {
   if (price >= 1000000) {
@@ -182,8 +179,19 @@ function ClusterLayer({
   const map = useMap();
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersMapRef = useRef<Map<string, L.Marker>>(new Map());
+  const [clusterReady, setClusterReady] = useState(false);
+
+  // Dynamically load leaflet.markercluster at runtime
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !clusterReady) {
+      require('leaflet.markercluster');
+      setClusterReady(true);
+    }
+  }, [clusterReady]);
 
   useEffect(() => {
+    if (!clusterReady) return;
+
     if (!clusterGroupRef.current) {
       clusterGroupRef.current = L.markerClusterGroup({
         maxClusterRadius: 60,
@@ -256,7 +264,7 @@ function ClusterLayer({
     });
 
     return () => {};
-  }, [items, activeItem, map, onPinClick, onDetailRequest]);
+  }, [items, activeItem, map, onPinClick, onDetailRequest, clusterReady]);
 
   // Update active marker icon when activeItem changes
   useEffect(() => {
@@ -311,6 +319,34 @@ const mapStyles = `
   }
   .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
     background: transparent !important;
+  }
+  .marker-cluster {
+    background-clip: padding-box;
+    border-radius: 20px;
+  }
+  .marker-cluster div {
+    width: 30px;
+    height: 30px;
+    margin-left: 5px;
+    margin-top: 5px;
+    text-align: center;
+    border-radius: 15px;
+    font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+  }
+  .marker-cluster span {
+    line-height: 30px;
+  }
+  .leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
+    -webkit-transition: -webkit-transform 0.3s ease-out, opacity 0.3s ease-in;
+    -moz-transition: -moz-transform 0.3s ease-out, opacity 0.3s ease-in;
+    -o-transition: -o-transform 0.3s ease-out, opacity 0.3s ease-in;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+  }
+  .leaflet-cluster-spider-leg {
+    -webkit-transition: -webkit-stroke-dashoffset 0.3s ease-out, -webkit-stroke-opacity 0.3s ease-in;
+    -moz-transition: -moz-stroke-dashoffset 0.3s ease-out, -moz-stroke-opacity 0.3s ease-in;
+    -o-transition: -o-stroke-dashoffset 0.3s ease-out, -o-stroke-opacity 0.3s ease-in;
+    transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in;
   }
 `;
 
