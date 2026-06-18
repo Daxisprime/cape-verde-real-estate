@@ -419,19 +419,14 @@ export default function MarketsView() {
             </div>
           </div>
 
-          {/* Single flyout panel - positioned outside scrolling container */}
+          {/* Single flyout panel - fixed height, pinned to category track top */}
           {hoveredCategoryId && (() => {
             const activeCat = MARKET_TAXONOMY.find(c => c.name === hoveredCategoryId);
-            const activeIndex = MARKET_TAXONOMY.findIndex(c => c.name === hoveredCategoryId);
             if (!activeCat) return null;
-            const isBottomHalf = activeIndex >= 5;
-            const positionStyle = isBottomHalf
-              ? { bottom: `${(MARKET_TAXONOMY.length - 1 - activeIndex) * 44 + 16}px`, marginLeft: '-1px' }
-              : { top: `${activeIndex * 44 + 130}px`, marginLeft: '-1px' };
             return (
               <div
-                className="absolute left-full bg-white border border-slate-200 shadow-2xl rounded-r-xl p-5 w-64 z-[100] pointer-events-auto block transition-all"
-                style={positionStyle}
+                className="absolute left-full top-0 w-64 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-5 z-[100] h-[calc(100vh-320px)] overflow-y-auto pointer-events-auto block"
+                style={{ marginLeft: '-1px' }}
                 onMouseEnter={() => setHoveredCategoryId(hoveredCategoryId)}
                 onMouseLeave={() => setHoveredCategoryId(null)}
               >
