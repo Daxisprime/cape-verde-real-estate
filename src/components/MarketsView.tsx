@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MapPin, ChevronRight, Home, LayoutGrid } from 'lucide-react';
+import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
 import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
 
@@ -83,6 +84,7 @@ const MARKETPLACE_ITEMS = [
     is_featured: true,
     is_premium: true,
     vendor_avatar: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?w=64&h=64&fit=crop",
+    facebook_handle: "praia.building.supplies",
   },
   {
     id: "mkt-002",
@@ -97,6 +99,7 @@ const MARKETPLACE_ITEMS = [
     is_featured: true,
     is_premium: false,
     vendor_avatar: null,
+    facebook_handle: "",
   },
   {
     id: "mkt-003",
@@ -111,6 +114,7 @@ const MARKETPLACE_ITEMS = [
     is_featured: false,
     is_premium: true,
     vendor_avatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=64&h=64&fit=crop",
+    facebook_handle: "mindelo.plumbing.pro",
   },
   {
     id: "mkt-004",
@@ -125,6 +129,7 @@ const MARKETPLACE_ITEMS = [
     is_featured: false,
     is_premium: false,
     vendor_avatar: null,
+    facebook_handle: "",
   },
   {
     id: "mkt-005",
@@ -139,6 +144,7 @@ const MARKETPLACE_ITEMS = [
     is_featured: false,
     is_premium: false,
     vendor_avatar: null,
+    facebook_handle: "",
   },
   {
     id: "mkt-006",
@@ -153,6 +159,7 @@ const MARKETPLACE_ITEMS = [
     is_featured: false,
     is_premium: false,
     vendor_avatar: null,
+    facebook_handle: "",
   },
 ];
 
@@ -166,6 +173,7 @@ const MUNICIPALITIES = [
 ];
 
 export default function MarketsView() {
+  const router = useRouter();
   const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
   const { t } = useLanguage();
   const { listings: liveItems, isLive } = useListings('item_service');
@@ -193,6 +201,7 @@ export default function MarketsView() {
       is_featured: item.is_featured || false,
       is_premium: item.is_featured || false,
       vendor_avatar: null as string | null,
+      facebook_handle: '',
     }));
     if (isLive && liveFormatted.length > 0) {
       return [...liveFormatted, ...MARKETPLACE_ITEMS];
@@ -415,9 +424,12 @@ export default function MarketsView() {
                     onMouseLeave={() => setActiveHoverId(null)}
                     className="break-inside-avoid inline-block w-full mb-2 sm:mb-3"
                   >
-                    <div className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden cursor-pointer ${
-                      activeHoverId === item.id ? 'border-[#0044FF] ring-2 ring-blue-100' : item.is_featured ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-100'
-                    }`}>
+                    <div
+                      onClick={() => router.push(`/profile/${item.id}`)}
+                      className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden cursor-pointer ${
+                        activeHoverId === item.id ? 'border-[#0044FF] ring-2 ring-blue-100' : item.is_featured ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-100'
+                      }`}
+                    >
                       <div className="relative overflow-hidden">
                         <img
                           src={item.image}
@@ -447,6 +459,39 @@ export default function MarketsView() {
                         <p className="font-extrabold text-sm text-slate-900 mt-1.5">
                           {item.price.toLocaleString()} <span className="text-[10px] font-medium text-slate-500">CVE</span>
                         </p>
+                        {(item.vendor_avatar || item.facebook_handle) && (
+                          <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+                            {item.vendor_avatar && (
+                              <img src={item.vendor_avatar} alt="" className="h-5 w-5 rounded-full object-cover" />
+                            )}
+                            <div className="flex items-center gap-1 ml-auto">
+                              <a
+                                href={`fb://facewebmodal/f?href=https://facebook.com/${item.facebook_handle || 'pro.cv'}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTimeout(() => { window.open(`https://facebook.com/${item.facebook_handle || 'pro.cv'}`, '_blank'); }, 500);
+                                }}
+                                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-slate-200 text-[#1877F2] hover:bg-blue-50 transition-colors"
+                              >
+                                <Facebook className="h-3 w-3" />
+                              </a>
+                              <a
+                                href="#"
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-slate-200 text-green-600 hover:bg-green-50 transition-colors"
+                              >
+                                <MessageCircle className="h-3 w-3" />
+                              </a>
+                              <a
+                                href="#"
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-slate-200 text-[#0044FF] hover:bg-blue-50 transition-colors"
+                              >
+                                <Phone className="h-3 w-3" />
+                              </a>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -500,7 +545,7 @@ export default function MarketsView() {
                         id={`market-item-${item.id}`}
                         onMouseEnter={() => setActiveHoverId(item.id)}
                         onMouseLeave={() => setActiveHoverId(null)}
-                        onClick={() => setActiveHoverId(item.id)}
+                        onClick={() => router.push(`/profile/${item.id}`)}
                         className={`break-inside-avoid inline-block w-full mb-1.5 md:mb-2 bg-white border rounded-xl shadow-xs transition-all overflow-hidden cursor-pointer touch-target-sm ${
                           activeHoverId === item.id ? 'border-[#0044FF] shadow-sm scale-[0.99]' : 'border-slate-100'
                         }`}
@@ -515,6 +560,37 @@ export default function MarketsView() {
                           <p className="font-extrabold text-xs text-slate-900 mt-0.5">
                             {item.price.toLocaleString()} <span className="text-[9px] font-medium text-slate-500">CVE</span>
                           </p>
+                          {(item.vendor_avatar || item.facebook_handle) && (
+                            <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-slate-100">
+                              {item.vendor_avatar && (
+                                <img src={item.vendor_avatar} alt="" className="h-4 w-4 rounded-full object-cover" />
+                              )}
+                              <a
+                                href={`fb://facewebmodal/f?href=https://facebook.com/${item.facebook_handle || 'pro.cv'}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTimeout(() => { window.open(`https://facebook.com/${item.facebook_handle || 'pro.cv'}`, '_blank'); }, 500);
+                                }}
+                                className="ml-auto inline-flex items-center justify-center h-5 w-5 rounded-full border border-slate-200 text-[#1877F2] hover:bg-blue-50 transition-colors"
+                              >
+                                <Facebook className="h-2.5 w-2.5" />
+                              </a>
+                              <a
+                                href="#"
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-slate-200 text-green-600 hover:bg-green-50 transition-colors"
+                              >
+                                <MessageCircle className="h-2.5 w-2.5" />
+                              </a>
+                              <a
+                                href="#"
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-slate-200 text-[#0044FF] hover:bg-blue-50 transition-colors"
+                              >
+                                <Phone className="h-2.5 w-2.5" />
+                              </a>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
