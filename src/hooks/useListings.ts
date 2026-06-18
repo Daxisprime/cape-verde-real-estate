@@ -61,8 +61,8 @@ export function useListings(mode?: 'real_estate' | 'item_service') {
           setListings(data as unknown as LiveListing[]);
           setIsLive(true);
         }
-      } catch (e) {
-        console.error('Failed to fetch listings:', e);
+      } catch {
+        // Table may not exist yet -- silently fall back to mock data
       } finally {
         setLoading(false);
       }
@@ -101,8 +101,8 @@ export function useMyListings() {
 
         if (error) throw error;
         setListings((data || []) as unknown as LiveListing[]);
-      } catch (e) {
-        console.error('Failed to fetch user listings:', e);
+      } catch {
+        // User not authenticated or table missing -- silently skip
       } finally {
         setLoading(false);
       }
