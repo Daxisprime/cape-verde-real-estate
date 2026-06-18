@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useLanguage, languages as langConfig, LanguageCode } from '@/contexts/LanguageContext';
 
 export default function Header() {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -18,6 +19,7 @@ export default function Header() {
     listingType, setListingType,
   } = useSearchMode();
   const { isAuthenticated, profile, signOut: supabaseSignOut, user } = useSupabaseAuth();
+  const { t, currentLanguage, setLanguage } = useLanguage();
 
   const isMarkets = searchMode === "markets";
 
@@ -61,7 +63,7 @@ export default function Header() {
             ? "text-white/60 hover:text-white"
             : "text-slate-800"
         }>
-          Real Estate
+          {t.realEstate}
         </span>
         {!isMarkets && (
           <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#2563EB] rounded-full" />
@@ -76,7 +78,7 @@ export default function Header() {
             ? "text-white"
             : "text-slate-400 hover:text-slate-700"
         }>
-          Markets
+          {t.markets}
         </span>
         {isMarkets && (
           <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-white rounded-full" />
@@ -120,7 +122,7 @@ export default function Header() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <Home className="h-4 w-4 text-gray-400" />
-                  Home
+                  {t.home}
                 </Link>
                 <button
                   onClick={() => {
@@ -132,7 +134,7 @@ export default function Header() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
                 >
                   <Tag className="h-4 w-4 text-gray-400" />
-                  Buy
+                  {t.buy}
                 </button>
                 <button
                   onClick={() => {
@@ -144,7 +146,7 @@ export default function Header() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
                 >
                   <DollarSign className="h-4 w-4 text-gray-400" />
-                  Rent
+                  {t.rent}
                 </button>
                 <Link
                   href="/sell"
@@ -152,7 +154,7 @@ export default function Header() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <PlusCircle className="h-4 w-4 text-gray-400" />
-                  Sell
+                  {t.sell}
                 </Link>
                 <Link
                   href="/map"
@@ -160,7 +162,7 @@ export default function Header() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <MapPin className="h-4 w-4 text-gray-400" />
-                  Map
+                  {t.map}
                 </Link>
                 <div className="border-t border-gray-100 mt-1 pt-1">
                   <Link
@@ -169,7 +171,7 @@ export default function Header() {
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Store className="h-4 w-4 text-gray-400" />
-                    My Store
+                    {t.myStore}
                   </Link>
                   <Link
                     href="/sell"
@@ -177,7 +179,7 @@ export default function Header() {
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <ShoppingBag className="h-4 w-4 text-gray-400" />
-                    Post an Ad
+                    {t.postAd}
                   </Link>
                 </div>
               </div>
@@ -202,7 +204,7 @@ export default function Header() {
                 }`} />
                 <input
                   type="text"
-                  placeholder="Search location..."
+                  placeholder={t.searchPlaceholder}
                   value={headerSearchQuery}
                   onChange={(e) => setHeaderSearchQuery(e.target.value)}
                   className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
@@ -223,9 +225,30 @@ export default function Header() {
           </div>
         )}
 
-        {/* RIGHT: (Tabs when results active) + Profile */}
+        {/* RIGHT: (Tabs when results active) + Language Selector + Profile */}
         <div className="flex items-center gap-4 ml-auto flex-shrink-0">
           {isResultsViewActive && tabsElement}
+
+          {/* Language Selector Button Track */}
+          <div className="hidden sm:flex items-center gap-0.5 rounded-full bg-gray-100/80 p-0.5">
+            {(Object.keys(langConfig) as LanguageCode[]).map((code) => (
+              <button
+                key={code}
+                onClick={() => setLanguage(code)}
+                className={`px-2 py-1 text-[11px] font-semibold rounded-full transition-all ${
+                  currentLanguage === code
+                    ? isMarkets
+                      ? "bg-white text-[#2563EB] shadow-sm"
+                      : "bg-[#2563EB] text-white shadow-sm"
+                    : isMarkets
+                      ? "text-gray-500 hover:text-gray-700"
+                      : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {langConfig[code].label}
+              </button>
+            ))}
+          </div>
 
           {/* Profile Avatar - FAR RIGHT */}
           <div className="relative" ref={dropdownRef}>
@@ -265,7 +288,7 @@ export default function Header() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Store className="h-4 w-4 text-gray-400" />
-                      My Store
+                      {t.myStore}
                     </Link>
                     <Link
                       href="/sell"
@@ -273,7 +296,7 @@ export default function Header() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <PlusCircle className="h-4 w-4 text-gray-400" />
-                      Post an Ad
+                      {t.postAd}
                     </Link>
                     <div className="border-t border-gray-100 mt-1 pt-1">
                       <button
@@ -281,7 +304,7 @@ export default function Header() {
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                       >
                         <LogOut className="h-4 w-4 text-red-400" />
-                        Sign Out
+                        {t.signOut}
                       </button>
                     </div>
                   </div>
@@ -296,7 +319,7 @@ export default function Header() {
                     : "bg-[#0044FF] text-white hover:bg-[#0033CC]"
                 }`}
               >
-                Sign In
+                {t.signIn}
               </Link>
             )}
           </div>
@@ -312,7 +335,7 @@ export default function Header() {
             }`} />
             <input
               type="text"
-              placeholder="Search location..."
+              placeholder={t.searchPlaceholder}
               value={headerSearchQuery}
               onChange={(e) => setHeaderSearchQuery(e.target.value)}
               className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
@@ -325,7 +348,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* Mobile mode tabs - always visible */}
+      {/* Mobile mode tabs + language selector */}
       <div className="sm:hidden flex items-center justify-center gap-1 px-4 pb-2">
         <button
           onClick={() => setSearchMode("realestate")}
@@ -336,7 +359,7 @@ export default function Header() {
               ? "text-white/60"
               : "text-slate-800"
           }>
-            Real Estate
+            {t.realEstate}
           </span>
           {!isMarkets && (
             <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#2563EB] rounded-full" />
@@ -351,12 +374,30 @@ export default function Header() {
               ? "text-white"
               : "text-slate-400"
           }>
-            Markets
+            {t.markets}
           </span>
           {isMarkets && (
             <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-white rounded-full" />
           )}
         </button>
+
+        <div className="flex items-center gap-0.5 rounded-full bg-gray-100/80 p-0.5 ml-2">
+          {(Object.keys(langConfig) as LanguageCode[]).map((code) => (
+            <button
+              key={code}
+              onClick={() => setLanguage(code)}
+              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full transition-all ${
+                currentLanguage === code
+                  ? isMarkets
+                    ? "bg-white text-[#2563EB] shadow-sm"
+                    : "bg-[#2563EB] text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {langConfig[code].label}
+            </button>
+          ))}
+        </div>
       </div>
     </header>
   );

@@ -4,17 +4,33 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // Supported languages
 export const languages = {
-  en: { code: 'en', name: 'English', flag: '🇺🇸' },
-  fr: { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  es: { code: 'es', name: 'Español', flag: '🇪🇸' },
-  pt: { code: 'pt', name: 'Português', flag: '🇵🇹' },
-  cv: { code: 'cv', name: 'Kriolu', flag: '🇨🇻' }
+  en: { code: 'en', name: 'English', flag: '\uD83C\uDDFA\uD83C\uDDF8', label: 'EN' },
+  pt: { code: 'pt', name: 'Portugu\u00EAs', flag: '\uD83C\uDDF5\uD83C\uDDF9', label: 'PT' },
+  fr: { code: 'fr', name: 'Fran\u00E7ais', flag: '\uD83C\uDDEB\uD83C\uDDF7', label: 'FR' },
+  cv: { code: 'cv', name: 'Kriolu', flag: '\uD83C\uDDE8\uD83C\uDDFB', label: 'KB' }
 } as const;
 
 export type LanguageCode = keyof typeof languages;
 
 // Translation interface
 export interface Translations {
+  // Navigation - UI
+  realEstate: string;
+  markets: string;
+  postAd: string;
+  myStore: string;
+  signOut: string;
+  home: string;
+  allCat: string;
+  location: string;
+  priceRange: string;
+  mapView: string;
+  listView: string;
+  searchPlaceholder: string;
+  buySlogan: string;
+  rentSlogan: string;
+  marketSlogan: string;
+
   // Navigation
   buy: string;
   rent: string;
@@ -124,6 +140,23 @@ export interface Translations {
 // Translations data
 const translations: Record<LanguageCode, Translations> = {
   en: {
+    // UI Navigation
+    realEstate: "Real Estate",
+    markets: "Markets",
+    postAd: "Post an Ad",
+    myStore: "My Store",
+    signOut: "Sign Out",
+    home: "Home",
+    allCat: "All Subcategories",
+    location: "LOCATION",
+    priceRange: "PRICE RANGE (CVE)",
+    mapView: "\uD83D\uDDFA\uFE0F Map",
+    listView: "\uD83D\uDCCB List",
+    searchPlaceholder: "Search apartments, land, or markets...",
+    buySlogan: "Discover properties for sale across Cabo Verde",
+    rentSlogan: "Discover properties for rent across Cabo Verde",
+    marketSlogan: "Discover Markets and services across Cabo Verde",
+
     // Navigation
     buy: 'Buy',
     rent: 'Rent',
@@ -230,6 +263,23 @@ const translations: Record<LanguageCode, Translations> = {
     personalizedAdvice: 'Get personalized investment advice from our market experts and discover the best opportunities across Cape Verde\'s growing property market.'
   },
   pt: {
+    // UI Navigation
+    realEstate: "Imobili\u00E1ria",
+    markets: "Mercados",
+    postAd: "Publicar An\u00FAncio",
+    myStore: "Meu Neg\u00F3cio",
+    signOut: "Sair",
+    home: "In\u00EDcio",
+    allCat: "Todas as Subcategorias",
+    location: "LOCALIZA\u00C7\u00C3O",
+    priceRange: "FAIXA DE PRE\u00C7O (CVE)",
+    mapView: "\uD83D\uDDFA\uFE0F Mapa",
+    listView: "\uD83D\uDCCB Lista",
+    searchPlaceholder: "Pesquisar apartamentos, terrenos ou mercados...",
+    buySlogan: "Descubra propriedades para venda em Cabo Verde",
+    rentSlogan: "Descubra propriedades para alugar em Cabo Verde",
+    marketSlogan: "Descubra mercados e servi\u00E7os em Cabo Verde",
+
     // Navigation
     buy: 'Comprar',
     rent: 'Arrendar',
@@ -336,6 +386,23 @@ const translations: Record<LanguageCode, Translations> = {
     personalizedAdvice: 'Obtenha conselhos de investimento personalizados dos nossos especialistas de mercado e descubra as melhores oportunidades no crescente mercado imobiliário de Cabo Verde.'
   },
   fr: {
+    // UI Navigation
+    realEstate: "Immobilier",
+    markets: "March\u00E9s",
+    postAd: "Publier une Annonce",
+    myStore: "Mon Magasin",
+    signOut: "D\u00E9connexion",
+    home: "Accueil",
+    allCat: "Toutes les sous-cat\u00E9gories",
+    location: "LOCALISATION",
+    priceRange: "FOURCHETTE DE PRIX (CVE)",
+    mapView: "\uD83D\uDDFA\uFE0F Carte",
+    listView: "\uD83D\uDCCB Liste",
+    searchPlaceholder: "Rechercher des appartements, terrains ou march\u00E9s...",
+    buySlogan: "D\u00E9couvrez des propri\u00E9t\u00E9s \u00E0 vendre au Cap-Vert",
+    rentSlogan: "D\u00E9couvrez des propri\u00E9t\u00E9s \u00E0 louer au Cap-Vert",
+    marketSlogan: "D\u00E9couvrez les march\u00E9s et services au Cap-Vert",
+
     // Navigation
     buy: 'Acheter',
     rent: 'Louer',
@@ -441,113 +508,24 @@ const translations: Record<LanguageCode, Translations> = {
     marketReports: 'Rapports de Marché',
     personalizedAdvice: 'Obtenez des conseils d\'investissement personnalisés de nos spécialistes du marché et découvrez les meilleures opportunités dans le marché immobilier en croissance du Cap-Vert.'
   },
-  es: {
-    // Navigation
-    buy: 'Comprar',
-    rent: 'Alquilar',
-    sell: 'Vender',
-    commercial: 'Comercial',
-    calculators: 'Calculadoras',
-    advice: 'Consejos',
-    listProperty: 'Listar Propiedad',
-    signIn: 'Iniciar Sesión',
-
-    // Hero section
-    heroTitle: 'Encuentra Propiedades en Venta en Cabo Verde',
-    heroSearchPlaceholder: 'Buscar una Isla, Ciudad o Área',
-    map: 'Mapa',
-    search: 'Buscar',
-    developments: 'Desarrollos',
-    agents: 'Agentes',
-    soldPrices: 'Precios Vendidos',
-
-    // Property filters
-    propertyType: 'Tipo de Propiedad',
-    minPrice: 'Precio Mín',
-    maxPrice: 'Precio Máx',
-    bedrooms: 'Habitaciones',
-    moreFilters: 'Más Filtros',
-
-    // Property types
-    house: 'Casa',
-    apartment: 'Apartamento',
-    townhouse: 'Casa Adosada',
-    land: 'Terreno',
-    commercialProperty: 'Comercial',
-
-    // Info section
-    discoverTitle: 'Descubre el Mercado Inmobiliario de Cabo Verde',
-    discoverSubtitle: 'Todo lo que necesitas para comprar, vender o alquilar propiedades en las hermosas islas de Cabo Verde',
-    propertyAlerts: 'Alertas de Propiedad',
-    marketTrends: 'Tendencias del Mercado',
-    propertyGuides: 'Guías Inmobiliarias',
-    findAgents: 'Encontrar Agentes',
-    propertyValuation: 'Valoración Inmobiliaria',
-    mortgageCalculator: 'Calculadora Hipotecaria',
-
-    // Regional section
-    regionalTitle: 'Propiedades en Venta en Cabo Verde',
-    regionalSubtitle: 'Explora propiedades en todas las islas de Cabo Verde',
-    propertyTrends: 'Tendencias Inmobiliarias de Cabo Verde',
-    avgPropertyPrice: 'Precio Promedio de Propiedades',
-    priceGrowth: 'Crecimiento de Precios (Anual)',
-    mostPopularIsland: 'Isla Más Popular',
-    propertiesListed: 'Propiedades Listadas',
-    acrossAllIslands: 'En todas las islas',
-
-    // Property Listings
-    featuredProperties: 'Propiedades Destacadas en Cabo Verde',
-    viewDetails: 'Ver Detalles',
-    viewAllProperties: 'Ver Todas las Propiedades',
-    advancedSearch: 'Búsqueda Avanzada',
-    featured: 'Destacado',
-
-    // Mortgage Calculator
-    mortgageCalculatorTitle: 'Calculadora Hipotecaria de Cabo Verde',
-    mortgageDetails: 'Detalles Hipotecarios',
-    propertyPrice: 'Precio de la Propiedad',
-    downPayment: 'Pago Inicial',
-    loanTerm: 'Plazo del Préstamo',
-    interestRate: 'Tasa de Interés',
-    calculateMortgage: 'Calcular Hipoteca',
-    mortgageResults: 'Resultados Hipotecarios',
-    monthlyPayment: 'Pago Mensual',
-    loanAmount: 'Monto del Préstamo',
-    totalInterest: 'Intereses Totales',
-    totalPayment: 'Pago Total',
-    importantNotes: 'Notas Importantes',
-    getPreApproved: 'Obtener Pre-aprobación',
-    contactBank: 'Contactar Banco',
-    bankingPartners: 'Socios Bancarios de Cabo Verde',
-
-    // Estate Agents
-    professionalAgents: 'Agentes Inmobiliarios Profesionales',
-    connectAgents: 'Conéctate con profesionales inmobiliarios experimentados en todas las islas de Cabo Verde',
-    yearsExperience: 'Años de Experiencia',
-    propertiesSold: 'Propiedades Vendidas',
-    specialties: 'Especialidades',
-    languages: 'Idiomas',
-    viewProfile: 'Ver Perfil y Listados',
-    verifiedProfessionals: 'Profesionales Verificados',
-    islandExpertise: 'Experiencia en Islas',
-    multilingualService: 'Servicio Multilingüe',
-    registerAgent: 'Registrarse como Agente',
-
-    // Market Insights
-    marketInsightsTitle: 'Perspectivas del Mercado Inmobiliario de Cabo Verde',
-    stayInformed: 'Mantente informado sobre las últimas tendencias del mercado, oportunidades de inversión y datos inmobiliarios en todas las islas',
-    averagePropertyPrice: 'Precio Promedio de Propiedades',
-    foreignBuyers: 'Compradores Extranjeros',
-    avgRentalYield: 'Rendimiento de Alquiler Promedio',
-    islandMarketPerformance: 'Rendimiento del Mercado por Isla',
-    latestInsights: 'Últimas Perspectivas del Mercado',
-    readFullReport: 'Leer Informe Completo',
-    readyToInvest: '¿Listo para Invertir?',
-    investmentProperties: 'Propiedades de Inversión',
-    marketReports: 'Informes de Mercado',
-    personalizedAdvice: 'Obtén consejos de inversión personalizados de nuestros especialistas del mercado y descubre las mejores oportunidades en el creciente mercado inmobiliario de Cabo Verde.'
-  },
   cv: {
+    // UI Navigation
+    realEstate: "Imobili\u00E1ria",
+    markets: "Merkadus",
+    postAd: "Po An\u00FAnsiu",
+    myStore: "Nha Neg\u00F3siu",
+    signOut: "Sa\u00ED",
+    home: "In\u00EDsiu",
+    allCat: "Tudu Subkategoria",
+    location: "LOKALIZASION",
+    priceRange: "PRESU (CVE)",
+    mapView: "\uD83D\uDDFA\uFE0F Mapa",
+    listView: "\uD83D\uDCCB Lista",
+    searchPlaceholder: "Djobe apartamentu, t\u00E9ra \u00F4 merkadu...",
+    buySlogan: "Djobe kaza pa kumpra na Kabu Verdi",
+    rentSlogan: "Djobe kaza pa aluga na Kabu Verdi",
+    marketSlogan: "Djobe merkadus ku serb\u00EDsus na Kabu Verdi",
+
     // Navigation
     buy: 'Kumpra',
     rent: 'Aluga',

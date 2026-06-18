@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPin, ChevronRight, Home, LayoutGrid } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
 
@@ -153,6 +154,7 @@ const MUNICIPALITIES = [
 
 export default function MarketsView() {
   const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
+  const { t } = useLanguage();
   const { listings: liveItems, isLive } = useListings('item_service');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -229,11 +231,11 @@ export default function MarketsView() {
       {/* Breadcrumb Trail */}
       <div className="w-full bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 flex-shrink-0 z-30 relative">
         <span className="hover:text-[#0044FF] cursor-pointer flex items-center gap-1" onClick={() => setIsResultsViewActive(false)}>
-          <Home className="w-3 h-3" /> Home
+          <Home className="w-3 h-3" /> {t.home}
         </span>
         <ChevronRight className="w-3 h-3 text-slate-300" />
         <span className="hover:text-[#0044FF] cursor-pointer" onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}>
-          Markets
+          {t.markets}
         </span>
         {selectedCategory && (
           <>
@@ -260,7 +262,7 @@ export default function MarketsView() {
           {/* Top Filters */}
           <div className="w-full p-4 pb-0 flex-shrink-0 space-y-3">
             <div className="pb-3 border-b border-slate-100">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Location</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t.location}</label>
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
@@ -270,7 +272,7 @@ export default function MarketsView() {
               </select>
             </div>
             <div className="pb-3 border-b border-slate-100">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Price Range (CVE)</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t.priceRange}</label>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)}
@@ -322,7 +324,7 @@ export default function MarketsView() {
                 onClick={() => { setSelectedCategory(hoveredCategory); setSelectedSubcategory(null); setHoveredCategory(null); }}
                 className="w-full text-left py-2 px-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-[#0044FF] block transition-colors"
               >
-                All in {hoveredCategory}
+                {t.allCat}
               </button>
               {activeSubcategories.map(sub => (
                 <button
@@ -345,9 +347,9 @@ export default function MarketsView() {
           className="fixed top-32 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-xs text-slate-800"
         >
           {isMapViewActive ? (
-            <><LayoutGrid className="w-3.5 h-3.5" /> List</>
+            <><LayoutGrid className="w-3.5 h-3.5" /> {t.listView}</>
           ) : (
-            <><MapPin className="w-3.5 h-3.5" /> Map</>
+            <><MapPin className="w-3.5 h-3.5" /> {t.mapView}</>
           )}
         </div>
 
@@ -389,7 +391,7 @@ export default function MarketsView() {
                         </span>
                         {item.is_featured && (
                           <span className="absolute bottom-2 left-2 bg-amber-500 text-[8px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                            Featured
+                            {t.featured}
                           </span>
                         )}
                       </div>
