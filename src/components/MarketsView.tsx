@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
-import { MapPin, ChevronRight, Home } from 'lucide-react';
+import { MapPin, ChevronRight, Home, LayoutGrid } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
 
 const SafeLeafletMap = dynamic(
@@ -77,7 +77,7 @@ const MARKETPLACE_ITEMS = [
     subcategory: "Cement, Blocks & Aggregates",
     image: "https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=400&h=300&fit=crop",
     posted: "2 hours ago",
-    coordinates: [-23.5133, 14.9177] as [number, number],
+    coordinates: [14.9177, -23.5133] as [number, number],
   },
   {
     id: "mkt-002",
@@ -88,7 +88,7 @@ const MARKETPLACE_ITEMS = [
     subcategory: "TV, Audio & Video",
     image: "https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?w=400&h=300&fit=crop",
     posted: "5 hours ago",
-    coordinates: [-22.9, 16.73] as [number, number],
+    coordinates: [16.73, -22.9] as [number, number],
   },
   {
     id: "mkt-003",
@@ -99,7 +99,7 @@ const MARKETPLACE_ITEMS = [
     subcategory: "Emergency Plumbing",
     image: "https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?w=400&h=300&fit=crop",
     posted: "1 day ago",
-    coordinates: [-24.98, 16.87] as [number, number],
+    coordinates: [16.87, -24.98] as [number, number],
   },
   {
     id: "mkt-004",
@@ -110,7 +110,7 @@ const MARKETPLACE_ITEMS = [
     subcategory: "Kitchen Appliances",
     image: "https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?w=400&h=300&fit=crop",
     posted: "3 hours ago",
-    coordinates: [-22.93, 16.74] as [number, number],
+    coordinates: [16.74, -22.93] as [number, number],
   },
   {
     id: "mkt-005",
@@ -121,7 +121,7 @@ const MARKETPLACE_ITEMS = [
     subcategory: "Legal & Business Consulting",
     image: "https://images.pexels.com/photos/5668882/pexels-photo-5668882.jpeg?w=400&h=300&fit=crop",
     posted: "6 hours ago",
-    coordinates: [-23.51, 14.92] as [number, number],
+    coordinates: [14.92, -23.51] as [number, number],
   },
   {
     id: "mkt-006",
@@ -132,73 +132,7 @@ const MARKETPLACE_ITEMS = [
     subcategory: "Women's Clothing",
     image: "https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=400&h=300&fit=crop",
     posted: "12 hours ago",
-    coordinates: [-22.9, 16.73] as [number, number],
-  },
-  {
-    id: "mkt-007",
-    title: "Industrial Power Drill Set",
-    price: 12500,
-    location: "Praia, Santiago",
-    category: "Building Materials & Tools",
-    subcategory: "Hand & Power Tools",
-    image: "https://images.pexels.com/photos/1249611/pexels-photo-1249611.jpeg?w=400&h=300&fit=crop",
-    posted: "4 hours ago",
-    coordinates: [-23.52, 14.91] as [number, number],
-  },
-  {
-    id: "mkt-008",
-    title: "iPhone 15 Pro Max 256GB",
-    price: 145000,
-    location: "Mindelo, Sao Vicente",
-    category: "Electronics & Computers",
-    subcategory: "Smartphones & Tablets",
-    image: "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?w=400&h=300&fit=crop",
-    posted: "30 min ago",
-    coordinates: [-24.97, 16.88] as [number, number],
-  },
-  {
-    id: "mkt-009",
-    title: "AC Installation & Maintenance",
-    price: 8000,
-    location: "Sal Rei, Boa Vista",
-    category: "Maintenance & Repair Services",
-    subcategory: "AC & Appliance Repair",
-    image: "https://images.pexels.com/photos/5463576/pexels-photo-5463576.jpeg?w=400&h=300&fit=crop",
-    posted: "1 day ago",
-    coordinates: [-22.79, 16.18] as [number, number],
-  },
-  {
-    id: "mkt-010",
-    title: "Leather Sofa Set - 3 Piece",
-    price: 95000,
-    location: "Praia, Santiago",
-    category: "Home, Furniture & Appliances",
-    subcategory: "Sofas & Living Room Chairs",
-    image: "https://images.pexels.com/photos/1866149/pexels-photo-1866149.jpeg?w=400&h=300&fit=crop",
-    posted: "8 hours ago",
-    coordinates: [-23.51, 14.93] as [number, number],
-  },
-  {
-    id: "mkt-011",
-    title: "Accounting & Tax Advisory",
-    price: 20000,
-    location: "Praia, Santiago",
-    category: "Professional & Event Services",
-    subcategory: "Legal & Business Consulting",
-    image: "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?w=400&h=300&fit=crop",
-    posted: "2 days ago",
-    coordinates: [-23.50, 14.92] as [number, number],
-  },
-  {
-    id: "mkt-012",
-    title: "Handmade Cape Verdean Jewelry",
-    price: 3200,
-    location: "Santa Maria, Sal",
-    category: "Fashion, Clothing & Retail",
-    subcategory: "Watches & Jewelry",
-    image: "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg?w=400&h=300&fit=crop",
-    posted: "5 hours ago",
-    coordinates: [-22.91, 16.72] as [number, number],
+    coordinates: [16.73, -22.9] as [number, number],
   },
 ];
 
@@ -209,9 +143,6 @@ const MUNICIPALITIES = [
   "Santa Maria, Sal",
   "Espargos, Sal",
   "Sal Rei, Boa Vista",
-  "Assomada, Santiago",
-  "Porto Novo, Santo Antao",
-  "Sao Filipe, Fogo",
 ];
 
 export default function MarketsView() {
@@ -222,12 +153,11 @@ export default function MarketsView() {
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [isMarketMapActive, setIsMarketMapActive] = useState(false);
-  const [activeMarketItem, setActiveMarketItem] = useState<string | null>(null);
-  const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
+  const [isMapViewActive, setIsMapViewActive] = useState(false);
+  const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
-  // Merge live data with mock fallback
-  const allItems = useMemo(() => {
+  const itemsPool = useMemo(() => {
     const liveFormatted = liveItems.map(item => ({
       id: item.id,
       title: item.title,
@@ -246,27 +176,29 @@ export default function MarketsView() {
   }, [liveItems, isLive]);
 
   const filteredItems = useMemo(() => {
-    return allItems.filter(item => {
-      if (selectedCategory && item.category !== selectedCategory) return false;
-      if (selectedSubcategory && item.subcategory !== selectedSubcategory) return false;
-      if (selectedLocation !== "All Locations" && item.location !== selectedLocation) return false;
-      if (minPrice && item.price < parseInt(minPrice)) return false;
-      if (maxPrice && item.price > parseInt(maxPrice)) return false;
-      if (headerSearchQuery) {
-        const q = headerSearchQuery.toLowerCase();
-        if (!item.title.toLowerCase().includes(q) &&
-            !item.location.toLowerCase().includes(q) &&
-            !item.category.toLowerCase().includes(q)) return false;
-      }
-      return true;
+    return itemsPool.filter(item => {
+      const matchSearch = headerSearchQuery
+        ? item.title.toLowerCase().includes(headerSearchQuery.toLowerCase())
+        : true;
+      const matchCat = selectedCategory ? item.category === selectedCategory : true;
+      const matchSub = selectedSubcategory ? item.subcategory === selectedSubcategory : true;
+      const matchLoc = selectedLocation !== "All Locations" ? item.location === selectedLocation : true;
+      const matchMin = minPrice ? item.price >= parseFloat(minPrice) : true;
+      const matchMax = maxPrice ? item.price <= parseFloat(maxPrice) : true;
+      return matchSearch && matchCat && matchSub && matchLoc && matchMin && matchMax;
     });
-  }, [selectedCategory, selectedSubcategory, selectedLocation, minPrice, maxPrice, headerSearchQuery]);
+  }, [itemsPool, headerSearchQuery, selectedCategory, selectedSubcategory, selectedLocation, minPrice, maxPrice]);
+
+  const activeSubcategories = useMemo(() => {
+    if (!hoveredCategory) return [];
+    return MARKET_TAXONOMY.find(c => c.name === hoveredCategory)?.subcategories || [];
+  }, [hoveredCategory]);
 
   const mapMarkers = useMemo(() => {
     return filteredItems.map(item => ({
       id: item.id,
-      latitude: item.coordinates[1],
-      longitude: item.coordinates[0],
+      latitude: item.coordinates[0],
+      longitude: item.coordinates[1],
       price: item.price,
       title: item.title,
       image_url: item.image,
@@ -275,281 +207,240 @@ export default function MarketsView() {
     }));
   }, [filteredItems]);
 
-  function handleMapPinClick(markerItem: any) {
-    setActiveMarketItem(markerItem.id);
+  function handleMapPinClick(markerItem: { id: string }) {
+    setActiveHoverId(markerItem.id);
     const el = document.getElementById(`market-item-${markerItem.id}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  function handleCategorySelect(label: string) {
-    if (selectedCategory === label) {
-      setSelectedCategory(null);
-      setSelectedSubcategory(null);
-    } else {
-      setSelectedCategory(label);
-      setSelectedSubcategory(null);
-    }
-  }
-
-  function handleSubcategorySelect(sub: string) {
-    setSelectedSubcategory(sub === selectedSubcategory ? null : sub);
-  }
-
   return (
     <div className="w-full h-[calc(100vh-64px)] overflow-hidden flex flex-col bg-white">
-      {/* Jiji-Style Breadcrumb Navigation Trail */}
-      <div className="w-full flex-shrink-0 bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 z-30 relative">
-        <button
-          onClick={() => { setIsResultsViewActive(false); }}
-          className="flex items-center gap-1 hover:text-[#0044FF] transition-colors"
-        >
-          <Home className="h-3 w-3" />
-          <span>Home</span>
-        </button>
-        <ChevronRight className="h-3 w-3 text-slate-300" />
-        <button
-          onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
-          className="hover:text-[#0044FF] transition-colors"
-        >
+      {/* Breadcrumb Trail */}
+      <div className="w-full bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 flex-shrink-0 z-30 relative">
+        <span className="hover:text-[#0044FF] cursor-pointer flex items-center gap-1" onClick={() => setIsResultsViewActive(false)}>
+          <Home className="w-3 h-3" /> Home
+        </span>
+        <ChevronRight className="w-3 h-3 text-slate-300" />
+        <span className="hover:text-[#0044FF] cursor-pointer" onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}>
           Markets
-        </button>
+        </span>
         {selectedCategory && (
           <>
-            <ChevronRight className="h-3 w-3 text-slate-300" />
-            <button
-              onClick={() => { setSelectedSubcategory(null); }}
-              className="hover:text-[#0044FF] transition-colors text-slate-700"
-            >
-              {selectedCategory}
-            </button>
+            <ChevronRight className="w-3 h-3 text-slate-300" />
+            <span className="text-slate-800 font-semibold">{selectedCategory}</span>
           </>
         )}
         {selectedSubcategory && (
           <>
-            <ChevronRight className="h-3 w-3 text-slate-300" />
-            <span className="text-slate-700 font-semibold">{selectedSubcategory}</span>
+            <ChevronRight className="w-3 h-3 text-slate-300" />
+            <span className="text-[#0044FF] font-semibold">{selectedSubcategory}</span>
           </>
         )}
       </div>
 
-      {/* Dual-column workspace */}
-      <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        {/* Floating Top-Center Pill Toggle */}
-        <button
-          onClick={() => setIsMarketMapActive(!isMarketMapActive)}
-          className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
-        >
-          {isMarketMapActive ? (
-            <><span aria-hidden="true">&#x1F4E6;</span> List View</>
-          ) : (
-            <><span aria-hidden="true">&#x1F5FA;&#xFE0F;</span> Map View</>
-          )}
-        </button>
+      {/* Main Container */}
+      <div className="w-full flex-1 flex flex-row overflow-hidden relative">
 
-        {/* Left Sidebar - Category Selector */}
+        {/* Left Sidebar */}
         <aside
-          className="hidden md:block w-64 lg:w-72 flex-shrink-0 h-full bg-white border-r border-slate-100 relative isolate z-40"
-          onMouseLeave={() => setHoveredCategoryId(null)}
+          className="hidden md:flex w-64 lg:w-72 flex-shrink-0 h-full bg-white border-r border-slate-100 relative isolate z-40 flex-col overflow-visible"
+          onMouseLeave={() => setHoveredCategory(null)}
         >
-          <div className="h-full flex flex-col">
-            {/* Top Fixed Controls - Location & Price */}
-            <div className="w-full p-4 pb-0 flex-shrink-0">
-              <div className="pb-4 mb-4 border-b border-slate-100">
-                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Location</h3>
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-                >
-                  {MUNICIPALITIES.map(m => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="pb-4 mb-4 border-b border-slate-100">
-                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price Range (CVE)</h3>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#0044FF] focus:ring-2 focus:ring-blue-50 outline-none transition-colors"
-                  />
-                </div>
-              </div>
+          {/* Top Filters */}
+          <div className="w-full p-4 pb-0 flex-shrink-0 space-y-3">
+            <div className="pb-3 border-b border-slate-100">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Location</label>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg p-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-[#0044FF]"
+              >
+                {MUNICIPALITIES.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+              </select>
             </div>
-
-            {/* Scrolling Categories Track */}
-            <div className="w-full flex-1 overflow-y-auto max-h-[calc(100vh-320px)] px-4 pb-4 pr-1">
-              <div className="flex flex-col">
-                {MARKET_TAXONOMY.map(cat => (
-                  <div
-                    key={cat.name}
-                    className="relative flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700 transition-colors"
-                    onMouseEnter={() => setHoveredCategoryId(cat.name)}
-                  >
-                    <button
-                      onClick={() => handleCategorySelect(cat.name)}
-                      className={`w-full flex items-center justify-between rounded-lg transition-colors text-left cursor-pointer ${
-                        selectedCategory === cat.name
-                          ? "bg-blue-50 text-[#0044FF] font-semibold"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm flex-shrink-0">{cat.icon}</span>
-                        <span className="truncate text-xs">{cat.name}</span>
-                      </span>
-                      <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
-                    </button>
-                  </div>
-                ))}
+            <div className="pb-3 border-b border-slate-100">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Price Range (CVE)</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-2 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#0044FF]"
+                />
+                <input
+                  type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-2 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#0044FF]"
+                />
               </div>
             </div>
           </div>
 
-          {/* Single flyout panel - fixed height, pinned to category track top */}
-          {hoveredCategoryId && (() => {
-            const activeCat = MARKET_TAXONOMY.find(c => c.name === hoveredCategoryId);
-            if (!activeCat) return null;
-            return (
+          {/* Category List Track */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {MARKET_TAXONOMY.map((cat) => (
               <div
-                className="absolute left-full top-0 w-64 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-5 z-[100] h-[calc(100vh-320px)] overflow-y-auto pointer-events-auto block"
-                style={{ marginLeft: '-1px' }}
-                onMouseEnter={() => setHoveredCategoryId(hoveredCategoryId)}
-                onMouseLeave={() => setHoveredCategoryId(null)}
-              >
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">{activeCat.name}</p>
-                {activeCat.subcategories.map(sub => (
-                  <button
-                    key={sub}
-                    onClick={() => {
-                      setSelectedCategory(activeCat.name);
-                      handleSubcategorySelect(sub);
-                      setHoveredCategoryId(null);
-                    }}
-                    className={`block w-full text-left px-3 py-2 text-xs rounded-md transition-colors ${
-                      selectedSubcategory === sub
-                        ? "bg-blue-50 text-[#0044FF] font-semibold"
-                        : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
-        </aside>
-
-      {/* Main Content Area */}
-      <div className={`flex-1 h-full bg-slate-50 relative z-10 overflow-hidden ${isMarketMapActive ? 'flex flex-col md:flex-row' : 'flex flex-col'}`}>
-        {/* Product Grid - independent scroll */}
-        <div className={`overflow-y-auto ${isMarketMapActive ? 'w-full md:w-1/2 h-[50vh] md:h-full' : 'flex-1'} px-3 pt-4 pb-24`}>
-          {/* Mobile filter bar */}
-          <div className="md:hidden p-3 bg-white border-b border-gray-200 flex gap-2 overflow-x-auto">
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="px-3 py-1.5 text-xs rounded-full border border-gray-200 bg-gray-50 text-gray-700 flex-shrink-0"
-            >
-              {MUNICIPALITIES.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-            {MARKET_TAXONOMY.slice(0, 6).map(cat => (
-              <button
                 key={cat.name}
-                onClick={() => handleCategorySelect(cat.name)}
-                className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${
-                  selectedCategory === cat.name
-                    ? "bg-[#0044FF] text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                onMouseEnter={() => setHoveredCategory(cat.name)}
+                onClick={() => {
+                  setSelectedCategory(selectedCategory === cat.name ? null : cat.name);
+                  setSelectedSubcategory(null);
+                }}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-lg cursor-pointer text-xs font-medium transition-colors ${
+                  selectedCategory === cat.name || hoveredCategory === cat.name
+                    ? 'bg-slate-50 text-[#0044FF]'
+                    : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                {cat.icon} {cat.name.split(" ")[0]}
-              </button>
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm flex-shrink-0">{cat.icon}</span>
+                  <span className="truncate">{cat.name}</span>
+                </span>
+                <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
+              </div>
             ))}
           </div>
 
-          <div className="p-3 sm:p-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              {filteredItems.length} items found
-              {selectedCategory && <span className="text-[#0044FF]"> in {selectedCategory}</span>}
-              {selectedSubcategory && <span className="text-gray-500"> / {selectedSubcategory}</span>}
-            </p>
-
-            {/* Masonry Grid */}
-            <div className="columns-2 gap-2 w-full block">
-              {filteredItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  id={`market-item-${item.id}`}
-                  className="break-inside-avoid inline-block w-full mb-3"
-                  onMouseEnter={() => setActiveMarketItem(item.id)}
-                  onMouseLeave={() => setActiveMarketItem(null)}
+          {/* Unified Fixed Parallel Flyout Tray - pinned top-0, full height */}
+          {hoveredCategory && (
+            <div
+              onMouseEnter={() => setHoveredCategory(hoveredCategory)}
+              onMouseLeave={() => setHoveredCategory(null)}
+              className="absolute left-full top-0 w-64 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-4 z-50 h-full overflow-y-auto pointer-events-auto block"
+              style={{ marginLeft: '-1px' }}
+            >
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{hoveredCategory}</p>
+              <button
+                onClick={() => { setSelectedCategory(hoveredCategory); setSelectedSubcategory(null); setHoveredCategory(null); }}
+                className="w-full text-left py-2 px-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-[#0044FF] block transition-colors"
+              >
+                All in {hoveredCategory}
+              </button>
+              {activeSubcategories.map(sub => (
+                <button
+                  key={sub}
+                  onClick={() => { setSelectedCategory(hoveredCategory); setSelectedSubcategory(sub); setHoveredCategory(null); }}
+                  className={`w-full text-left py-2 px-2 rounded-lg text-xs font-medium block transition-colors ${
+                    selectedSubcategory === sub ? 'bg-blue-50 text-[#0044FF]' : 'text-slate-600 hover:bg-slate-50 hover:text-[#0044FF]'
+                  }`}
                 >
-                  <div className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border group ${
-                    activeMarketItem === item.id
-                      ? 'border-[#0044FF] shadow-lg ring-2 ring-blue-100'
-                      : 'border-gray-100 hover:border-[#0044FF]/30 hover:shadow-lg'
-                  }`}>
-                    <div className="relative overflow-hidden">
+                  {sub}
+                </button>
+              ))}
+            </div>
+          )}
+        </aside>
+
+        {/* Floating View Toggle Pill */}
+        <div
+          onClick={() => setIsMapViewActive(!isMapViewActive)}
+          className="fixed top-32 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-xs text-slate-800"
+        >
+          {isMapViewActive ? (
+            <><LayoutGrid className="w-3.5 h-3.5" /> List</>
+          ) : (
+            <><MapPin className="w-3.5 h-3.5" /> Map</>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 h-full bg-slate-50 relative z-10 overflow-hidden flex flex-col">
+          {!isMapViewActive ? (
+            /* Masonry Grid Feed */
+            <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                {filteredItems.length} items found
+                {selectedCategory && <span className="text-[#0044FF]"> in {selectedCategory}</span>}
+                {selectedSubcategory && <span className="text-slate-500"> / {selectedSubcategory}</span>}
+              </p>
+              <div className="columns-2 lg:columns-3 gap-3 w-full">
+                {filteredItems.map((item, index) => (
+                  <div
+                    key={item.id}
+                    id={`market-item-${item.id}`}
+                    onMouseEnter={() => setActiveHoverId(item.id)}
+                    onMouseLeave={() => setActiveHoverId(null)}
+                    className="break-inside-avoid inline-block w-full mb-3"
+                  >
+                    <div className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden cursor-pointer ${
+                      activeHoverId === item.id ? 'border-[#0044FF] ring-2 ring-blue-100' : 'border-slate-100'
+                    }`}>
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className={`w-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105 bg-slate-100 ${
+                            index % 2 === 0 ? 'h-36' : 'h-48'
+                          }`}
+                        />
+                        <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-slate-600 px-1.5 py-0.5 rounded-full">
+                          {item.posted}
+                        </span>
+                        <span className="absolute top-2 right-2 bg-[#0044FF]/90 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full">
+                          {item.subcategory || item.category.split(" ")[0]}
+                        </span>
+                      </div>
+                      <div className="p-2.5">
+                        <h3 className="font-bold text-xs text-slate-900 line-clamp-2 leading-tight">{item.title}</h3>
+                        <div className="flex items-center gap-1 mt-1">
+                          <MapPin className="h-2.5 w-2.5 text-slate-400" />
+                          <p className="text-[10px] text-slate-500 truncate">{item.location}</p>
+                        </div>
+                        <p className="font-extrabold text-sm text-slate-900 mt-1.5">
+                          {item.price.toLocaleString()} <span className="text-[10px] font-medium text-slate-500">CVE</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {filteredItems.length === 0 && (
+                <div className="text-center py-16 text-slate-400">
+                  <p className="text-sm">No active marketplace items match your tracking parameters.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Split Map View */
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              {/* Left mini-card column */}
+              <div className="w-full md:w-80 h-[40vh] md:h-full overflow-y-auto px-3 py-3 border-r border-slate-200">
+                <div className="columns-1 gap-2">
+                  {filteredItems.map((item, index) => (
+                    <div
+                      key={item.id}
+                      id={`market-item-${item.id}`}
+                      onMouseEnter={() => setActiveHoverId(item.id)}
+                      onMouseLeave={() => setActiveHoverId(null)}
+                      className={`break-inside-avoid inline-block w-full mb-2 bg-white border rounded-xl shadow-xs transition-all overflow-hidden cursor-pointer ${
+                        activeHoverId === item.id ? 'border-[#0044FF] shadow-sm scale-[0.99]' : 'border-slate-100'
+                      }`}
+                    >
                       <img
                         src={item.image}
                         alt={item.title}
-                        className={`w-full object-cover rounded-t-lg bg-gray-100 group-hover:scale-105 transition-transform duration-300 ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
+                        className={`w-full object-cover bg-slate-100 ${index % 2 === 0 ? 'h-24' : 'h-32'}`}
                       />
-                      <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-1.5 py-0.5 rounded-full">
-                        {item.subcategory || item.category.split(" ")[0]}
-                      </span>
-                    </div>
-                    <div className="p-2">
-                      <h3 className="font-bold text-xs text-gray-900 line-clamp-2 leading-tight">{item.title}</h3>
-                      <p className="font-extrabold text-sm text-gray-900 mt-1">
-                        {item.price.toLocaleString()} <span className="text-[10px] font-medium text-gray-500">CVE</span>
-                      </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <MapPin className="h-2.5 w-2.5 text-gray-400" />
-                        <p className="text-[10px] text-gray-500 truncate">{item.location}</p>
+                      <div className="p-2">
+                        <h3 className="font-bold text-[11px] text-slate-900 line-clamp-1">{item.title}</h3>
+                        <p className="font-extrabold text-xs text-slate-900 mt-0.5">
+                          {item.price.toLocaleString()} <span className="text-[9px] font-medium text-slate-500">CVE</span>
+                        </p>
                       </div>
-                      <p className="text-[9px] text-gray-400 mt-0.5">{item.posted}</p>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {filteredItems.length === 0 && (
-              <div className="text-center py-16 text-gray-400">
-                <p className="text-sm">No marketplace items found. Try adjusting your filters.</p>
               </div>
-            )}
-          </div>
+              {/* Right map pane */}
+              <div className="flex-1 h-[60vh] md:h-full relative">
+                <SafeLeafletMap
+                  items={mapMarkers}
+                  activeItem={mapMarkers.find(m => m.id === activeHoverId) || null}
+                  onPinClick={handleMapPinClick}
+                />
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Map Pane - fixed to viewport */}
-        {isMarketMapActive && (
-          <div className="w-full md:flex-1 h-[50vh] md:h-full relative z-0 border-l border-gray-200">
-            <SafeLeafletMap
-              items={mapMarkers}
-              activeItem={mapMarkers.find(m => m.id === activeMarketItem) || null}
-              onPinClick={handleMapPinClick}
-            />
-          </div>
-        )}
-      </div>
       </div>
     </div>
   );
