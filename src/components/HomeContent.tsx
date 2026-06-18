@@ -128,7 +128,7 @@ export default function HomeContent() {
         {/* Floating toggle pill */}
         <button
           onClick={() => setIsMapViewActive(false)}
-          className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
         >
           <span aria-hidden>&#x1F4CB;</span> List
         </button>
@@ -191,12 +191,12 @@ export default function HomeContent() {
         {/* Floating toggle pill */}
         <button
           onClick={() => setIsMapViewActive(true)}
-          className="fixed top-36 left-1/2 -translate-x-1/2 z-40 bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer font-semibold text-sm text-slate-800"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
         >
           <span aria-hidden>&#x1F5FA;&#xFE0F;</span> Map
         </button>
 
-        <div className="relative w-full max-w-7xl mx-auto px-3 pt-16 pb-10">
+        <div className="relative w-full max-w-7xl mx-auto px-3 pt-4 pb-24">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             {filteredProperties.length} Available Properties
           </p>
