@@ -398,18 +398,18 @@ export default function MarketsView() {
           </div>
 
           {/* Scrolling Categories Track */}
-          <div className="w-full flex-1 overflow-y-auto overflow-x-visible px-4 pb-4 pr-2">
+          <div className="w-full flex-1 overflow-y-auto px-4 pb-4 pr-2" style={{ overflowX: 'visible' }}>
             <div className="flex flex-col">
               {CATEGORY_TREE.map(cat => (
                 <div
                   key={cat.id}
-                  className="relative"
+                  className="relative group flex items-center justify-between py-0 rounded-lg cursor-pointer z-50 overflow-visible"
                   onMouseEnter={() => setHoveredCategoryId(cat.id)}
                   onMouseLeave={() => setHoveredCategoryId(null)}
                 >
                   <button
                     onClick={() => handleCategorySelect(cat.label)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-left group cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left cursor-pointer ${
                       selectedCategory === cat.label
                         ? "bg-blue-50 text-[#0044FF] font-semibold"
                         : "text-gray-700 hover:bg-slate-50"
@@ -421,9 +421,12 @@ export default function MarketsView() {
                     </span>
                     <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
                   </button>
-                  {/* Inline flyout - positioned absolute from this row */}
+                  {/* Subcategory flyout - flush against row right edge */}
                   {hoveredCategoryId === cat.id && (
-                    <div className="absolute left-full top-0 w-56 bg-white shadow-2xl rounded-xl border border-slate-200 p-4 z-[9999] min-h-[200px] pointer-events-auto">
+                    <div
+                      className="absolute left-full top-0 w-60 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-4 z-[9999] pointer-events-auto block min-h-[200px]"
+                      style={{ marginLeft: '-1px' }}
+                    >
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{cat.label}</p>
                       {cat.subcategories.map(sub => (
                         <button
