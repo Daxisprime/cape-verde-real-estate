@@ -13,12 +13,12 @@ const MARKET_CATEGORIES = [
   { id: "electronics", label: "Electronics & Computers" },
   { id: "home", label: "Home, Furniture & Appliances" },
   { id: "building", label: "Building Materials & Tools" },
-  { id: "restaurants", label: "Restaurants & Menus" },
-  { id: "fashion", label: "Fashion & Retail" },
+  { id: "restaurants", label: "Restaurants & Menus (Takeaway)" },
+  { id: "fashion", label: "Fashion, Clothing & Retail" },
   { id: "babies", label: "Babies & Kids Items" },
-  { id: "pets", label: "Pets" },
+  { id: "pets", label: "Pets & Animal Supplies" },
   { id: "maintenance", label: "Maintenance & Repair Services" },
-  { id: "professional", label: "Professional Services" },
+  { id: "professional", label: "Professional & Event Services" },
 ];
 
 interface FormData {
@@ -318,7 +318,7 @@ export default function PostAdForm({ vendorId, onAdCreated }: { vendorId?: strin
               </select>
 
               {/* Menu photo upload for Restaurants & Menus */}
-              {form.marketCategory === "Restaurants & Menus" && (
+              {form.marketCategory === "Restaurants & Menus (Takeaway)" && (
                 <div>
                   <p className="text-xs text-gray-600 font-medium mb-1.5">Menu Booklet Photos ({menuImages.length}/2)</p>
                   <div className="flex gap-2 flex-wrap">

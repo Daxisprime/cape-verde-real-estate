@@ -14,66 +14,56 @@ const SafeLeafletMap = dynamic(
   }
 );
 
-const CATEGORY_TREE = [
+const MARKET_TAXONOMY = [
   {
-    id: "vehicles",
-    label: "Vehicles & Automotive",
+    name: "Vehicles & Automotive",
     icon: "\uD83D\uDE97",
-    subcategories: ["Cars", "Motorbikes", "Parts & Accessories"],
+    subcategories: ["Cars & SUVs", "Motorbikes & Scooters", "Vehicle Parts & Accessories", "Heavy Duty & Trucks", "Car Rental Services"],
   },
   {
-    id: "electronics",
-    label: "Electronics & Computers",
+    name: "Electronics & Computers",
     icon: "\uD83D\uDCF1",
-    subcategories: ["Smartphones", "Laptops", "TV & Audio"],
+    subcategories: ["Smartphones & Tablets", "Laptops & Desktops", "Computer Hardware & Accessories", "TV, Audio & Video", "Video Game Consoles"],
   },
   {
-    id: "home",
-    label: "Home, Furniture & Appliances",
+    name: "Home, Furniture & Appliances",
     icon: "\uD83D\uDECB\uFE0F",
-    subcategories: ["Beds & Sofas", "Kitchen Appliances", "Decor"],
+    subcategories: ["Beds & Mattresses", "Sofas & Living Room Chairs", "Kitchen Appliances", "Home Decor & Lighting", "Generators & Solar Energy Equipment"],
   },
   {
-    id: "building",
-    label: "Building Materials & Tools",
-    icon: "\uD83E\uDDF1",
-    subcategories: ["Cement & Tiles", "Hand Tools", "Electrical Supplies"],
+    name: "Building Materials & Tools",
+    icon: "\uD83C\uDFD7\uFE0F",
+    subcategories: ["Cement, Blocks & Aggregates", "Tiles & Flooring", "Hand & Power Tools", "Electrical Supplies & Cables", "Plumbing Pipes & Fixtures"],
   },
   {
-    id: "restaurants",
-    label: "Restaurants & Menus",
-    icon: "\uD83C\uDF7D\uFE0F",
-    subcategories: ["Local Restaurants", "Takeaway/Menus", "Cafes"],
+    name: "Restaurants & Menus (Takeaway)",
+    icon: "\uD83C\uDF73",
+    subcategories: ["Praia Local Eats", "Mindelo Cafes & Bars", "Sal Resort Takeaway", "Daily Menu Uploads", "Bakery & Catering Options"],
   },
   {
-    id: "fashion",
-    label: "Fashion & Retail",
-    icon: "\uD83D\uDC5F",
-    subcategories: ["Shoes", "Apparel", "Bags"],
+    name: "Fashion, Clothing & Retail",
+    icon: "\uD83D\uDC55",
+    subcategories: ["Shoes & Sneakers", "Men's Clothing", "Women's Clothing", "Bags & Accessories", "Watches & Jewelry"],
   },
   {
-    id: "babies",
-    label: "Babies & Kids Items",
+    name: "Babies & Kids Items",
     icon: "\uD83D\uDC76",
-    subcategories: ["Toys", "Clothing", "Strollers"],
+    subcategories: ["Children's Apparel", "Toys & Games", "Strollers & Car Seats", "Baby Care & Feeding Essentials"],
   },
   {
-    id: "pets",
-    label: "Pets",
+    name: "Pets & Animal Supplies",
     icon: "\uD83D\uDC3E",
-    subcategories: ["Pet Food", "Accessories"],
+    subcategories: ["Pet Food", "Dog & Cat Accessories", "Livestock & Poultry Feed"],
   },
   {
-    id: "maintenance",
-    label: "Maintenance & Repair Services",
-    icon: "\uD83D\uDD27",
-    subcategories: ["Plumbing", "Electricians", "AC Repair"],
+    name: "Maintenance & Repair Services",
+    icon: "\uD83D\uDEE0\uFE0F",
+    subcategories: ["Emergency Plumbing", "Residential Electricians", "AC & Appliance Repair", "Masonry & Painting Pro's", "Car Mechanics"],
   },
   {
-    id: "professional",
-    label: "Professional Services",
+    name: "Professional & Event Services",
     icon: "\uD83D\uDCBC",
-    subcategories: ["Developers", "Photography", "Legal"],
+    subcategories: ["Web Developers & IT Support", "Photography & Video Production", "Legal & Business Consulting", "Event Planning & DJ Services", "Private Tutors & Lessons"],
   },
 ];
 
@@ -84,7 +74,7 @@ const MARKETPLACE_ITEMS = [
     price: 850,
     location: "Praia, Santiago",
     category: "Building Materials & Tools",
-    subcategory: "Cement & Tiles",
+    subcategory: "Cement, Blocks & Aggregates",
     image: "https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=400&h=300&fit=crop",
     posted: "2 hours ago",
     coordinates: [-23.5133, 14.9177] as [number, number],
@@ -95,7 +85,7 @@ const MARKETPLACE_ITEMS = [
     price: 65000,
     location: "Santa Maria, Sal",
     category: "Electronics & Computers",
-    subcategory: "TV & Audio",
+    subcategory: "TV, Audio & Video",
     image: "https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?w=400&h=300&fit=crop",
     posted: "5 hours ago",
     coordinates: [-22.9, 16.73] as [number, number],
@@ -106,7 +96,7 @@ const MARKETPLACE_ITEMS = [
     price: 3500,
     location: "Mindelo, Sao Vicente",
     category: "Maintenance & Repair Services",
-    subcategory: "Plumbing",
+    subcategory: "Emergency Plumbing",
     image: "https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?w=400&h=300&fit=crop",
     posted: "1 day ago",
     coordinates: [-24.98, 16.87] as [number, number],
@@ -127,8 +117,8 @@ const MARKETPLACE_ITEMS = [
     title: "Legal & Notary Translation Services",
     price: 15000,
     location: "Praia, Santiago",
-    category: "Professional Services",
-    subcategory: "Legal",
+    category: "Professional & Event Services",
+    subcategory: "Legal & Business Consulting",
     image: "https://images.pexels.com/photos/5668882/pexels-photo-5668882.jpeg?w=400&h=300&fit=crop",
     posted: "6 hours ago",
     coordinates: [-23.51, 14.92] as [number, number],
@@ -138,8 +128,8 @@ const MARKETPLACE_ITEMS = [
     title: "Designer Summer Clothing Collection",
     price: 4500,
     location: "Santa Maria, Sal",
-    category: "Fashion & Retail",
-    subcategory: "Apparel",
+    category: "Fashion, Clothing & Retail",
+    subcategory: "Women's Clothing",
     image: "https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=400&h=300&fit=crop",
     posted: "12 hours ago",
     coordinates: [-22.9, 16.73] as [number, number],
@@ -150,7 +140,7 @@ const MARKETPLACE_ITEMS = [
     price: 12500,
     location: "Praia, Santiago",
     category: "Building Materials & Tools",
-    subcategory: "Hand Tools",
+    subcategory: "Hand & Power Tools",
     image: "https://images.pexels.com/photos/1249611/pexels-photo-1249611.jpeg?w=400&h=300&fit=crop",
     posted: "4 hours ago",
     coordinates: [-23.52, 14.91] as [number, number],
@@ -161,7 +151,7 @@ const MARKETPLACE_ITEMS = [
     price: 145000,
     location: "Mindelo, Sao Vicente",
     category: "Electronics & Computers",
-    subcategory: "Smartphones",
+    subcategory: "Smartphones & Tablets",
     image: "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?w=400&h=300&fit=crop",
     posted: "30 min ago",
     coordinates: [-24.97, 16.88] as [number, number],
@@ -172,7 +162,7 @@ const MARKETPLACE_ITEMS = [
     price: 8000,
     location: "Sal Rei, Boa Vista",
     category: "Maintenance & Repair Services",
-    subcategory: "AC Repair",
+    subcategory: "AC & Appliance Repair",
     image: "https://images.pexels.com/photos/5463576/pexels-photo-5463576.jpeg?w=400&h=300&fit=crop",
     posted: "1 day ago",
     coordinates: [-22.79, 16.18] as [number, number],
@@ -183,7 +173,7 @@ const MARKETPLACE_ITEMS = [
     price: 95000,
     location: "Praia, Santiago",
     category: "Home, Furniture & Appliances",
-    subcategory: "Beds & Sofas",
+    subcategory: "Sofas & Living Room Chairs",
     image: "https://images.pexels.com/photos/1866149/pexels-photo-1866149.jpeg?w=400&h=300&fit=crop",
     posted: "8 hours ago",
     coordinates: [-23.51, 14.93] as [number, number],
@@ -193,8 +183,8 @@ const MARKETPLACE_ITEMS = [
     title: "Accounting & Tax Advisory",
     price: 20000,
     location: "Praia, Santiago",
-    category: "Professional Services",
-    subcategory: "Legal",
+    category: "Professional & Event Services",
+    subcategory: "Legal & Business Consulting",
     image: "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?w=400&h=300&fit=crop",
     posted: "2 days ago",
     coordinates: [-23.50, 14.92] as [number, number],
@@ -204,8 +194,8 @@ const MARKETPLACE_ITEMS = [
     title: "Handmade Cape Verdean Jewelry",
     price: 3200,
     location: "Santa Maria, Sal",
-    category: "Fashion & Retail",
-    subcategory: "Bags",
+    category: "Fashion, Clothing & Retail",
+    subcategory: "Watches & Jewelry",
     image: "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg?w=400&h=300&fit=crop",
     posted: "5 hours ago",
     coordinates: [-22.91, 16.72] as [number, number],
@@ -403,23 +393,23 @@ export default function MarketsView() {
             {/* Scrolling Categories Track */}
             <div className="w-full flex-1 overflow-y-auto max-h-[calc(100vh-320px)] px-4 pb-4 pr-1">
               <div className="flex flex-col">
-                {CATEGORY_TREE.map(cat => (
+                {MARKET_TAXONOMY.map(cat => (
                   <div
-                    key={cat.id}
+                    key={cat.name}
                     className="relative flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700 transition-colors"
-                    onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                    onMouseEnter={() => setHoveredCategoryId(cat.name)}
                   >
                     <button
-                      onClick={() => handleCategorySelect(cat.label)}
+                      onClick={() => handleCategorySelect(cat.name)}
                       className={`w-full flex items-center justify-between rounded-lg transition-colors text-left cursor-pointer ${
-                        selectedCategory === cat.label
+                        selectedCategory === cat.name
                           ? "bg-blue-50 text-[#0044FF] font-semibold"
                           : "text-gray-700"
                       }`}
                     >
                       <span className="flex items-center gap-2 min-w-0">
                         <span className="text-sm flex-shrink-0">{cat.icon}</span>
-                        <span className="truncate text-xs">{cat.label}</span>
+                        <span className="truncate text-xs">{cat.name}</span>
                       </span>
                       <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
                     </button>
@@ -431,8 +421,8 @@ export default function MarketsView() {
 
           {/* Single flyout panel - positioned outside scrolling container */}
           {hoveredCategoryId && (() => {
-            const activeCat = CATEGORY_TREE.find(c => c.id === hoveredCategoryId);
-            const activeIndex = CATEGORY_TREE.findIndex(c => c.id === hoveredCategoryId);
+            const activeCat = MARKET_TAXONOMY.find(c => c.name === hoveredCategoryId);
+            const activeIndex = MARKET_TAXONOMY.findIndex(c => c.name === hoveredCategoryId);
             if (!activeCat) return null;
             return (
               <div
@@ -444,12 +434,12 @@ export default function MarketsView() {
                 onMouseEnter={() => setHoveredCategoryId(hoveredCategoryId)}
                 onMouseLeave={() => setHoveredCategoryId(null)}
               >
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">{activeCat.label}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">{activeCat.name}</p>
                 {activeCat.subcategories.map(sub => (
                   <button
                     key={sub}
                     onClick={() => {
-                      setSelectedCategory(activeCat.label);
+                      setSelectedCategory(activeCat.name);
                       handleSubcategorySelect(sub);
                       setHoveredCategoryId(null);
                     }}
@@ -482,17 +472,17 @@ export default function MarketsView() {
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
-            {CATEGORY_TREE.slice(0, 6).map(cat => (
+            {MARKET_TAXONOMY.slice(0, 6).map(cat => (
               <button
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.label)}
+                key={cat.name}
+                onClick={() => handleCategorySelect(cat.name)}
                 className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${
-                  selectedCategory === cat.label
+                  selectedCategory === cat.name
                     ? "bg-[#0044FF] text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {cat.icon} {cat.label.split(" ")[0]}
+                {cat.icon} {cat.name.split(" ")[0]}
               </button>
             ))}
           </div>
