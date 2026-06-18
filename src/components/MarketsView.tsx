@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPin, ChevronRight, Home, LayoutGrid } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
+import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
@@ -80,6 +81,8 @@ const MARKETPLACE_ITEMS = [
     posted: "2 hours ago",
     coordinates: [14.9177, -23.5133] as [number, number],
     is_featured: true,
+    is_premium: true,
+    vendor_avatar: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?w=64&h=64&fit=crop",
   },
   {
     id: "mkt-002",
@@ -92,6 +95,8 @@ const MARKETPLACE_ITEMS = [
     posted: "5 hours ago",
     coordinates: [16.73, -22.9] as [number, number],
     is_featured: true,
+    is_premium: false,
+    vendor_avatar: null,
   },
   {
     id: "mkt-003",
@@ -104,6 +109,8 @@ const MARKETPLACE_ITEMS = [
     posted: "1 day ago",
     coordinates: [16.87, -24.98] as [number, number],
     is_featured: false,
+    is_premium: true,
+    vendor_avatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=64&h=64&fit=crop",
   },
   {
     id: "mkt-004",
@@ -116,6 +123,8 @@ const MARKETPLACE_ITEMS = [
     posted: "3 hours ago",
     coordinates: [16.74, -22.93] as [number, number],
     is_featured: false,
+    is_premium: false,
+    vendor_avatar: null,
   },
   {
     id: "mkt-005",
@@ -128,6 +137,8 @@ const MARKETPLACE_ITEMS = [
     posted: "6 hours ago",
     coordinates: [14.92, -23.51] as [number, number],
     is_featured: false,
+    is_premium: false,
+    vendor_avatar: null,
   },
   {
     id: "mkt-006",
@@ -140,6 +151,8 @@ const MARKETPLACE_ITEMS = [
     posted: "12 hours ago",
     coordinates: [16.73, -22.9] as [number, number],
     is_featured: false,
+    is_premium: false,
+    vendor_avatar: null,
   },
 ];
 
@@ -164,6 +177,7 @@ export default function MarketsView() {
   const [isMapViewActive, setIsMapViewActive] = useState(false);
   const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [viewportBounds, setViewportBounds] = useState<BoundingBox | null>(null);
 
   const itemsPool = useMemo(() => {
     const liveFormatted = liveItems.map(item => ({
@@ -175,8 +189,10 @@ export default function MarketsView() {
       subcategory: null as string | null,
       image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
       posted: new Date(item.created_at).toLocaleDateString(),
-      coordinates: [0, 0] as [number, number],
+      coordinates: (item.latitude && item.longitude ? [item.latitude, item.longitude] : [0, 0]) as [number, number],
       is_featured: item.is_featured || false,
+      is_premium: item.is_featured || false,
+      vendor_avatar: null as string | null,
     }));
     if (isLive && liveFormatted.length > 0) {
       return [...liveFormatted, ...MARKETPLACE_ITEMS];
@@ -204,19 +220,46 @@ export default function MarketsView() {
     return MARKET_TAXONOMY.find(c => c.name === hoveredCategory)?.subcategories || [];
   }, [hoveredCategory]);
 
-  const mapMarkers = useMemo(() => {
-    return filteredItems.map(item => ({
-      id: item.id,
-      latitude: item.coordinates[0],
-      longitude: item.coordinates[1],
-      price: item.price,
-      title: item.title,
-      image_url: item.image,
-      listing_type: "marketplace" as const,
-      neighborhood: item.location,
-      is_featured: item.is_featured,
-    }));
-  }, [filteredItems]);
+  // Lightweight map markers: only ID, lat, lng, category + display flags
+  // Bounding box filter: only include markers within visible viewport
+  const mapMarkers: MapMarkerLight[] = useMemo(() => {
+    return filteredItems
+      .filter(item => {
+        if (!item.coordinates[0] || !item.coordinates[1]) return false;
+        if (!viewportBounds) return true;
+        const lat = item.coordinates[0];
+        const lng = item.coordinates[1];
+        return (
+          lat >= viewportBounds.south &&
+          lat <= viewportBounds.north &&
+          lng >= viewportBounds.west &&
+          lng <= viewportBounds.east
+        );
+      })
+      .map(item => ({
+        id: item.id,
+        latitude: item.coordinates[0],
+        longitude: item.coordinates[1],
+        category: item.category,
+        price: item.price,
+        is_featured: item.is_featured,
+        is_premium: item.is_premium || false,
+        vendor_avatar: item.vendor_avatar || null,
+      }));
+  }, [filteredItems, viewportBounds]);
+
+  const handleBoundsChange = useCallback((bounds: BoundingBox) => {
+    setViewportBounds(bounds);
+  }, []);
+
+  const handleDetailRequest = useCallback((item: MapMarkerLight) => {
+    // Lazy detail fetch: only load full profile on pin click
+    // For now, scroll to card in list; full Supabase fetch can be added here
+    const el = document.getElementById(`market-item-${item.id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
 
   function handleMapPinClick(markerItem: { id: string }) {
     setActiveHoverId(markerItem.id);
@@ -452,6 +495,8 @@ export default function MarketsView() {
                   items={mapMarkers}
                   activeItem={mapMarkers.find(m => m.id === activeHoverId) || null}
                   onPinClick={handleMapPinClick}
+                  onBoundsChange={handleBoundsChange}
+                  onDetailRequest={handleDetailRequest}
                 />
               </div>
             </div>

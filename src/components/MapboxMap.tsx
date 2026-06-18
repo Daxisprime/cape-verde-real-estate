@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { Bed, Bath } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 
 function formatPriceShort(price: number): string {
   if (price >= 1000000) {
@@ -17,40 +19,146 @@ function formatPriceShort(price: number): string {
   return price.toString();
 }
 
-function createPriceIcon(price: number, isActive = false, isFeatured = false): L.DivIcon {
+// Lightweight marker struct for initial payload (4 core fields + display metadata)
+export interface MapMarkerLight {
+  id: string;
+  latitude: number;
+  longitude: number;
+  category?: string;
+  price?: number;
+  is_featured?: boolean;
+  is_premium?: boolean;
+  vendor_avatar?: string | null;
+  title?: string;
+}
+
+// Full detail payload fetched lazily on click
+export interface MapMarkerDetail {
+  id: string;
+  title: string;
+  image_url: string;
+  neighborhood: string;
+  price: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  seller_phone?: string;
+}
+
+export interface BoundingBox {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+function createPremiumPinHtml(item: MapMarkerLight, isActive: boolean): string {
+  const price = item.price || 0;
   const priceLabel = formatPriceShort(price);
-  let pinClasses: string;
-  if (isActive) {
-    pinClasses = 'bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl';
-  } else if (isFeatured) {
-    pinClasses = 'bg-amber-500 text-white border-2 border-amber-300 font-black text-[10px] w-11 h-11 rounded-full flex items-center justify-center shadow-lg';
-  } else {
-    pinClasses = 'bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md';
+  const isPremium = item.is_premium || false;
+  const isFeatured = item.is_featured || false;
+
+  // Golden priority pin
+  if (isPremium && isFeatured) {
+    const pulseRing = `<div class="animate-ping absolute rounded-full h-full w-full bg-amber-400/30"></div>`;
+    const avatarContent = item.vendor_avatar
+      ? `<img src="${item.vendor_avatar}" class="w-full h-full rounded-full object-cover" />`
+      : `<span class="text-[10px] font-black">${priceLabel}</span>`;
+
+    return `<div class="relative flex items-center justify-center" style="width:48px;height:48px;">
+      ${pulseRing}
+      <div class="relative bg-amber-400 text-slate-900 border-2 border-amber-500 font-black text-[10px] w-12 h-12 rounded-full flex items-center justify-center shadow-xl z-10 ${isActive ? 'scale-[1.2]' : 'scale-[1.05]'}" style="transition:all 0.2s ease;">
+        ${avatarContent}
+      </div>
+    </div>`;
   }
 
-  const size = isActive ? 48 : isFeatured ? 44 : 44;
-  const anchor = isActive ? 24 : isFeatured ? 22 : 22;
+  // Premium animated pin with avatar
+  if (isPremium) {
+    const pulseRing = `<div class="animate-ping absolute rounded-full h-full w-full bg-[#0044FF]/30"></div>`;
+    const avatarContent = item.vendor_avatar
+      ? `<img src="${item.vendor_avatar}" class="w-full h-full rounded-full object-cover" />`
+      : `<span class="text-[10px] font-black text-white">${priceLabel}</span>`;
+
+    return `<div class="relative flex items-center justify-center" style="width:48px;height:48px;">
+      ${pulseRing}
+      <div class="relative bg-[#0044FF] text-white border-2 border-white font-black text-[10px] w-11 h-11 rounded-full flex items-center justify-center shadow-xl z-10 ${isActive ? 'scale-[1.2]' : 'scale-[1.05]'}" style="transition:all 0.2s ease;">
+        ${avatarContent}
+      </div>
+    </div>`;
+  }
+
+  // Featured (non-premium) pin
+  if (isFeatured) {
+    return `<div class="bg-amber-500 text-white border-2 border-amber-300 font-black text-[10px] w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.15)' : 'scale(1.05)'};">${priceLabel}</div>`;
+  }
+
+  // Active standard pin
+  if (isActive) {
+    return `<div class="bg-[#0044FF] text-white border-2 border-white font-black text-[11px] w-12 h-12 rounded-full flex items-center justify-center shadow-2xl" style="cursor:pointer;transition:all 0.2s ease;transform:scale(1.15);">${priceLabel}</div>`;
+  }
+
+  // Standard free pin
+  return `<div class="bg-white text-gray-800 border border-gray-200 font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-md" style="cursor:pointer;transition:all 0.2s ease;">${priceLabel}</div>`;
+}
+
+function createPinIcon(item: MapMarkerLight, isActive: boolean): L.DivIcon {
+  const isPremium = item.is_premium || false;
+  const isFeatured = item.is_featured || false;
+  const size = isActive || (isPremium && isFeatured) ? 48 : isPremium || isFeatured ? 44 : 40;
 
   return L.divIcon({
-    className: `custom-price-marker ${isActive ? 'active-marker' : ''} ${isFeatured ? 'featured-marker' : ''}`,
-    html: `<div class="${pinClasses}" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.15)' : isFeatured ? 'scale(1.05)' : 'scale(1)'};">${priceLabel}</div>`,
+    className: 'custom-price-marker',
+    html: createPremiumPinHtml(item, isActive),
     iconSize: [size, size],
-    iconAnchor: [anchor, anchor],
-    popupAnchor: [0, -24],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -(size / 2)],
   });
 }
 
-function MapController({ activeItem }: { activeItem: any }) {
+// Bounding box watcher that reports viewport changes
+function BoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: BoundingBox) => void }) {
+  const map = useMapEvents({
+    moveend: () => {
+      const b = map.getBounds();
+      onBoundsChange({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      });
+    },
+    zoomend: () => {
+      const b = map.getBounds();
+      onBoundsChange({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      });
+    },
+  });
+
+  useEffect(() => {
+    const b = map.getBounds();
+    onBoundsChange({
+      north: b.getNorth(),
+      south: b.getSouth(),
+      east: b.getEast(),
+      west: b.getWest(),
+    });
+  }, [map, onBoundsChange]);
+
+  return null;
+}
+
+function MapController({ activeItem }: { activeItem: MapMarkerLight | null }) {
   const map = useMap();
   useEffect(() => {
     if (activeItem?.latitude && activeItem?.longitude) {
       const targetLatLng = L.latLng(activeItem.latitude, activeItem.longitude);
       const bounds = map.getBounds();
       if (!bounds.contains(targetLatLng)) {
-        map.flyTo(targetLatLng, map.getZoom(), {
-          animate: true,
-          duration: 0.8,
-        });
+        map.flyTo(targetLatLng, map.getZoom(), { animate: true, duration: 0.8 });
       } else {
         map.panTo(targetLatLng, { animate: true, duration: 0.5 });
       }
@@ -59,7 +167,125 @@ function MapController({ activeItem }: { activeItem: any }) {
   return null;
 }
 
-const popupStyles = `
+// Cluster layer managed imperatively
+function ClusterLayer({
+  items,
+  activeItem,
+  onPinClick,
+  onDetailRequest,
+}: {
+  items: MapMarkerLight[];
+  activeItem: MapMarkerLight | null;
+  onPinClick: (item: MapMarkerLight) => void;
+  onDetailRequest?: (item: MapMarkerLight) => void;
+}) {
+  const map = useMap();
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+  const markersMapRef = useRef<Map<string, L.Marker>>(new Map());
+
+  useEffect(() => {
+    if (!clusterGroupRef.current) {
+      clusterGroupRef.current = L.markerClusterGroup({
+        maxClusterRadius: 60,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: (cluster) => {
+          const count = cluster.getChildCount();
+          let size = 36;
+          let classes = 'bg-[#0044FF]/90 text-white';
+          if (count > 50) { size = 52; classes = 'bg-[#0044FF] text-white'; }
+          else if (count > 20) { size = 44; classes = 'bg-[#0044FF]/95 text-white'; }
+
+          return L.divIcon({
+            html: `<div class="${classes} font-bold text-xs rounded-full flex items-center justify-center shadow-lg border-2 border-white/50" style="width:${size}px;height:${size}px;">${count}</div>`,
+            className: 'custom-cluster-icon',
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size / 2],
+          });
+        },
+      });
+      map.addLayer(clusterGroupRef.current);
+    }
+
+    const cluster = clusterGroupRef.current;
+    const existingMarkers = markersMapRef.current;
+    const newIds = new Set(items.map(i => i.id));
+
+    // Remove markers no longer in items
+    existingMarkers.forEach((marker, id) => {
+      if (!newIds.has(id)) {
+        cluster.removeLayer(marker);
+        existingMarkers.delete(id);
+      }
+    });
+
+    // Add/update markers
+    items.forEach(item => {
+      if (!item.latitude || !item.longitude) return;
+      const isActive = item.id === activeItem?.id;
+
+      if (existingMarkers.has(item.id)) {
+        const marker = existingMarkers.get(item.id)!;
+        marker.setIcon(createPinIcon(item, isActive));
+        marker.setZIndexOffset(isActive ? 1000 : item.is_premium ? 800 : item.is_featured ? 500 : 0);
+      } else {
+        const marker = L.marker([item.latitude, item.longitude], {
+          icon: createPinIcon(item, isActive),
+          zIndexOffset: isActive ? 1000 : item.is_premium ? 800 : item.is_featured ? 500 : 0,
+        });
+
+        marker.on('click', () => {
+          onPinClick(item);
+          if (onDetailRequest) onDetailRequest(item);
+        });
+
+        marker.on('mouseover', () => {
+          marker.setIcon(createPinIcon(item, true));
+        });
+
+        marker.on('mouseout', () => {
+          if (item.id !== activeItem?.id) {
+            marker.setIcon(createPinIcon(item, false));
+          }
+        });
+
+        cluster.addLayer(marker);
+        existingMarkers.set(item.id, marker);
+      }
+    });
+
+    return () => {};
+  }, [items, activeItem, map, onPinClick, onDetailRequest]);
+
+  // Update active marker icon when activeItem changes
+  useEffect(() => {
+    const existingMarkers = markersMapRef.current;
+    existingMarkers.forEach((marker, id) => {
+      const item = items.find(i => i.id === id);
+      if (item) {
+        const isActive = id === activeItem?.id;
+        marker.setIcon(createPinIcon(item, isActive));
+        marker.setZIndexOffset(isActive ? 1000 : item.is_premium ? 800 : item.is_featured ? 500 : 0);
+      }
+    });
+  }, [activeItem, items]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (clusterGroupRef.current) {
+        map.removeLayer(clusterGroupRef.current);
+        clusterGroupRef.current = null;
+        markersMapRef.current.clear();
+      }
+    };
+  }, [map]);
+
+  return null;
+}
+
+const mapStyles = `
   .leaflet-popup-content-wrapper {
     padding: 0 !important;
     border-radius: 12px !important;
@@ -79,18 +305,24 @@ const popupStyles = `
     align-items: center !important;
     justify-content: center !important;
   }
-  .active-marker {
-    z-index: 999 !important;
+  .custom-cluster-icon {
+    background: transparent !important;
+    border: none !important;
+  }
+  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+    background: transparent !important;
   }
 `;
 
 interface MapProps {
-  items: any[];
-  activeItem: any;
-  onPinClick: (item: any) => void;
+  items: MapMarkerLight[];
+  activeItem: MapMarkerLight | null;
+  onPinClick: (item: MapMarkerLight) => void;
+  onBoundsChange?: (bounds: BoundingBox) => void;
+  onDetailRequest?: (item: MapMarkerLight) => void;
 }
 
-export default function MapboxMap({ items = [], activeItem, onPinClick }: MapProps) {
+export default function MapboxMap({ items = [], activeItem, onPinClick, onBoundsChange, onDetailRequest }: MapProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -99,14 +331,18 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
 
   useEffect(() => {
     if (!isMounted) return;
-    const styleId = 'trulia-map-styles';
+    const styleId = 'map-cluster-styles';
     if (!document.getElementById(styleId)) {
       const styleEl = document.createElement('style');
       styleEl.id = styleId;
-      styleEl.textContent = popupStyles;
+      styleEl.textContent = mapStyles;
       document.head.appendChild(styleEl);
     }
   }, [isMounted]);
+
+  const handleBoundsChange = useCallback((bounds: BoundingBox) => {
+    if (onBoundsChange) onBoundsChange(bounds);
+  }, [onBoundsChange]);
 
   if (!isMounted) {
     return (
@@ -132,78 +368,13 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
         />
 
         <MapController activeItem={activeItem} />
-
-        {items.map((item) => {
-          if (!item.latitude || !item.longitude) return null;
-          const isActive = item.id === activeItem?.id;
-          const isFeatured = item.is_featured || false;
-
-          return (
-            <Marker
-              key={item.id}
-              position={[item.latitude, item.longitude]}
-              icon={createPriceIcon(item.price, isActive, isFeatured)}
-              zIndexOffset={isActive ? 1000 : isFeatured ? 500 : 0}
-              eventHandlers={{
-                mouseover: (e) => {
-                  e.target.setIcon(createPriceIcon(item.price, true, isFeatured));
-                  e.target.openPopup();
-                },
-                mouseout: (e) => {
-                  if (!isActive) {
-                    e.target.setIcon(createPriceIcon(item.price, false, isFeatured));
-                  }
-                },
-                click: () => onPinClick(item),
-              }}
-            >
-              <Popup closeButton={false} autoPan={false}>
-                <div className="cursor-pointer w-[200px]" onClick={() => onPinClick(item)}>
-                  {item.image_url && (
-                    <img
-                      src={item.image_url}
-                      className="w-full h-28 object-cover"
-                      alt="preview"
-                    />
-                  )}
-                  <div className="p-2.5 space-y-1 bg-white">
-                    <p className="text-sm font-black text-gray-900 leading-tight">
-                      CVE {item.price?.toLocaleString()}
-                    </p>
-                    <p className="text-[11px] font-medium text-gray-700 truncate">
-                      {item.title || 'Property'}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-600">
-                      <span className="flex items-center gap-0.5">
-                        <Bed className="h-3.5 w-3.5 text-gray-400" />
-                        {item.bedrooms || 0}
-                      </span>
-                      <span className="text-gray-300">|</span>
-                      <span className="flex items-center gap-0.5">
-                        <Bath className="h-3.5 w-3.5 text-gray-400" />
-                        {item.bathrooms || 0}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-gray-500 truncate">
-                      {item.neighborhood || 'Cape Verde'}
-                    </p>
-                    {item.seller_phone && (
-                      <a
-                        href={`https://wa.me/${item.seller_phone.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${item.title}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block mt-1.5 text-center text-[10px] font-bold text-white bg-emerald-500 rounded-md py-1 px-2 hover:bg-emerald-600 transition"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        WhatsApp Seller
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+        <BoundsWatcher onBoundsChange={handleBoundsChange} />
+        <ClusterLayer
+          items={items}
+          activeItem={activeItem}
+          onPinClick={onPinClick}
+          onDetailRequest={onDetailRequest}
+        />
       </MapContainer>
     </div>
   );
