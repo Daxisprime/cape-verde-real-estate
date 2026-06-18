@@ -338,7 +338,90 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
             </section>
           )}
 
-          {/* Similar Properties */}
+          {/* MOBILE-ONLY INQUIRY FORM — renders here on mobile, hidden on desktop */}
+          <section className="mt-8 lg:hidden">
+            <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={property.agent.avatar}
+                  alt={property.agent.name}
+                  className="h-9 w-9 rounded-full object-cover shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
+                </div>
+              </div>
+
+              {inquiryStatus === "sent" ? (
+                <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+                  <p className="text-sm font-medium text-green-800">Inquiry sent!</p>
+                  <p className="text-xs text-green-600 mt-0.5">The agent will contact you shortly.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleInquirySubmit} className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    required
+                    value={inquiryForm.fullName}
+                    onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={inquiryForm.phone}
+                    onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    required
+                    value={inquiryForm.email}
+                    onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                  />
+                  <textarea
+                    rows={3}
+                    value={inquiryForm.message}
+                    onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={inquiryStatus === "sending"}
+                    className="w-full py-3 rounded-lg bg-[#0044FF] text-white text-sm font-semibold hover:bg-[#0033CC] transition-colors disabled:opacity-60"
+                  >
+                    {inquiryStatus === "sending" ? "Sending..." : "Send Inquiry"}
+                  </button>
+                  {inquiryStatus === "error" && (
+                    <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
+                  )}
+                </form>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <a
+                  href={`tel:${property.agent.phone}`}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  Call
+                </a>
+                <button
+                  onClick={handleWhatsApp}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  WhatsApp
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Similar Properties — always at bottom of left column */}
           <section className="mt-10">
             <hr className="border-gray-100 mb-6" />
             <h2 className="text-base font-semibold text-gray-800 mb-4">Similar Listings in the Area</h2>
@@ -379,8 +462,8 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           </section>
           </main>
 
-          {/* RIGHT COLUMN: Sticky Inquiry Side-Card — 4 cols */}
-          <aside className="lg:col-span-4">
+          {/* RIGHT COLUMN: Sticky Inquiry Side-Card — 4 cols, desktop only */}
+          <aside className="hidden lg:block lg:col-span-4">
             <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
             {/* Agent mini-header */}
             <div className="flex items-center gap-3">
@@ -434,7 +517,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
                 <button
                   type="submit"
                   disabled={inquiryStatus === "sending"}
-                  className="w-full py-2 rounded-lg bg-[#2563EB] text-white text-sm font-semibold hover:bg-[#1D4ED8] transition-colors disabled:opacity-60"
+                  className="w-full py-2 rounded-lg bg-[#0044FF] text-white text-sm font-semibold hover:bg-[#0033CC] transition-colors disabled:opacity-60"
                 >
                   {inquiryStatus === "sending" ? "Sending..." : "Send Inquiry"}
                 </button>
