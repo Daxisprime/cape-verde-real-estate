@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 import type { Database, Profile, UserRole } from '@/lib/supabase';
 
 // Auth state interface
@@ -32,18 +33,7 @@ interface SupabaseAuthContextType extends AuthState {
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
 function createSupabaseClient(): SupabaseClient<Database> | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  if (url && key && !url.includes('your-project') && !key.includes('your-anon-key')) {
-    return createClient<Database>(url, key, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-    });
-  }
-  return null;
+  return createSupabaseBrowserClient();
 }
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
@@ -77,43 +67,12 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    let mounted = true;
-
     // With persistSession: false, there's no stored session to recover.
     // Set initial state to unauthenticated immediately.
+    // We don't subscribe to onAuthStateChange here to avoid triggering
+    // the SDK's internal _initialize() which makes network requests.
     setState(prev => ({ ...prev, isLoading: false }));
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        if (session?.user) {
-          const profile = await fetchProfile(session.user.id);
-          if (!mounted) return;
-          setState({
-            user: session.user,
-            session,
-            profile,
-            isLoading: false,
-            isAuthenticated: true,
-          });
-        } else {
-          setState({
-            user: null,
-            session: null,
-            profile: null,
-            isLoading: false,
-            isAuthenticated: false,
-          });
-        }
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [supabase, fetchProfile]);
+  }, [supabase]);
 
   const signUp = async (
     email: string,
@@ -134,7 +93,17 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error && data.session?.user) {
+      const profile = await fetchProfile(data.session.user.id);
+      setState({
+        user: data.session.user,
+        session: data.session,
+        profile,
+        isLoading: false,
+        isAuthenticated: true,
+      });
+    }
     return { error };
   };
 
