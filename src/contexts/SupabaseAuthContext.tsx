@@ -37,6 +37,7 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
   if (url && key && !url.includes('your-project') && !key.includes('your-anon-key')) {
     return createClient<Database>(url, key, {
       auth: {
+        autoRefreshToken: false,
         detectSessionInUrl: false,
       },
     });

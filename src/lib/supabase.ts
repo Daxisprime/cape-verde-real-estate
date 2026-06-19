@@ -133,7 +133,12 @@ export const isSupabaseConfigured = (): boolean => {
 
 export const createSupabaseBrowserClient = () => {
   if (!isSupabaseConfigured()) return null;
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
 };
 
 // Server client bypasses RLS — use only in API routes / server components, never in 'use client' files
@@ -146,5 +151,10 @@ export const createSupabaseServerClient = () => {
 };
 
 export const supabase = isSupabaseConfigured()
-  ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    })
   : null;
