@@ -38,6 +38,7 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
     return createClient<Database>(url, key, {
       auth: {
         autoRefreshToken: false,
+        persistSession: false,
         detectSessionInUrl: false,
       },
     });
@@ -78,36 +79,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     let mounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted) return;
-
-        if (session?.user) {
-          const profile = await fetchProfile(session.user.id);
-          if (!mounted) return;
-          setState({
-            user: session.user,
-            session,
-            profile,
-            isLoading: false,
-            isAuthenticated: true,
-          });
-        } else {
-          setState({
-            user: null,
-            session: null,
-            profile: null,
-            isLoading: false,
-            isAuthenticated: false,
-          });
-        }
-      } catch {
-        if (mounted) setState(prev => ({ ...prev, isLoading: false }));
-      }
-    };
-
-    initializeAuth();
+    // With persistSession: false, there's no stored session to recover.
+    // Set initial state to unauthenticated immediately.
+    setState(prev => ({ ...prev, isLoading: false }));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {

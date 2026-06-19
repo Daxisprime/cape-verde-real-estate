@@ -131,14 +131,19 @@ export const isSupabaseConfigured = (): boolean => {
     !supabaseAnonKey.includes('your-anon-key'));
 };
 
+let _browserClient: ReturnType<typeof createClient<Database>> | null = null;
+
 export const createSupabaseBrowserClient = () => {
   if (!isSupabaseConfigured()) return null;
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  if (_browserClient) return _browserClient;
+  _browserClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
+      persistSession: false,
       detectSessionInUrl: false,
     },
   });
+  return _browserClient;
 };
 
 // Server client bypasses RLS — use only in API routes / server components, never in 'use client' files
@@ -154,6 +159,7 @@ export const supabase = isSupabaseConfigured()
   ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
+        persistSession: false,
         detectSessionInUrl: false,
       },
     })
