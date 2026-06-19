@@ -60,7 +60,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       .eq('id', userId)
       .single();
     if (error) {
-      console.error('Error fetching profile:', error);
       return null;
     }
     return data as Profile;
@@ -98,8 +97,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             isAuthenticated: false,
           });
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+      } catch {
         if (mounted) setState(prev => ({ ...prev, isLoading: false }));
       }
     };
