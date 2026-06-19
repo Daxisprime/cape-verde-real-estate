@@ -35,7 +35,11 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   if (url && key && !url.includes('your-project') && !key.includes('your-anon-key')) {
-    return createClient<Database>(url, key);
+    return createClient<Database>(url, key, {
+      auth: {
+        detectSessionInUrl: false,
+      },
+    });
   }
   return null;
 }
