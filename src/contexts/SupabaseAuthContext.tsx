@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { createSupabaseBrowserClient, markSessionActive, markSessionInactive } from '@/lib/supabase';
 import type { Database, Profile, UserRole } from '@/lib/supabase';
 
 // Auth state interface
@@ -80,6 +80,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     metadata?: { full_name?: string }
   ): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
+    markSessionActive();
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -88,11 +89,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+    if (error) markSessionInactive();
     return { error };
   };
 
   const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
+    markSessionActive();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error && data.session?.user) {
       const profile = await fetchProfile(data.session.user.id);
@@ -103,6 +106,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         isAuthenticated: true,
       });
+    } else {
+      markSessionInactive();
     }
     return { error };
   };
@@ -111,6 +116,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     provider: 'google' | 'facebook' | 'github'
   ): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
+    markSessionActive();
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -121,6 +127,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const signOut = async (): Promise<void> => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    markSessionInactive();
     setState({
       user: null,
       session: null,
