@@ -97,6 +97,12 @@ export default function HeroSection() {
     setShowHeroAutocomplete(value.trim().length >= 2);
   };
 
+  const handleHeroClearSearch = () => {
+    setSearchQuery("");
+    setShowHeroAutocomplete(false);
+    requestAnimationFrame(() => heroInputRef.current?.focus());
+  };
+
   const handleHeroAutocompleteSelect = (mode: "realestate" | "markets") => {
     setHeaderSearchQuery(searchQuery);
     setSearchMode(mode);
@@ -202,11 +208,21 @@ export default function HeroSection() {
                       ? "Island or neighborhood..."
                       : "Search items or services..."
                     }
-                    className="w-full pl-9 md:pl-12 pr-2 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
+                    className="w-full pl-9 md:pl-12 pr-8 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
                     value={searchQuery}
                     onChange={(e) => handleHeroSearchChange(e.target.value)}
                     onFocus={() => searchQuery.trim().length >= 2 && setShowHeroAutocomplete(true)}
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={handleHeroClearSearch}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-shrink-0">

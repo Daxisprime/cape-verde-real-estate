@@ -49,6 +49,15 @@ export default function Header() {
     }
   }
 
+  function handleClearSearch() {
+    setHeaderSearchQuery("");
+    setShowAutocomplete(false);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      mobileInputRef.current?.focus();
+    });
+  }
+
   function handleAutocompleteSelect(mode: "realestate" | "markets") {
     setSearchMode(mode);
     setShowAutocomplete(false);
@@ -273,12 +282,24 @@ export default function Header() {
                   value={headerSearchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onFocus={() => headerSearchQuery.trim().length >= 2 && setShowAutocomplete(true)}
-                  className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
+                  className={`w-full pl-9 pr-8 py-2 rounded-full text-sm outline-none transition ${
                     isMarkets
                       ? "bg-white/15 border border-white/20 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/50"
                       : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   }`}
                 />
+                {headerSearchQuery && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={handleClearSearch}
+                    className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full transition-colors ${
+                      isMarkets ? "text-white/50 hover:text-white hover:bg-white/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
               {showAutocomplete && headerSearchQuery.trim().length >= 2 && (
                 <div ref={autocompleteRef} className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
@@ -430,12 +451,24 @@ export default function Header() {
               value={headerSearchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               onFocus={() => headerSearchQuery.trim().length >= 2 && setShowAutocomplete(true)}
-              className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
+              className={`w-full pl-9 pr-9 py-2 rounded-full text-sm outline-none transition ${
                 isMarkets
                   ? "bg-white/15 border border-white/20 text-white placeholder-white/50"
                   : "bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400"
               }`}
             />
+            {headerSearchQuery && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleClearSearch}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full transition-colors ${
+                  isMarkets ? "text-white/50 hover:text-white hover:bg-white/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
           {showAutocomplete && headerSearchQuery.trim().length >= 2 && (
             <div ref={mobileAutocompleteRef} className="absolute left-4 right-4 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
