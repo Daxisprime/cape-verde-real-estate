@@ -436,13 +436,13 @@ export default function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth"
-                  className="text-gray-700 hover:text-green-600 font-medium text-sm transition-colors bg-transparent border-0"
+                  className="text-gray-700 hover:text-blue-600 font-medium text-sm transition-colors bg-transparent border-0"
                 >
                   {t.signIn}
                 </Link>
                 <button
                   onClick={handleSellClick}
-                  className="border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-bold px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 text-sm shadow-sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-full transition-all flex items-center gap-1.5 text-sm shadow-sm border-0"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   SELL
