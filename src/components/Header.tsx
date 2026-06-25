@@ -2,16 +2,20 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User, Plus } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useLanguage, languages as langConfig, LanguageCode } from '@/contexts/LanguageContext';
+import AuthModal from '@/components/AuthModal';
 
 export default function Header() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const {
     searchMode, setSearchMode,
     isResultsViewActive, setIsResultsViewActive,
@@ -78,6 +82,15 @@ export default function Header() {
     setIsResultsViewActive(true);
     inputRef.current?.focus();
     mobileInputRef.current?.focus();
+  }
+
+  function handleSellClick(e: React.MouseEvent) {
+    if (isAuthenticated) {
+      router.push('/sell');
+    } else {
+      e.preventDefault();
+      setShowAuthModal(true);
+    }
   }
 
   useEffect(() => {
@@ -420,16 +433,21 @@ export default function Header() {
                 )}
               </>
             ) : (
-              <Link
-                href="/auth"
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  isMarkets
-                    ? "bg-white text-[#0044FF] hover:bg-white/90"
-                    : "bg-[#0044FF] text-white hover:bg-[#0033CC]"
-                }`}
-              >
-                {t.signIn}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/auth"
+                  className="text-gray-700 hover:text-green-600 font-medium text-sm transition-colors bg-transparent border-0"
+                >
+                  {t.signIn}
+                </Link>
+                <button
+                  onClick={handleSellClick}
+                  className="border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-bold px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 text-sm shadow-sm"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  SELL
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -546,6 +564,19 @@ export default function Header() {
           ))}
         </div>
       </div>
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          defaultTab="login"
+          onSuccess={(_user) => {
+            setShowAuthModal(false);
+            router.push('/sell');
+          }}
+          redirectTo="/sell"
+        />
+      )}
     </header>
   );
 }
