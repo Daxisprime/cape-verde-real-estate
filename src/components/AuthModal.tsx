@@ -245,14 +245,14 @@ export default function AuthModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-center text-2xl font-bold">
             Welcome to ProCV
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register' | 'forgot-password')} className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register' | 'forgot-password')} className="w-full overflow-y-auto max-h-full pr-1 scroll-smooth">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Sign In</TabsTrigger>
             <TabsTrigger value="register">Sign Up</TabsTrigger>
@@ -660,7 +660,7 @@ export default function AuthModal({
         </Tabs>
 
         {/* Security Features */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg flex-shrink-0">
           <div className="flex items-center justify-center space-x-6 text-xs text-gray-600">
             <div className="flex items-center">
               <Shield className="h-3 w-3 mr-1" />
