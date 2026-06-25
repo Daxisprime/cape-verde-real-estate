@@ -2,16 +2,11 @@
 const nextConfig = {
   trailingSlash: true,
   typescript: {
-    // ⚠️ Dangerously allow production builds to successfully complete even if
-    // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  // Remove reactStrictMode from experimental as it's not valid there
   reactStrictMode: false,
   images: {
     remotePatterns: [
@@ -33,11 +28,17 @@ const nextConfig = {
       }
     ],
   },
-  // Skip trailing slash redirect
   skipTrailingSlashRedirect: true,
-  experimental: {
-    // Experimental features
-  }
+  experimental: {},
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'same-runtime/dist/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
+      'same-runtime/dist/jsx-runtime': require.resolve('react/jsx-runtime'),
+      'same-runtime': require.resolve('react'),
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
