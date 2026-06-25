@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, Clock, User } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, Clock, User, Send, ExternalLink } from 'lucide-react';
+import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
 
 const CVE_TO_EUR = 0.00907;
@@ -25,6 +26,22 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('pt-CV');
 }
 
+interface SellerProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  island: string | null;
+  municipality: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  created_at: string | null;
+}
+
+interface SellerLink {
+  platform: string;
+  url: string;
+}
+
 interface MarketplaceItemDrawerProps {
   item: MarketplaceItem | null;
   onClose: () => void;
@@ -34,21 +51,76 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showEur, setShowEur] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+
+  // Seller data
+  const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [sellerLinks, setSellerLinks] = useState<SellerLink[]>([]);
+  const [sellerLoading, setSellerLoading] = useState(false);
+
+  // Inquiry form
+  const [inquiryForm, setInquiryForm] = useState({ fullName: '', email: '', phone: '', message: '' });
+  const [inquiryStatus, setInquiryStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  // Touch handling for carousel
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
-  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (item) {
       setCurrentImageIndex(0);
+      setInquiryStatus('idle');
+      setInquiryForm(f => ({ ...f, message: `Olá, estou interessado no item "${item.title}". Ainda está disponível?` }));
       requestAnimationFrame(() => setIsVisible(true));
       document.body.style.overflow = 'hidden';
+      fetchSellerProfile(item.user_id);
     } else {
       setIsVisible(false);
+      setSeller(null);
+      setSellerLinks([]);
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
   }, [item]);
+
+  const fetchSellerProfile = useCallback(async (userId: string | null) => {
+    if (!userId || !isSupabaseConfigured()) {
+      setSeller(null);
+      setSellerLinks([]);
+      setSellerLoading(false);
+      return;
+    }
+
+    setSellerLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setSellerLoading(false); return; }
+
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, island, municipality, phone, whatsapp, created_at')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (profileData) {
+        setSeller(profileData as unknown as SellerProfile);
+      }
+
+      const { data: linksData } = await supabase
+        .from('user_links')
+        .select('platform, url')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (linksData) {
+        setSellerLinks(linksData as unknown as SellerLink[]);
+      }
+    } catch {
+      // Graceful fallback
+    } finally {
+      setSellerLoading(false);
+    }
+  }, []);
 
   function handleClose() {
     setIsVisible(false);
@@ -73,14 +145,39 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
 
   function nextImage() {
     if (!item) return;
-    const count = item.images?.length || 1;
+    const count = images.length;
     setCurrentImageIndex((prev) => (prev + 1) % count);
   }
 
   function prevImage() {
     if (!item) return;
-    const count = item.images?.length || 1;
+    const count = images.length;
     setCurrentImageIndex((prev) => (prev - 1 + count) % count);
+  }
+
+  async function handleInquirySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inquiryForm.fullName || !inquiryForm.email || !item) return;
+
+    setInquiryStatus('sending');
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) throw new Error('No client');
+
+      const { error } = await supabase.from('marketplace_inquiries' as never).insert({
+        item_id: item.id,
+        seller_id: item.user_id || null,
+        full_name: inquiryForm.fullName,
+        email: inquiryForm.email,
+        phone: inquiryForm.phone || null,
+        message: inquiryForm.message || null,
+      } as never);
+
+      if (error) throw error;
+      setInquiryStatus('sent');
+    } catch {
+      setInquiryStatus('error');
+    }
   }
 
   if (!item) return null;
@@ -89,255 +186,530 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     ? item.images
     : ['https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=600&h=400&fit=crop'];
 
-  const whatsappNumber = item.contact_whatsapp || item.contact_phone || '';
-  const phoneNumber = item.contact_phone || '';
+  const sellerPhone = seller?.phone || item.contact_phone || '';
+  const sellerWhatsapp = seller?.whatsapp || item.contact_whatsapp || sellerPhone;
   const whatsappMessage = encodeURIComponent(`Olá, estou interessado no seu item "${item.title}" anunciado no Pro.CV. Ainda está disponível?`);
-  const whatsappUrl = whatsappNumber
-    ? `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${whatsappMessage}`
+  const whatsappUrl = sellerWhatsapp
+    ? `https://wa.me/${sellerWhatsapp.replace(/\D/g, '')}?text=${whatsappMessage}`
     : '#';
+  const sellerName = seller?.full_name || 'Seller';
+  const sellerAvatar = seller?.avatar_url || null;
+  const sellerIsland = seller?.island || item.island;
+  const memberSince = seller?.created_at
+    ? new Date(seller.created_at).toLocaleDateString('pt-CV', { month: 'short', year: 'numeric' })
+    : '--';
+
+  const extraPhotos = images.length > 4 ? images.length - 4 : 0;
 
   return (
     <div className="fixed inset-0 z-[100]">
       {/* Backdrop */}
       <div
-        ref={backdropRef}
         onClick={handleClose}
         className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}
       />
 
-      {/* Drawer */}
+      {/* Drawer panel */}
       <div
-        className={`absolute inset-x-0 bottom-0 top-0 bg-white flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`absolute inset-0 bg-white flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto pb-24">
-          {/* Header - Close Button */}
-          <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-sm border-b border-slate-100">
+        {/* Back nav - mirrors property detail */}
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <button
               onClick={handleClose}
-              className="flex items-center gap-1.5 text-slate-700 font-medium text-sm active:scale-95 transition-transform"
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="h-4 w-4 mr-1.5" />
               Back
             </button>
             <button
               onClick={handleClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-transform"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
 
-          {/* Image Carousel */}
-          <div
-            className="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <img
-              src={images[currentImageIndex]}
-              alt={`${item.title} - image ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover"
-            />
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <div className="max-w-7xl mx-auto px-4 pb-8">
 
-            {/* Image navigation arrows */}
-            {images.length > 1 && (
-              <>
+            {/* Full-Width Photo Gallery - same as property */}
+            <section className="mt-4">
+              <div className="space-y-2">
                 <button
-                  onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm active:scale-90 transition-transform"
+                  onClick={() => { setGalleryOpen(true); setCurrentImageIndex(0); }}
+                  className="w-full block"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm active:scale-90 transition-transform"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </>
-            )}
-
-            {/* Image dots */}
-            {images.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                {images.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'
-                    }`}
+                  <img
+                    src={images[0]}
+                    alt={item.title}
+                    className="w-full h-64 sm:h-80 md:h-[420px] object-cover rounded-xl bg-slate-100"
                   />
-                ))}
-              </div>
-            )}
-
-            {/* Image counter */}
-            <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
-              {currentImageIndex + 1}/{images.length}
-            </div>
-
-            {/* Featured badge */}
-            {item.is_featured && (
-              <div className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">
-                Featured
-              </div>
-            )}
-          </div>
-
-          {/* Title & Price Section */}
-          <div className="px-4 pt-4 pb-3 border-b border-slate-100">
-            <h1 className="text-xl font-bold text-slate-900 leading-tight mb-2">
-              {item.title}
-            </h1>
-
-            <div className="flex items-baseline gap-2 mb-2">
-              <button
-                onClick={() => setShowEur(!showEur)}
-                className="group"
-              >
-                {!showEur ? (
-                  <span className="text-2xl font-extrabold text-slate-900">
-                    {formatPrice(item.price_cve)}
-                    <span className="text-sm font-semibold text-slate-500 ml-1">CVE</span>
-                  </span>
-                ) : (
-                  <span className="text-2xl font-extrabold text-blue-600">
-                    ~{cveToEur(item.price_cve)}
-                    <span className="text-sm font-semibold text-blue-400 ml-1">EUR</span>
-                  </span>
+                </button>
+                {images.length > 1 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {images.slice(1, 4).map((img, i) => {
+                      const isLast = i === 2 || i === images.length - 2;
+                      const showOverlay = isLast && extraPhotos > 0;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => { setGalleryOpen(true); setCurrentImageIndex(i + 1); }}
+                          className="relative w-full aspect-[4/3] overflow-hidden rounded-lg"
+                        >
+                          <img src={img} alt={`${item.title} ${i + 2}`} className="w-full h-full object-cover bg-slate-100" />
+                          {showOverlay && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                              <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
-              <span className="text-[10px] text-slate-400 uppercase font-medium">
-                tap to {showEur ? 'show CVE' : 'show EUR'}
-              </span>
-            </div>
-
-            {/* Condition Badge */}
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600 capitalize">
-                {item.condition || 'Used'}
-              </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-[11px] font-semibold text-blue-600">
-                {item.category}
-              </span>
-              {item.subcategory && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-50 text-[11px] font-medium text-slate-500">
-                  {item.subcategory}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Location & Verification */}
-          <div className="px-4 py-3 border-b border-slate-100">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-4 h-4 text-green-600" />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {item.island}{item.municipality ? ` / ${item.municipality}` : ''}
-                </p>
-                <p className="text-[11px] text-slate-500">Cape Verde</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
-                <Clock className="w-3 h-3" />
-                Posted {timeAgo(item.created_at)}
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
-                <Shield className="w-3 h-3" />
-                {item.view_count || 0} views
-              </span>
-            </div>
-          </div>
+            </section>
 
-          {/* Description */}
-          {item.description && (
-            <div className="px-4 py-3 border-b border-slate-100">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</h3>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                {item.description}
-              </p>
-            </div>
-          )}
+            {/* 2-Column Layout: Left Content / Right Inquiry */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6 items-start w-full">
 
-          {/* Seller Details Card */}
-          <div className="px-4 py-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Seller</h3>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <User className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-slate-900 truncate">
-                    Seller
+              {/* LEFT COLUMN - 8 cols */}
+              <main className="lg:col-span-8">
+                {/* Price + Title */}
+                <section>
+                  <button onClick={() => setShowEur(!showEur)} className="group text-left">
+                    {!showEur ? (
+                      <p className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+                        {formatPrice(item.price_cve)} <span className="text-lg font-semibold text-gray-500">CVE</span>
+                      </p>
+                    ) : (
+                      <p className="text-3xl sm:text-4xl font-bold tracking-tight text-blue-600">
+                        ~{cveToEur(item.price_cve)} <span className="text-lg font-semibold text-blue-400">EUR</span>
+                      </p>
+                    )}
+                  </button>
+                  <p className="text-[10px] text-slate-400 mt-0.5 uppercase font-medium">
+                    tap price to {showEur ? 'show CVE' : 'show EUR'}
                   </p>
-                  <p className="text-[11px] text-slate-500">
-                    {item.island} seller
-                  </p>
+                  <h1 className="mt-2 text-xl sm:text-2xl font-semibold text-gray-800">
+                    {item.title}
+                  </h1>
+                </section>
+
+                {/* Specs row */}
+                <section className="mt-4 flex items-center gap-3 flex-wrap">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-600 capitalize">
+                    {item.condition || 'Used'}
+                  </span>
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-xs font-semibold text-blue-600">
+                    {item.category}
+                  </span>
+                  {item.subcategory && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-50 text-xs font-medium text-slate-500">
+                      {item.subcategory}
+                    </span>
+                  )}
+                  {item.is_featured && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-50 text-xs font-semibold text-amber-700">
+                      Featured
+                    </span>
+                  )}
+                </section>
+
+                {/* Location */}
+                <section className="mt-4 flex items-start gap-1.5 text-gray-600">
+                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span className="text-sm leading-snug">
+                    {item.island}{item.municipality ? ` / ${item.municipality}` : ''}, Cape Verde
+                  </span>
+                </section>
+
+                {/* Posted / Views */}
+                <section className="mt-3 flex items-center gap-4 text-xs text-slate-500">
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    Posted {timeAgo(item.created_at)}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Shield className="w-3.5 h-3.5" />
+                    {item.view_count || 0} views
+                  </span>
+                </section>
+
+                {/* Description */}
+                {item.description && (
+                  <section className="mt-6">
+                    <h2 className="text-sm font-semibold text-gray-800 mb-2">Description</h2>
+                    <p className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-line">
+                      {item.description}
+                    </p>
+                  </section>
+                )}
+
+                {/* Seller Profile Card */}
+                <section className="mt-8">
+                  <h2 className="text-sm font-semibold text-gray-800 mb-3">About the Seller</h2>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-5">
+                    <div className="flex items-center gap-3">
+                      {sellerAvatar ? (
+                        <img src={sellerAvatar} alt={sellerName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <User className="w-6 h-6 text-blue-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-gray-900 truncate">{sellerName}</p>
+                        <p className="text-xs text-gray-500">{sellerIsland} seller</p>
+                      </div>
+                      <div className="flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full flex-shrink-0">
+                        <Shield className="w-3 h-3 text-green-600" />
+                        <span className="text-[10px] font-semibold text-green-700">Active</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-200 grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <p className="text-base font-bold text-slate-900">{memberSince}</p>
+                        <p className="text-[10px] text-slate-500 uppercase">Member since</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-bold text-slate-900">{sellerIsland}</p>
+                        <p className="text-[10px] text-slate-500 uppercase">Location</p>
+                      </div>
+                    </div>
+
+                    {/* Seller Links */}
+                    {sellerLinks.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-slate-200 flex flex-wrap gap-2">
+                        {sellerLinks.map((link, i) => (
+                          <a
+                            key={i}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-600 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            {link.platform}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {/* MOBILE-ONLY INQUIRY FORM */}
+                <section className="mt-8 lg:hidden">
+                  <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4">
+                    <div className="flex items-center gap-3">
+                      {sellerAvatar ? (
+                        <img src={sellerAvatar} alt={sellerName} className="h-9 w-9 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{sellerName}</p>
+                        <p className="text-xs text-gray-500 truncate">{sellerIsland} seller</p>
+                      </div>
+                    </div>
+
+                    {inquiryStatus === 'sent' ? (
+                      <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+                        <p className="text-sm font-medium text-green-800">Inquiry sent!</p>
+                        <p className="text-xs text-green-600 mt-0.5">The seller will contact you shortly.</p>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleInquirySubmit} className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Full Name"
+                          required
+                          value={inquiryForm.fullName}
+                          onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
+                          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Email Address"
+                          required
+                          value={inquiryForm.email}
+                          onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
+                          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Phone Number (optional)"
+                          value={inquiryForm.phone}
+                          onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
+                          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                        />
+                        <textarea
+                          rows={3}
+                          value={inquiryForm.message}
+                          onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
+                          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                        />
+                        <button
+                          type="submit"
+                          disabled={inquiryStatus === 'sending'}
+                          className="w-full py-3 rounded-lg bg-[#0044FF] text-white text-sm font-semibold hover:bg-[#0033CC] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                        >
+                          <Send className="w-4 h-4" />
+                          {inquiryStatus === 'sending' ? 'Sending...' : 'Send Inquiry'}
+                        </button>
+                        {inquiryStatus === 'error' && (
+                          <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
+                        )}
+                      </form>
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      {sellerPhone ? (
+                        <a
+                          href={`tel:${sellerPhone}`}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                          Call
+                        </a>
+                      ) : (
+                        <span className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-300">
+                          <Phone className="h-3.5 w-3.5" />
+                          Call
+                        </span>
+                      )}
+                      <a
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => { if (!sellerWhatsapp) e.preventDefault(); }}
+                        className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium transition-colors ${
+                          sellerWhatsapp ? 'text-green-700 hover:bg-green-50' : 'text-gray-300 cursor-not-allowed'
+                        }`}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                </section>
+              </main>
+
+              {/* RIGHT COLUMN: Sticky Inquiry Card - 4 cols, desktop only */}
+              <aside className="hidden lg:block lg:col-span-4">
+                <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
+                  {/* Seller mini-header */}
+                  <div className="flex items-center gap-3">
+                    {sellerAvatar ? (
+                      <img src={sellerAvatar} alt={sellerName} className="h-9 w-9 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                        <User className="h-4 w-4 text-blue-600" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{sellerName}</p>
+                      <p className="text-xs text-gray-500 truncate">{sellerIsland} seller</p>
+                    </div>
+                  </div>
+
+                  {inquiryStatus === 'sent' ? (
+                    <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+                      <p className="text-sm font-medium text-green-800">Inquiry sent!</p>
+                      <p className="text-xs text-green-600 mt-0.5">The seller will contact you shortly.</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleInquirySubmit} className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        required
+                        value={inquiryForm.fullName}
+                        onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email Address"
+                        required
+                        value={inquiryForm.email}
+                        onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone Number (optional)"
+                        value={inquiryForm.phone}
+                        onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                      />
+                      <textarea
+                        rows={3}
+                        value={inquiryForm.message}
+                        onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                      />
+                      <button
+                        type="submit"
+                        disabled={inquiryStatus === 'sending'}
+                        className="w-full py-2.5 rounded-lg bg-[#0044FF] text-white text-sm font-semibold hover:bg-[#0033CC] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        {inquiryStatus === 'sending' ? 'Sending...' : 'Send Inquiry'}
+                      </button>
+                      {inquiryStatus === 'error' && (
+                        <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
+                      )}
+                    </form>
+                  )}
+
+                  {/* Quick contact shortcuts */}
+                  <div className="flex gap-2 pt-1">
+                    {sellerPhone ? (
+                      <a
+                        href={`tel:${sellerPhone}`}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Phone className="h-3.5 w-3.5" />
+                        Call
+                      </a>
+                    ) : (
+                      <span className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-300">
+                        <Phone className="h-3.5 w-3.5" />
+                        Call
+                      </span>
+                    )}
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => { if (!sellerWhatsapp) e.preventDefault(); }}
+                      className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-xs font-medium transition-colors ${
+                        sellerWhatsapp ? 'text-green-700 hover:bg-green-50' : 'text-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      WhatsApp
+                    </a>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full">
-                  <Shield className="w-3 h-3 text-green-600" />
-                  <span className="text-[10px] font-semibold text-green-700">Active</span>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-3">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-slate-900">--</p>
-                  <p className="text-[10px] text-slate-500">Listings</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-slate-900">--</p>
-                  <p className="text-[10px] text-slate-500">Member since</p>
-                </div>
-              </div>
+              </aside>
             </div>
           </div>
         </div>
 
-        {/* Sticky Bottom Contact Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 flex items-center gap-3 z-[101] shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
-          {/* Phone button */}
-          {phoneNumber ? (
-            <a
-              href={`tel:${phoneNumber}`}
-              className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-200 text-blue-600 hover:bg-blue-50 active:scale-95 transition-all flex-shrink-0"
-            >
-              <Phone className="w-5 h-5" />
-            </a>
-          ) : (
-            <div className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-200 text-slate-300 flex-shrink-0">
-              <Phone className="w-5 h-5" />
+        {/* Mobile fixed bottom bar - matches property detail */}
+        <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-[101] lg:hidden">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+            {sellerAvatar ? (
+              <img src={sellerAvatar} alt={sellerName} className="h-10 w-10 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <User className="h-5 w-5 text-blue-600" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{sellerName}</p>
+              <p className="text-xs text-gray-500 truncate">{sellerIsland}</p>
             </div>
-          )}
-
-          {/* WhatsApp button */}
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex-1 h-12 flex items-center justify-center gap-2 rounded-full font-bold text-sm transition-all active:scale-[0.97] ${
-              whatsappNumber
-                ? 'bg-[#25D366] text-white hover:bg-[#20BD5A] shadow-lg shadow-green-200'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            }`}
-            onClick={(e) => { if (!whatsappNumber) e.preventDefault(); }}
-          >
-            <MessageCircle className="w-5 h-5" />
-            Chat on WhatsApp
-          </a>
+            {sellerPhone ? (
+              <a
+                href={`tel:${sellerPhone}`}
+                className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#0044FF] text-white hover:bg-[#0033CC] transition-colors shrink-0"
+                aria-label="Call seller"
+              >
+                <Phone className="h-4 w-4" />
+              </a>
+            ) : (
+              <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-400 shrink-0">
+                <Phone className="h-4 w-4" />
+              </div>
+            )}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => { if (!sellerWhatsapp) e.preventDefault(); }}
+              className={`inline-flex items-center justify-center h-10 w-10 rounded-full shrink-0 transition-colors ${
+                sellerWhatsapp
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+              aria-label="WhatsApp seller"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       </div>
+
+      {/* Photo Gallery Modal */}
+      {galleryOpen && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/95 flex flex-col"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-white/70 text-sm">{currentImageIndex + 1} / {images.length}</span>
+            <button onClick={() => setGalleryOpen(false)} className="text-white/70 hover:text-white p-1">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-4 relative">
+            <img
+              src={images[currentImageIndex]}
+              alt={`${item.title} ${currentImageIndex + 1}`}
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            {currentImageIndex > 0 && (
+              <button
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <ChevronLeft className="h-6 w-6 text-white" />
+              </button>
+            )}
+            {currentImageIndex < images.length - 1 && (
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <ChevronRight className="h-6 w-6 text-white" />
+              </button>
+            )}
+          </div>
+          {/* Dots */}
+          {images.length > 1 && (
+            <div className="flex items-center justify-center gap-1.5 py-4">
+              {images.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/40'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+
+export default MarketplaceItemDrawer
