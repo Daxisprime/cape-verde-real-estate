@@ -710,6 +710,3 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     </div>
   );
 }
-
-
-export default MarketplaceItemDrawer
