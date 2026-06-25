@@ -1,18 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Custom fetch wrapper for Supabase client that intercepts auth-related
-// requests which would fail (no session) and returns synthetic successful
-// responses. This prevents the preview harness from logging errors.
+// Custom fetch wrapper that only intercepts background session-recovery
+// requests (refresh_token, getUser) that would 401 when no session exists.
+// It must NOT intercept explicit sign-in/sign-up calls.
 const supabaseFetch: typeof globalThis.fetch = (input, init) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
-  // Intercept auth token refresh/session recovery requests that will fail
-  // when there's no active session
-  if (url.includes('/auth/v1/token') || url.includes('/auth/v1/session') || url.includes('/auth/v1/user')) {
-    // Check if this looks like a recovery attempt (no valid auth header with user token)
+  const body = typeof init?.body === 'string' ? init.body : '';
+
+  // Only intercept token-refresh (grant_type=refresh_token) and session/user
+  // recovery GETs. Never block grant_type=password (sign-in) or sign-up.
+  const isRefreshAttempt = url.includes('/auth/v1/token') && body.includes('refresh_token');
+  const isSessionRecovery = (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) && (!init?.method || init.method === 'GET');
+
+  if (isRefreshAttempt || isSessionRecovery) {
     const headers = init?.headers as Record<string, string> | undefined;
     const authHeader = headers?.['Authorization'] || headers?.['authorization'] || '';
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    // If using anon key as bearer (no real user token), skip the network call
     if (!authHeader || authHeader === `Bearer ${anonKey}`) {
       return Promise.resolve(new Response(JSON.stringify({ session: null, user: null }), {
         status: 200,
