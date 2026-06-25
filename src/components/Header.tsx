@@ -297,7 +297,7 @@ export default function Header() {
                     onClick={() => handleAutocompleteSelect("markets")}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-orange-50 transition-colors border-t border-gray-100"
                   >
-                    <ShoppingBag className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
+                    <Tag className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
                     <span className="truncate"><span className="font-medium text-gray-900">{headerSearchQuery}</span> <span className="text-gray-500">in General Markets</span></span>
                   </button>
                 </div>
@@ -454,7 +454,7 @@ export default function Header() {
                 onClick={() => handleAutocompleteSelect("markets")}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-orange-50 transition-colors border-t border-gray-100"
               >
-                <ShoppingBag className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                <Tag className="h-4 w-4 text-orange-600 flex-shrink-0" />
                 <span className="truncate"><span className="font-medium text-gray-900">{headerSearchQuery}</span> <span className="text-gray-500">in General Markets</span></span>
               </button>
             </div>
