@@ -442,7 +442,7 @@ export default function Header() {
                 </Link>
                 <button
                   onClick={handleSellClick}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-full transition-all flex items-center gap-1.5 text-sm shadow-sm border-0"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-lg transition-all flex items-center gap-1.5 text-sm shadow-sm border-0"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   SELL
