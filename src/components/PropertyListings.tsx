@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import PropertyComparison from '@/components/PropertyComparison';
 import { capeVerdeProperties, type Property } from '@/data/cape-verde-properties';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 interface PropertyListingsProps {
   searchFilters?: {

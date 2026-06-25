@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, User, LogOut, Settings, Heart, Search } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useLanguage, languages } from '@/contexts/LanguageContext';
 import Link from 'next/link';
 
@@ -23,7 +23,7 @@ export default function ClientOnlyHeaderControls({
   onSignIn,
   onSignUp
 }: ClientOnlyHeaderControlsProps) {
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, logout, isLoading, hasRole } = useAuth();
   const { currentLanguage, setLanguage } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -121,7 +121,7 @@ export default function ClientOnlyHeaderControls({
               </DropdownMenuItem>
 
               {/* Admin-only menu items */}
-              {user?.roles?.includes('admin') && (
+              {hasRole('admin') && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

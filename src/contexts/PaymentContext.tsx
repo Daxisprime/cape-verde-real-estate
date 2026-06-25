@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { Stripe, StripeElements } from '@stripe/stripe-js';
-import { useAuth } from './AuthContext';
+import { useAuth } from './SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   PropertyPayment,
