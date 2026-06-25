@@ -23,6 +23,9 @@ export default function Header() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+  const mobileAutocompleteRef = useRef<HTMLDivElement>(null);
 
   const isMarkets = searchMode === "markets";
 
@@ -37,6 +40,7 @@ export default function Header() {
 
   function handleSearchChange(value: string) {
     setHeaderSearchQuery(value);
+    setShowAutocomplete(value.trim().length >= 2);
     if (value.length >= 2) {
       const intent = classifySearchIntent(value);
       if (intent && intent !== searchMode) {
@@ -45,8 +49,19 @@ export default function Header() {
     }
   }
 
+  function handleAutocompleteSelect(mode: "realestate" | "markets") {
+    setSearchMode(mode);
+    setShowAutocomplete(false);
+    setIsResultsViewActive(true);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      mobileInputRef.current?.focus();
+    });
+  }
+
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setShowAutocomplete(false);
     const intent = classifySearchIntent(headerSearchQuery);
     if (intent && intent !== searchMode) {
       setSearchMode(intent);
@@ -63,6 +78,14 @@ export default function Header() {
       }
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setIsNavOpen(false);
+      }
+      if (
+        autocompleteRef.current && !autocompleteRef.current.contains(e.target as Node) &&
+        mobileAutocompleteRef.current && !mobileAutocompleteRef.current.contains(e.target as Node) &&
+        inputRef.current !== e.target &&
+        mobileInputRef.current !== e.target
+      ) {
+        setShowAutocomplete(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -238,7 +261,7 @@ export default function Header() {
 
           {/* Search bar - only when results view active */}
           {isResultsViewActive && (
-            <form onSubmit={handleFormSubmit} className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0">
+            <form onSubmit={handleFormSubmit} className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0 relative">
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
                   isMarkets ? "text-white/50" : "text-gray-400"
@@ -249,6 +272,7 @@ export default function Header() {
                   placeholder={t.searchPlaceholder}
                   value={headerSearchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={() => headerSearchQuery.trim().length >= 2 && setShowAutocomplete(true)}
                   className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
                     isMarkets
                       ? "bg-white/15 border border-white/20 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/50"
@@ -256,6 +280,28 @@ export default function Header() {
                   }`}
                 />
               </div>
+              {showAutocomplete && headerSearchQuery.trim().length >= 2 && (
+                <div ref={autocompleteRef} className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleAutocompleteSelect("realestate")}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors"
+                  >
+                    <Home className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                    <span className="truncate"><span className="font-medium text-gray-900">{headerSearchQuery}</span> <span className="text-gray-500">in Real Estate</span></span>
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleAutocompleteSelect("markets")}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-orange-50 transition-colors border-t border-gray-100"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
+                    <span className="truncate"><span className="font-medium text-gray-900">{headerSearchQuery}</span> <span className="text-gray-500">in General Markets</span></span>
+                  </button>
+                </div>
+              )}
             </form>
           )}
         </div>
@@ -370,7 +416,7 @@ export default function Header() {
 
       {/* Mobile: search bar when results active */}
       {isResultsViewActive && (
-        <form onSubmit={handleFormSubmit} className="sm:hidden px-4 pb-2">
+        <form onSubmit={handleFormSubmit} className="sm:hidden px-4 pb-2 relative">
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
               isMarkets ? "text-white/50" : "text-gray-400"
@@ -383,6 +429,7 @@ export default function Header() {
               placeholder={t.searchPlaceholder}
               value={headerSearchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => headerSearchQuery.trim().length >= 2 && setShowAutocomplete(true)}
               className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
                 isMarkets
                   ? "bg-white/15 border border-white/20 text-white placeholder-white/50"
@@ -390,6 +437,28 @@ export default function Header() {
               }`}
             />
           </div>
+          {showAutocomplete && headerSearchQuery.trim().length >= 2 && (
+            <div ref={mobileAutocompleteRef} className="absolute left-4 right-4 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleAutocompleteSelect("realestate")}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-blue-50 transition-colors"
+              >
+                <Home className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <span className="truncate"><span className="font-medium text-gray-900">{headerSearchQuery}</span> <span className="text-gray-500">in Real Estate</span></span>
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleAutocompleteSelect("markets")}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-orange-50 transition-colors border-t border-gray-100"
+              >
+                <ShoppingBag className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                <span className="truncate"><span className="font-medium text-gray-900">{headerSearchQuery}</span> <span className="text-gray-500">in General Markets</span></span>
+              </button>
+            </div>
+          )}
         </form>
       )}
 

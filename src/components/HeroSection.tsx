@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, X, Home, ShoppingBag } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 
 const CV_9_ISLAND_IMAGES = [
@@ -45,7 +45,10 @@ export default function HeroSection() {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [marketplaceCategory, setMarketplaceCategory] = useState("All");
+  const [showHeroAutocomplete, setShowHeroAutocomplete] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+  const heroAutocompleteRef = useRef<HTMLDivElement>(null);
   const { searchMode, setSearchMode, listingType, setListingType, setIsResultsViewActive, setHeaderSearchQuery } = useSearchMode();
 
   useEffect(() => {
@@ -60,18 +63,22 @@ export default function HeroSection() {
   }, []);
 
   useEffect(() => {
-    if (!isFilterOpen) return;
+    if (!isFilterOpen && !showHeroAutocomplete) return;
     function handleClickOutside(e: MouseEvent) {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+      if (isFilterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) {
         setIsFilterOpen(false);
+      }
+      if (showHeroAutocomplete && heroAutocompleteRef.current && !heroAutocompleteRef.current.contains(e.target as Node) && heroInputRef.current !== e.target) {
+        setShowHeroAutocomplete(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isFilterOpen]);
+  }, [isFilterOpen, showHeroAutocomplete]);
 
   const handleSearch = () => {
     setHeaderSearchQuery(searchQuery);
+    setShowHeroAutocomplete(false);
     const q = searchQuery.toLowerCase();
     const isRealEstate = q.includes('pent') || q.includes('apart') || q.includes('casa') || q.includes('vivenda') || q.includes('quarto') || q.includes('terreno') || q.includes('villa') || q.includes('house') || q.includes('moradia') || q.includes('flat') || q.includes('duplex') || q.includes('studio') || q.includes('bedroom') || q.includes('rent') || q.includes('apto') || q.includes('andar') || q.includes('plot') || q.includes('land') || q.includes('condo') || q.includes('townhouse') || /t[1-4]/i.test(q);
     const isMarketIntent = q.includes('ceme') || q.includes('martelo') || q.includes('carro') || q.includes('iphone') || q.includes('bonnet') || q.includes('roupa') || q.includes('tijolo') || q.includes('hamm') || q.includes('drill') || q.includes('paint') || q.includes('furni') || q.includes('sofa') || q.includes('fridge') || q.includes('plumb') || q.includes('electri') || q.includes('phone') || q.includes('moto') || q.includes('shoe') || q.includes('cloth') || q.includes('tool') || q.includes('block') || q.includes('tile');
@@ -83,6 +90,19 @@ export default function HeroSection() {
   const handleHeroFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSearch();
+  };
+
+  const handleHeroSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setShowHeroAutocomplete(value.trim().length >= 2);
+  };
+
+  const handleHeroAutocompleteSelect = (mode: "realestate" | "markets") => {
+    setHeaderSearchQuery(searchQuery);
+    setSearchMode(mode);
+    setShowHeroAutocomplete(false);
+    setIsResultsViewActive(true);
+    requestAnimationFrame(() => heroInputRef.current?.focus());
   };
 
   const getSlogan = () => {
@@ -169,46 +189,73 @@ export default function HeroSection() {
             </div>
 
             {/* Main Search Bar */}
-            <form onSubmit={handleHeroFormSubmit} className="w-full flex items-center bg-white rounded-xl md:rounded-2xl shadow-2xl border border-slate-200 p-1.5 md:p-2 max-w-xl md:max-w-none mx-auto">
-              <div className="flex-1 relative flex items-center min-w-0">
-                <MapPin className="absolute left-3 md:left-4 h-4 w-4 md:h-5 md:w-5 text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  inputMode="search"
-                  enterKeyHint="search"
-                  placeholder={searchMode === "realestate"
-                    ? "Island or neighborhood..."
-                    : "Search items or services..."
-                  }
-                  className="w-full pl-9 md:pl-12 pr-2 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+            <div className="w-full relative max-w-xl md:max-w-none mx-auto">
+              <form onSubmit={handleHeroFormSubmit} className="w-full flex items-center bg-white rounded-xl md:rounded-2xl shadow-2xl border border-slate-200 p-1.5 md:p-2">
+                <div className="flex-1 relative flex items-center min-w-0">
+                  <MapPin className="absolute left-3 md:left-4 h-4 w-4 md:h-5 md:w-5 text-gray-400 flex-shrink-0" />
+                  <input
+                    ref={heroInputRef}
+                    type="text"
+                    inputMode="search"
+                    enterKeyHint="search"
+                    placeholder={searchMode === "realestate"
+                      ? "Island or neighborhood..."
+                      : "Search items or services..."
+                    }
+                    className="w-full pl-9 md:pl-12 pr-2 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
+                    value={searchQuery}
+                    onChange={(e) => handleHeroSearchChange(e.target.value)}
+                    onFocus={() => searchQuery.trim().length >= 2 && setShowHeroAutocomplete(true)}
+                  />
+                </div>
 
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`flex items-center gap-1.5 p-2.5 md:px-3 md:py-2.5 rounded-lg md:rounded-xl text-xs font-semibold transition-all border ${
-                    isFilterOpen
-                      ? "bg-blue-50 text-[#2563EB] border-blue-200"
-                      : "bg-gray-50 text-[#2563EB] border-gray-200 hover:bg-blue-50"
-                  }`}
-                >
-                  {isFilterOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
-                  <span className="hidden md:inline">Filters</span>
-                </button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`flex items-center gap-1.5 p-2.5 md:px-3 md:py-2.5 rounded-lg md:rounded-xl text-xs font-semibold transition-all border ${
+                      isFilterOpen
+                        ? "bg-blue-50 text-[#2563EB] border-blue-200"
+                        : "bg-gray-50 text-[#2563EB] border-gray-200 hover:bg-blue-50"
+                    }`}
+                  >
+                    {isFilterOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
+                    <span className="hidden md:inline">Filters</span>
+                  </button>
 
-                <button
-                  type="submit"
-                  className="bg-[#0044FF] hover:bg-[#0033CC] text-white font-bold p-2.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
-                >
-                  <Search className="h-4 w-4" />
+                  <button
+                    type="submit"
+                    className="bg-[#0044FF] hover:bg-[#0033CC] text-white font-bold p-2.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
+                  >
+                    <Search className="h-4 w-4" />
                   <span className="hidden md:inline">Search</span>
                 </button>
               </div>
             </form>
+
+              {showHeroAutocomplete && searchQuery.trim().length >= 2 && (
+                <div ref={heroAutocompleteRef} className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleHeroAutocompleteSelect("realestate")}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-blue-50 transition-colors"
+                  >
+                    <Home className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <span><span className="font-medium text-gray-900">{searchQuery}</span> <span className="text-gray-500">in Real Estate</span></span>
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleHeroAutocompleteSelect("markets")}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-orange-50 transition-colors border-t border-gray-100"
+                  >
+                    <ShoppingBag className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                    <span><span className="font-medium text-gray-900">{searchQuery}</span> <span className="text-gray-500">in General Markets</span></span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Absolute Floating Filter Overlay */}
             {isFilterOpen && (
