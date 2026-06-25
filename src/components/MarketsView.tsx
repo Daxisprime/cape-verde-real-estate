@@ -5,8 +5,9 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook } from 'lucide-react';
+import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
+import { useMarketplace } from '@/hooks/useMarketplace';
 import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
 
 const SafeLeafletMap = dynamic(
@@ -176,7 +177,7 @@ export default function MarketsView() {
   const router = useRouter();
   const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
   const { t } = useLanguage();
-  const { listings: liveItems, isLive } = useListings('item_service');
+  const { listings: liveItems } = useListings('item_service');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -186,6 +187,8 @@ export default function MarketsView() {
   const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [viewportBounds, setViewportBounds] = useState<BoundingBox | null>(null);
+
+  const { items: marketplaceDbItems } = useMarketplace({ category: selectedCategory || undefined });
 
   const itemsPool = useMemo(() => {
     const liveFormatted = liveItems.map(item => ({
@@ -203,11 +206,31 @@ export default function MarketsView() {
       vendor_avatar: null as string | null,
       facebook_handle: '',
     }));
-    if (isLive && liveFormatted.length > 0) {
-      return [...liveFormatted, ...MARKETPLACE_ITEMS];
-    }
-    return MARKETPLACE_ITEMS;
-  }, [liveItems, isLive]);
+
+    const dbFormatted = marketplaceDbItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      price: item.price_cve,
+      location: `${item.municipality || ''}, ${item.island}`.replace(/^, /, ''),
+      category: item.category,
+      subcategory: item.subcategory,
+      image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
+      posted: new Date(item.created_at).toLocaleDateString(),
+      coordinates: [0, 0] as [number, number],
+      is_featured: item.is_featured,
+      is_premium: item.is_featured,
+      vendor_avatar: null as string | null,
+      facebook_handle: '',
+    }));
+
+    const allItems = [...dbFormatted, ...liveFormatted, ...MARKETPLACE_ITEMS];
+    const seen = new Set<string>();
+    return allItems.filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }, [liveItems, marketplaceDbItems]);
 
   const filteredItems = useMemo(() => {
     const filtered = itemsPool.filter(item => {
@@ -498,8 +521,23 @@ export default function MarketsView() {
                 ))}
               </div>
               {filteredItems.length === 0 && (
-                <div className="text-center py-16 text-slate-400">
-                  <p className="text-sm">No active marketplace items match your tracking parameters.</p>
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-5">
+                    <Package className="w-10 h-10 text-slate-300" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">
+                    No items found{selectedCategory ? ` in ${selectedCategory}` : ''} yet
+                  </h3>
+                  <p className="text-sm text-slate-500 max-w-md mb-6">
+                    Be the first to post an ad in Cape Verde! List your items, vehicles, services, or anything else for the community.
+                  </p>
+                  <button
+                    onClick={() => router.push('/sell')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Post Your First Ad
+                  </button>
                 </div>
               )}
             </div>

@@ -120,6 +120,27 @@ export interface UserLink {
   updated_at: string;
 }
 
+export interface MarketplaceItem {
+  id: string;
+  title: string;
+  description: string | null;
+  price_cve: number;
+  category: string;
+  subcategory: string | null;
+  condition: string;
+  island: string;
+  municipality: string | null;
+  images: string[];
+  status: string;
+  user_id: string | null;
+  contact_phone: string | null;
+  contact_whatsapp: string | null;
+  view_count: number;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -137,6 +158,11 @@ export interface Database {
         Row: UserLink;
         Insert: Omit<UserLink, 'id' | 'created_at' | 'updated_at' | 'is_verified'>;
         Update: Partial<Omit<UserLink, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
+      };
+      marketplace_items: {
+        Row: MarketplaceItem;
+        Insert: Omit<MarketplaceItem, 'id' | 'created_at' | 'updated_at' | 'view_count'>;
+        Update: Partial<Omit<MarketplaceItem, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };
