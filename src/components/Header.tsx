@@ -23,12 +23,32 @@ export default function Header() {
 
   const isMarkets = searchMode === "markets";
 
-  const marketKeywords = ['cement', 'block', 'tile', 'tool', 'car', 'moto', 'tv', 'phone', 'iphone', 'sofa', 'fridge', 'plumber', 'electrician', 'repair', 'service', 'menu', 'food', 'restaurant', 'clothes', 'shoes'];
+  const marketKeywords = ['cement', 'block', 'tile', 'tool', 'car', 'moto', 'tv', 'phone', 'iphone', 'sofa', 'fridge', 'plumber', 'electrician', 'repair', 'service', 'menu', 'food', 'restaurant', 'clothes', 'shoes', 'hammer', 'drill', 'paint', 'furniture', 'appliance'];
+  const realEstateKeywords = ['apartment', 'villa', 'house', 'land', 'plot', 'bedroom', 'penthouse', 'condominium', 'rent', 'moradia', 'terreno', 'T1', 'T2', 'T3', 'T4', 'property', 'flat', 'studio', 'duplex', 'townhouse'];
+
+  function classifySearchIntent(query: string): "realestate" | "markets" | null {
+    const lower = query.toLowerCase();
+    const isMarket = marketKeywords.some(k => lower.includes(k));
+    const isRealEstate = realEstateKeywords.some(k => lower.includes(k.toLowerCase()));
+    if (isRealEstate && !isMarket) return "realestate";
+    if (isMarket && !isRealEstate) return "markets";
+    return null;
+  }
+
+  function handleSearchChange(value: string) {
+    setHeaderSearchQuery(value);
+    if (value.length >= 3) {
+      const intent = classifySearchIntent(value);
+      if (intent && intent !== searchMode) {
+        setSearchMode(intent);
+      }
+    }
+  }
 
   function handleSearchSubmit(query: string) {
-    const isMarketIntent = marketKeywords.some(keyword => query.toLowerCase().includes(keyword));
-    if (isMarketIntent && searchMode !== "markets") {
-      setSearchMode("markets");
+    const intent = classifySearchIntent(query);
+    if (intent && intent !== searchMode) {
+      setSearchMode(intent);
     }
     setIsResultsViewActive(true);
   }
@@ -230,7 +250,7 @@ export default function Header() {
                   type="text"
                   placeholder={t.searchPlaceholder}
                   value={headerSearchQuery}
-                  onChange={(e) => setHeaderSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
                   className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
                     isMarkets
@@ -362,7 +382,7 @@ export default function Header() {
               type="text"
               placeholder={t.searchPlaceholder}
               value={headerSearchQuery}
-              onChange={(e) => setHeaderSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
                 isMarkets
