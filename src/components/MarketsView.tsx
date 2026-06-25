@@ -178,7 +178,7 @@ export default function MarketsView() {
   const router = useRouter();
   const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
   const { t } = useLanguage();
-  const { listings: liveItems } = useListings('item_service');
+  const { listings: liveItems } = useListings();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -197,8 +197,8 @@ export default function MarketsView() {
       id: item.id,
       title: item.title,
       price: item.price,
-      location: `${item.zone || ''}, ${item.island}`.replace(/^, /, ''),
-      category: item.market_category || 'Other',
+      location: `${item.location || ''}, ${item.island}`.replace(/^, /, ''),
+      category: item.property_type || 'Other',
       subcategory: null as string | null,
       image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
       posted: new Date(item.created_at).toLocaleDateString(),

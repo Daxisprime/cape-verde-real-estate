@@ -70,11 +70,11 @@ export default function MyStorePage() {
         title: item.title,
         price: item.price,
         island: item.island,
-        zone: item.zone || '',
+        zone: item.location || '',
         image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400',
         bedrooms: item.bedrooms || undefined,
         bathrooms: item.bathrooms || undefined,
-        squareMeters: item.square_meters || undefined,
+        squareMeters: item.total_area || undefined,
         status: (item.status === 'sold' ? 'closed' : item.status === 'draft' ? 'reviewing' : 'active') as ListingStatus,
       }));
       setListings(live);

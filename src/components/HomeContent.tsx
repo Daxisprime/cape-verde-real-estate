@@ -34,7 +34,7 @@ export default function HomeContent() {
     searchMode, listingType, headerSearchQuery,
   } = useSearchMode();
 
-  const { listings: liveRealEstate, isLive } = useListings('real_estate');
+  const { listings: liveRealEstate, isLive } = useListings();
   const [isMapViewActive, setIsMapViewActive] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -66,16 +66,16 @@ export default function HomeContent() {
       id: item.id,
       title: item.title,
       price: item.price,
-      location: item.zone || item.island,
+      location: item.location || item.island,
       island: item.island,
-      type: 'apartment' as const,
+      type: item.property_type || 'apartment',
       bedrooms: item.bedrooms || 0,
       bathrooms: item.bathrooms || 0,
-      area: item.square_meters || 0,
+      area: item.total_area || 0,
       image: item.images?.[0] || 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?w=800',
       images: item.images || [],
-      coordinates: [0, 0] as [number, number],
-      featured: false,
+      coordinates: [item.longitude || 0, item.latitude || 0] as [number, number],
+      featured: item.is_featured || false,
     }));
     const base = isLive && liveMapped.length > 0
       ? [...liveMapped, ...capeVerdeProperties]

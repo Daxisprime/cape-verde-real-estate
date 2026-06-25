@@ -8,15 +8,15 @@ export interface LiveListing {
   title: string;
   price: number;
   island: string;
-  zone: string | null;
-  mode: 'real_estate' | 'item_service';
+  location: string | null;
+  property_type: string;
+  listing_type: string;
   images: string[];
-  bedrooms: number | null;
-  bathrooms: number | null;
-  square_meters: number | null;
+  bedrooms: number;
+  bathrooms: number;
+  total_area: number | null;
   description: string | null;
-  market_category: string | null;
-  vendor_id: string;
+  agent_id: string | null;
   status: string;
   created_at: string;
   is_featured: boolean;
@@ -24,7 +24,7 @@ export interface LiveListing {
   longitude: number | null;
 }
 
-export function useListings(mode?: 'real_estate' | 'item_service') {
+export function useListings() {
   const [listings, setListings] = useState<LiveListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
@@ -43,18 +43,14 @@ export function useListings(mode?: 'real_estate' | 'item_service') {
       }
 
       try {
-        let query = supabase
-          .from('vendor_ads' as never)
+        const { data, error } = await supabase
+          .from('properties')
           .select('*')
           .eq('status', 'active')
           .order('is_featured', { ascending: false })
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-        if (mode) {
-          query = query.eq('mode', mode);
-        }
-
-        const { data, error } = await query;
         if (error) throw error;
 
         if (data && data.length > 0) {
@@ -62,14 +58,14 @@ export function useListings(mode?: 'real_estate' | 'item_service') {
           setIsLive(true);
         }
       } catch {
-        // Table may not exist yet -- silently fall back to mock data
+        // Silently fall back to mock data
       } finally {
         setLoading(false);
       }
     }
 
     fetchListings();
-  }, [mode]);
+  }, []);
 
   return { listings, loading, isLive };
 }
@@ -80,6 +76,11 @@ export function useMyListings() {
 
   useEffect(() => {
     async function fetchMyListings() {
+      if (!isSupabaseConfigured()) {
+        setLoading(false);
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
       if (!supabase) {
         setLoading(false);
@@ -93,16 +94,47 @@ export function useMyListings() {
           return;
         }
 
-        const { data, error } = await supabase
-          .from('vendor_ads' as never)
+        // Fetch user's properties
+        const { data: props } = await supabase
+          .from('properties')
           .select('*')
-          .eq('vendor_id', user.id)
+          .eq('agent_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setListings((data || []) as unknown as LiveListing[]);
+        // Fetch user's marketplace items
+        const { data: items } = await supabase
+          .from('marketplace_items')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        const combined: LiveListing[] = [
+          ...((props || []) as unknown as LiveListing[]),
+          ...((items || []).map((item: Record<string, unknown>) => ({
+            id: item.id as string,
+            title: item.title as string,
+            price: item.price_cve as number,
+            island: item.island as string,
+            location: item.municipality as string | null,
+            property_type: item.category as string,
+            listing_type: 'sale',
+            images: item.images as string[],
+            bedrooms: 0,
+            bathrooms: 0,
+            total_area: null,
+            description: item.description as string | null,
+            agent_id: item.user_id as string | null,
+            status: item.status as string,
+            created_at: item.created_at as string,
+            is_featured: item.is_featured as boolean,
+            latitude: null,
+            longitude: null,
+          }))),
+        ];
+
+        setListings(combined);
       } catch {
-        // User not authenticated or table missing -- silently skip
+        // Silently skip
       } finally {
         setLoading(false);
       }
@@ -111,5 +143,5 @@ export function useMyListings() {
     fetchMyListings();
   }, []);
 
-  return { listings, loading, refetch: () => { setLoading(true); } };
+  return { listings, loading };
 }
