@@ -7,7 +7,8 @@ import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
-import { useMarketplace } from '@/hooks/useMarketplace';
+import { useMarketplace, type MarketplaceItem } from '@/hooks/useMarketplace';
+import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
 import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
 
 const SafeLeafletMap = dynamic(
@@ -187,6 +188,7 @@ export default function MarketsView() {
   const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [viewportBounds, setViewportBounds] = useState<BoundingBox | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
 
   const { items: marketplaceDbItems } = useMarketplace({ category: selectedCategory || undefined });
 
@@ -299,6 +301,34 @@ export default function MarketsView() {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  }
+
+  function handleItemClick(item: typeof filteredItems[number]) {
+    const dbItem = marketplaceDbItems.find(d => d.id === item.id);
+    if (dbItem) {
+      setSelectedItem(dbItem);
+      return;
+    }
+    setSelectedItem({
+      id: item.id,
+      title: item.title,
+      description: null,
+      price_cve: item.price,
+      category: item.category,
+      subcategory: item.subcategory,
+      condition: 'used',
+      island: item.location.split(', ').pop() || 'Santiago',
+      municipality: item.location.split(', ')[0] || null,
+      images: item.image ? [item.image] : [],
+      status: 'active',
+      user_id: null,
+      contact_phone: null,
+      contact_whatsapp: null,
+      view_count: 0,
+      is_featured: item.is_featured,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
   }
 
   return (
@@ -448,7 +478,7 @@ export default function MarketsView() {
                     className="break-inside-avoid inline-block w-full mb-2 sm:mb-3"
                   >
                     <div
-                      onClick={() => router.push(`/profile/${item.id}`)}
+                      onClick={() => handleItemClick(item)}
                       className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden cursor-pointer ${
                         activeHoverId === item.id ? 'border-[#0044FF] ring-2 ring-blue-100' : item.is_featured ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-100'
                       }`}
@@ -583,7 +613,7 @@ export default function MarketsView() {
                         id={`market-item-${item.id}`}
                         onMouseEnter={() => setActiveHoverId(item.id)}
                         onMouseLeave={() => setActiveHoverId(null)}
-                        onClick={() => router.push(`/profile/${item.id}`)}
+                        onClick={() => handleItemClick(item)}
                         className={`break-inside-avoid inline-block w-full mb-1.5 md:mb-2 bg-white border rounded-xl shadow-xs transition-all overflow-hidden cursor-pointer touch-target-sm ${
                           activeHoverId === item.id ? 'border-[#0044FF] shadow-sm scale-[0.99]' : 'border-slate-100'
                         }`}
@@ -639,6 +669,9 @@ export default function MarketsView() {
           )}
         </div>
       </div>
+
+      {/* Item Detail Drawer */}
+      <MarketplaceItemDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />
     </div>
   );
 }

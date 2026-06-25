@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, MapPin, ChevronRight, SlidersHorizontal, X, Package, Plus, Home } from 'lucide-react';
-import { useMarketplace, MARKETPLACE_CATEGORIES, CAPE_VERDE_ISLANDS } from '@/hooks/useMarketplace';
+import { useMarketplace, MARKETPLACE_CATEGORIES, CAPE_VERDE_ISLANDS, type MarketplaceItem } from '@/hooks/useMarketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
+import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
 
 const CVE_TO_EUR = 0.00907;
 
@@ -27,6 +28,7 @@ export default function MarketplacePage() {
   const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
 
   const { items, loading } = useMarketplace({
     category: selectedCategory,
@@ -314,6 +316,7 @@ export default function MarketplacePage() {
               {items.map((item) => (
                 <div
                   key={item.id}
+                  onClick={() => setSelectedItem(item)}
                   className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-blue-200 transition-all group cursor-pointer"
                 >
                   {/* Image */}
@@ -368,6 +371,9 @@ export default function MarketplacePage() {
           </Link>
         </main>
       </div>
+
+      {/* Item Detail Drawer */}
+      <MarketplaceItemDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />
     </div>
   );
 }
