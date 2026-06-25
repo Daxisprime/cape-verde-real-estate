@@ -796,10 +796,6 @@ export default function AdminDashboard() {
                         <span className="text-sm">Payments Processing</span>
                       </div>
                       <div className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="text-sm">Chat Server Online</span>
-                      </div>
-                      <div className="flex items-center">
                         <Clock className="h-5 w-5 text-yellow-600 mr-2" />
                         <span className="text-sm">AI Assistant (Demo)</span>
                       </div>

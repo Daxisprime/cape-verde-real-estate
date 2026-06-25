@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Heart, Search, Bell, User, Settings, TrendingUp, MapPin,
   Bed, Bath, Square, Calendar, Clock, Star, ArrowRight,
-  Filter, BarChart3, Home, Bookmark, AlertCircle, MessageSquare
+  Filter, BarChart3, Home, Bookmark, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,6 @@ import Footer from "@/components/Footer";
 import PropertyManagementDashboard from "@/components/PropertyManagementDashboard";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChat } from "@/contexts/ChatContext";
 import { useRouter } from "next/navigation";
 
 interface SavedProperty {
@@ -174,7 +173,6 @@ const sampleRecommendations: Recommendation[] = [
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
-  const { conversations, totalUnreadCount } = useChat();
   const router = useRouter();
   const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([]);
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
@@ -277,21 +275,6 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold text-gray-900">{savedProperties.length}</p>
                 </div>
                 <Heart className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Messages</p>
-                  <p className="text-2xl font-bold text-gray-900">{conversations.length}</p>
-                  {totalUnreadCount > 0 && (
-                    <p className="text-sm text-blue-600">{totalUnreadCount} unread</p>
-                  )}
-                </div>
-                <MessageSquare className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>

@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChat } from "@/contexts/ChatContext";
 import PhotoGallery from "@/components/PhotoGallery";
 import PropertyContactForm from "@/components/PropertyContactForm";
 import VirtualTour from "@/components/VirtualTour";
@@ -64,20 +63,15 @@ export default function PropertyDetailClient({ property }: PropertyDetailClientP
   const isMounted = useMountedState();
   const { currentLanguage } = useLanguage();
   const { isFavorite, addToFavorites, removeFromFavorites, addToViewingHistory, isAuthenticated } = useAuth();
-  const { createPropertyInquiry } = useChat();
   const [isViewingSchedulerOpen, setIsViewingSchedulerOpen] = useState(false);
 
   const handleAskQuestion = () => {
     if (!isAuthenticated) {
-      // Could trigger login modal
       return;
     }
-
-    createPropertyInquiry(
-      property.id,
-      property.agent.name,
-      `Hi ${property.agent.name}, I have some questions about the property "${getPropertyTitle()}" in ${property.location}. Could you please provide more details?`
-    ).catch(console.error);
+    const subject = encodeURIComponent(`Inquiry about: ${getPropertyTitle()}`);
+    const body = encodeURIComponent(`Hi ${property.agent.name}, I have some questions about the property "${getPropertyTitle()}" in ${property.location}. Could you please provide more details?`);
+    window.open(`mailto:${property.agent.email || ''}?subject=${subject}&body=${body}`, '_blank');
   };
 
   // Add to user's viewing history
