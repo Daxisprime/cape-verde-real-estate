@@ -23,21 +23,56 @@ export default function Header() {
 
   const isMarkets = searchMode === "markets";
 
-  const marketKeywords = ['cement', 'block', 'tile', 'tool', 'car', 'moto', 'tv', 'phone', 'iphone', 'sofa', 'fridge', 'plumber', 'electrician', 'repair', 'service', 'menu', 'food', 'restaurant', 'clothes', 'shoes', 'hammer', 'drill', 'paint', 'furniture', 'appliance'];
-  const realEstateKeywords = ['apartment', 'villa', 'house', 'land', 'plot', 'bedroom', 'penthouse', 'condominium', 'rent', 'moradia', 'terreno', 'T1', 'T2', 'T3', 'T4', 'property', 'flat', 'studio', 'duplex', 'townhouse'];
+  const marketStems = ['ceme', 'cemen', 'cement', 'tijo', 'bloc', 'block', 'tile', 'tool', 'car', 'moto', 'mota', 'tv', 'phone', 'iph', 'iphone', 'sofa', 'fridge', 'plumb', 'plumber', 'electri', 'electrician', 'repair', 'service', 'menu', 'food', 'restau', 'restaurant', 'clot', 'clothes', 'shir', 'shirt', 'shoes', 'sap', 'sapato', 'hamm', 'hammer', 'drill', 'paint', 'furni', 'furniture', 'appli', 'appliance', 'bonn', 'tele', 'mart', 'market'];
+  const realEstateStems = ['apart', 'apto', 'apartment', 'villa', 'house', 'casa', 'land', 'plot', 'bed', 'bedroom', 'pent', 'penth', 'penthouse', 'condo', 'condominium', 'rent', 'moradia', 'viv', 'vivenda', 'terr', 'terreno', 't1', 't2', 't3', 't4', 'property', 'flat', 'studio', 'duplex', 'townhouse', 'quar', 'quarto', 'room', 'andar'];
+
+  function fuzzyMatch(input: string, keyword: string): boolean {
+    if (input.length < 4 || keyword.length < 4) return input.includes(keyword) || keyword.startsWith(input);
+    if (input.includes(keyword) || keyword.startsWith(input)) return true;
+    if (Math.abs(input.length - keyword.length) > 2) return false;
+    const shorter = input.length <= keyword.length ? input : keyword;
+    const longer = input.length > keyword.length ? input : keyword;
+    let diffs = 0;
+    let j = 0;
+    for (let i = 0; i < longer.length && diffs <= 1; i++) {
+      if (shorter[j] !== longer[i]) {
+        diffs++;
+        if (shorter.length === longer.length) j++;
+      } else {
+        j++;
+      }
+    }
+    return diffs <= 1;
+  }
 
   function classifySearchIntent(query: string): "realestate" | "markets" | null {
-    const lower = query.toLowerCase();
-    const isMarket = marketKeywords.some(k => lower.includes(k));
-    const isRealEstate = realEstateKeywords.some(k => lower.includes(k.toLowerCase()));
-    if (isRealEstate && !isMarket) return "realestate";
-    if (isMarket && !isRealEstate) return "markets";
+    const lower = query.toLowerCase().trim();
+    const words = lower.split(/\s+/);
+    let marketScore = 0;
+    let realEstateScore = 0;
+    for (const word of words) {
+      if (word.length < 2) continue;
+      for (const stem of marketStems) {
+        if (word.startsWith(stem) || stem.startsWith(word) || fuzzyMatch(word, stem)) {
+          marketScore++;
+          break;
+        }
+      }
+      for (const stem of realEstateStems) {
+        if (word.startsWith(stem) || stem.startsWith(word) || fuzzyMatch(word, stem)) {
+          realEstateScore++;
+          break;
+        }
+      }
+    }
+    if (realEstateScore > marketScore) return "realestate";
+    if (marketScore > realEstateScore) return "markets";
     return null;
   }
 
   function handleSearchChange(value: string) {
     setHeaderSearchQuery(value);
-    if (value.length >= 3) {
+    if (value.length >= 2) {
       const intent = classifySearchIntent(value);
       if (intent && intent !== searchMode) {
         setSearchMode(intent);
