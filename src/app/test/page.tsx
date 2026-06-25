@@ -39,7 +39,6 @@ export default function TestPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Environment Check</h2>
             <div className="space-y-2 text-sm">
-              <p><strong>Mapbox Token:</strong> {process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? "✅ Present" : "❌ Missing"}</p>
               <p><strong>Window Object:</strong> {typeof window !== 'undefined' ? "✅ Available" : "❌ Not Available"}</p>
               <p><strong>Navigator:</strong> {typeof navigator !== 'undefined' ? "✅ Available" : "❌ Not Available"}</p>
             </div>

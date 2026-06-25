@@ -336,7 +336,6 @@ export default function WorkingSearch({
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
   // Load search history on component mount
   useEffect(() => {
@@ -899,14 +898,6 @@ export default function WorkingSearch({
         </div>
       )}
 
-      {/* Token Warning */}
-      {!MAPBOX_TOKEN || MAPBOX_TOKEN.includes('example-token') ? (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-amber-50 border border-amber-200 rounded-lg p-3 z-50">
-          <div className="text-xs text-amber-800">
-            Interactive search functionality requires Mapbox API configuration
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
