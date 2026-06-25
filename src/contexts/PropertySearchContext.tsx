@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 
 // Cape Verde cities organized by island
 export const CAPE_VERDE_CITIES: Record<string, string[]> = {
@@ -303,10 +304,57 @@ const PropertySearchContext = createContext<PropertySearchContextType | undefine
 
 export function PropertySearchProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<PropertyFilters>(defaultFilters);
-  const [allProperties] = useState<Property[]>(sampleProperties);
+  const [allProperties, setAllProperties] = useState<Property[]>(sampleProperties);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>(sampleProperties);
   const [isLoading, setIsLoading] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(true);
+
+  // Attempt to load live properties from Supabase on mount
+  useEffect(() => {
+    async function loadLiveProperties() {
+      if (!isSupabaseConfigured()) return;
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('status', 'active')
+          .order('is_featured', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (error || !data || data.length === 0) return;
+
+        const mapped: Property[] = data.map((p) => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          location: p.city ? `${p.city}, ${p.island}` : p.island,
+          city: p.city,
+          island: p.island,
+          type: p.property_type,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          totalArea: p.total_area || 0,
+          images: p.images || [],
+          features: p.features || [],
+          isFeatured: p.is_featured,
+          listingType: p.price_type === 'rent' ? 'rent' : 'buy',
+          dateAdded: p.created_at,
+        }));
+
+        const merged = [...mapped, ...sampleProperties];
+        setAllProperties(merged);
+        setFilteredProperties(merged);
+      } catch {
+        // Keep mock data on any failure
+      }
+    }
+
+    loadLiveProperties();
+  }, []);
 
   const updateFilter = (key: keyof PropertyFilters, value: string | number) => {
     setFilters(prev => {
