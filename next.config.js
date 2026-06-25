@@ -1,5 +1,3 @@
-const path = require('path');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   trailingSlash: true,
@@ -31,16 +29,6 @@ const nextConfig = {
     ],
   },
   skipTrailingSlashRedirect: true,
-  experimental: {},
-  webpack: (config, { isServer }) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'same-runtime/dist/jsx-dev-runtime': path.resolve(__dirname, 'src/shims/jsx-dev-runtime.js'),
-      'same-runtime/dist/jsx-runtime': path.resolve(__dirname, 'src/shims/jsx-runtime.js'),
-      'same-runtime': path.resolve(__dirname, 'src/shims/same-runtime.js'),
-    };
-    return config;
-  },
 };
 
 module.exports = nextConfig;
