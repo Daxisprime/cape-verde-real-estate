@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 type AuthMode = 'login' | 'signup' | 'reset';
 
@@ -28,6 +29,7 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalProps) {
   const { signIn, signUp, signInWithProvider, resetPassword } = useSupabaseAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +67,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
             description: 'You have successfully signed in.',
           });
           onClose();
+          router.push('/dashboard');
         }
       } else if (mode === 'signup') {
         if (formData.password !== formData.confirmPassword) {
@@ -86,11 +89,12 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
         if (error) {
           setError(error.message);
         } else {
-          setSuccess('Check your email to confirm your account!');
           toast({
             title: 'Account created!',
-            description: 'Please check your email to verify your account.',
+            description: 'Welcome to PropertyCV.',
           });
+          onClose();
+          router.push('/dashboard');
         }
       } else if (mode === 'reset') {
         const { error } = await resetPassword(formData.email);
