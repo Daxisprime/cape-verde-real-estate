@@ -67,14 +67,15 @@ export default function MyStorePage() {
     if (liveListings.length > 0) {
       const live: ManagedListing[] = liveListings.map(item => ({
         id: item.id,
+        mode: 'real_estate' as const,
         title: item.title,
         price: item.price,
         island: item.island,
         zone: item.location || '',
-        image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400',
-        bedrooms: item.bedrooms || undefined,
-        bathrooms: item.bathrooms || undefined,
-        squareMeters: item.total_area || undefined,
+        images: item.images?.length ? item.images : ['https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400'],
+        bedrooms: item.bedrooms || null,
+        bathrooms: item.bathrooms || null,
+        square_meters: item.total_area || null,
         status: (item.status === 'sold' ? 'closed' : item.status === 'draft' ? 'reviewing' : 'active') as ListingStatus,
       }));
       setListings(live);
@@ -366,7 +367,7 @@ export default function MyStorePage() {
                   )}
 
                   {/* Image */}
-                  {listing.images[0] && (
+                  {listing.images?.[0] && (
                     <img
                       src={listing.images[0]}
                       alt={listing.title}
