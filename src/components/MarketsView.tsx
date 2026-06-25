@@ -599,8 +599,8 @@ export default function MarketsView() {
                 overflow-hidden
                 will-change-transform
                 translate-y-0
-                transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
-              " style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                transition-transform duration-300
+              " style={{ transitionTimingFunction: 'cubic-bezier(0.32, 0.72, 0, 1)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                 {/* Drawer handle for mobile */}
                 <div className="md:hidden flex justify-center pt-2 pb-1">
                   <div className="w-10 h-1 bg-slate-300 rounded-full" />

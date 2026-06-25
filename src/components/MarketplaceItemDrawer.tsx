@@ -213,9 +213,10 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
 
       {/* Drawer panel */}
       <div
-        className={`absolute inset-0 bg-white flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`absolute inset-0 bg-white flex flex-col transition-transform duration-300 ${
           isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
+        style={{ transitionTimingFunction: 'cubic-bezier(0.32, 0.72, 0, 1)' }}
       >
         {/* Back nav - mirrors property detail */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0">
