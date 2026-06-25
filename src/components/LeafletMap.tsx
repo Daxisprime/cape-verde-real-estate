@@ -6,9 +6,6 @@ import L from 'leaflet';
 import { Bed, Bath } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
-// =============================================
-// TRULIA-STYLE PRICE FORMATTING
-// =============================================
 function formatPriceShort(price: number): string {
   if (price >= 1000000) {
     const millions = price / 1000000;
@@ -20,15 +17,9 @@ function formatPriceShort(price: number): string {
   return price.toString();
 }
 
-// =============================================
-// CUSTOM PRICE DOT ICON (Trulia-style circular badge)
-// Fixed 44x44 square bounding box prevents oval morphing
-// =============================================
 function createPriceIcon(price: number, isActive: boolean = false): L.DivIcon {
   const priceLabel = formatPriceShort(price);
 
-  // Default: Deep dark navy blue
-  // Active/Hovered: Bright electric blue with scale-up
   const pinClasses = isActive
     ? 'bg-[#3b82f6] text-white border-2 border-white font-black text-[11px] w-11 h-11 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform scale-110 z-50'
     : 'bg-[#1e3a8a] text-white border-2 border-white font-bold text-[10px] w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform scale-100';
@@ -46,11 +37,7 @@ function createPriceIcon(price: number, isActive: boolean = false): L.DivIcon {
   });
 }
 
-// =============================================
-// INTERNAL MAP CONTROLLER
-// Connects external card selection clicks to Leaflet viewport
-// =============================================
-function MapController({ activeItem }: { activeItem: any }) {
+function MapController({ activeItem }: { activeItem: MapItem | null }) {
   const map = useMap();
   useEffect(() => {
     if (activeItem && activeItem.latitude && activeItem.longitude) {
@@ -63,9 +50,6 @@ function MapController({ activeItem }: { activeItem: any }) {
   return null;
 }
 
-// =============================================
-// CUSTOM POPUP STYLES (Bleeding images - zero padding)
-// =============================================
 const popupStyles = `
   .leaflet-popup-content-wrapper {
     padding: 0 !important;
@@ -90,13 +74,25 @@ const popupStyles = `
   }
 `;
 
-interface MapProps {
-  items: any[];
-  activeItem: any;
-  onPinClick: (item: any) => void;
+export interface MapItem {
+  id: string;
+  title: string;
+  price: number;
+  neighborhood?: string;
+  bedrooms: number;
+  bathrooms: number;
+  latitude: number | null;
+  longitude: number | null;
+  image_url?: string;
 }
 
-export default function MapboxMap({ items = [], activeItem, onPinClick }: MapProps) {
+interface LeafletMapProps {
+  items: MapItem[];
+  activeItem: MapItem | null;
+  onPinClick: (item: MapItem) => void;
+}
+
+export default function LeafletMap({ items = [], activeItem, onPinClick }: LeafletMapProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [hoveredPinId, setHoveredPinId] = useState<string | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -105,10 +101,9 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
     setIsMounted(true);
   }, []);
 
-  // Inject custom popup styles
   useEffect(() => {
     if (isMounted && typeof document !== 'undefined') {
-      const styleId = 'trulia-map-styles';
+      const styleId = 'leaflet-map-styles';
       if (!document.getElementById(styleId)) {
         const styleEl = document.createElement('style');
         styleEl.id = styleId;
@@ -121,18 +116,19 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
   if (!isMounted) {
     return (
       <div className="w-full h-full min-h-[400px] bg-gray-50 flex items-center justify-center text-sm text-gray-400">
-        Syncing Map Coordinates...
+        Loading Map...
       </div>
     );
   }
 
+  // Default center: Cape Verde (Praia, Santiago)
   const defaultCenter: [number, number] = [14.9212, -23.5126];
 
   return (
     <div className="w-full h-full min-h-[400px] relative z-0">
       <MapContainer
         center={defaultCenter}
-        zoom={13}
+        zoom={9}
         scrollWheelZoom={true}
         className="w-full h-full absolute inset-0"
       >
@@ -146,7 +142,6 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
         {items.map((item) => {
           if (!item.latitude || !item.longitude) return null;
 
-          // Determine if this pin is active (selected or hovered)
           const isActive = item.id === hoveredPinId || item.id === activeItem?.id;
 
           return (
@@ -175,7 +170,6 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
                   className="cursor-pointer w-[180px]"
                   onClick={() => onPinClick(item)}
                 >
-                  {/* Bleeding Image - zero padding, full bleed to edges */}
                   {item.image_url && (
                     <img
                       src={item.image_url}
@@ -184,14 +178,11 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
                     />
                   )}
 
-                  {/* Trulia-style compact text container */}
                   <div className="p-2.5 space-y-0.5 bg-white rounded-b-lg">
-                    {/* Price Line - Bold, large black font */}
                     <p className="text-base font-black text-gray-900 leading-tight">
-                      CVE {item.price?.toLocaleString()}
+                      &euro;{item.price?.toLocaleString()}
                     </p>
 
-                    {/* Trulia Metrics Row - Bed & Bath icons */}
                     <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
                       <span className="flex items-center gap-0.5">
                         <Bed className="h-3.5 w-3.5 text-gray-400" />
@@ -204,7 +195,6 @@ export default function MapboxMap({ items = [], activeItem, onPinClick }: MapPro
                       </span>
                     </div>
 
-                    {/* Neighborhood Line - Clean truncated grey text */}
                     <p className="text-[11px] font-normal text-gray-500 truncate mt-0.5">
                       {item.neighborhood || item.title || 'Cape Verde'}
                     </p>
