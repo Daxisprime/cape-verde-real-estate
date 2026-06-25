@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { usePayment } from '@/contexts/PaymentContext';
 import { PaymentIntent } from '@/utils/stripe';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getStripe, isStripeAvailable } from '@/utils/stripe';
 import PaymentForm from './PaymentForm';

@@ -121,13 +121,11 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       .single();
 
     if (error) {
-      console.error('Error fetching profile:', error);
       return null;
     }
 
     return data as Profile;
-  } catch (error) {
-    console.error('Error fetching profile:', error);
+  } catch {
     return null;
   }
 }

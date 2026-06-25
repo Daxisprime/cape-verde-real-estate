@@ -9,8 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { fetchProperties, type Property } from '@/lib/properties';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { capeVerdeProperties, agentDatabase, type Property } from '@/data/cape-verde-properties';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PropertyComparisonProps {
   isOpen: boolean;
@@ -29,18 +29,19 @@ interface ComparisonMetrics {
 }
 
 const getPropertyMetrics = (property: Property): ComparisonMetrics => {
+  // Calculate investment metrics (mock data - in real app would come from API)
   const baseRating = property.price > 500000 ? 'A+' : property.price > 300000 ? 'A' : property.price > 150000 ? 'B+' : 'B';
-  const beachBonus = property.beach_distance != null && property.beach_distance < 200 ? 1 : 0;
-  const rentalYield = property.ocean_view ? 6.5 + beachBonus : 4.5 + beachBonus;
+  const beachBonus = property.beachDistance && property.beachDistance < 200 ? 1 : 0;
+  const rentalYield = property.oceanView ? 6.5 + beachBonus : 4.5 + beachBonus;
 
   return {
-    pricePerSqm: property.price_per_sqm ?? 0,
-    walkScore: Math.floor(Math.random() * 40) + 60,
+    pricePerSqm: property.pricePerSqm,
+    walkScore: Math.floor(Math.random() * 40) + 60, // Mock walk score
     investmentRating: baseRating as ComparisonMetrics['investmentRating'],
     rentalYield: rentalYield,
-    appreciationForecast: Math.floor(Math.random() * 8) + 3,
-    liquidity: property.beach_distance != null && property.beach_distance < 500 ? 'High' : 'Medium',
-    maintenance: property.property_type === 'Apartment' ? 'Low' : property.property_type === 'House' ? 'Medium' : 'High'
+    appreciationForecast: Math.floor(Math.random() * 8) + 3, // 3-10% forecast
+    liquidity: property.beachDistance && property.beachDistance < 500 ? 'High' : 'Medium',
+    maintenance: property.type === 'Apartment' ? 'Low' : property.type === 'House' ? 'Medium' : 'High'
   };
 };
 
@@ -60,8 +61,6 @@ export default function PropertyComparison({ isOpen, onClose, initialProperties 
   const [activeTab, setActiveTab] = useState('overview');
   const { user, addToFavorites, removeFromFavorites, isFavorite } = useAuth();
 
-  const [allProperties, setAllProperties] = useState<Property[]>([]);
-
   // Reset when dialog opens/closes
   useEffect(() => {
     if (isOpen && initialProperties.length > 0) {
@@ -69,19 +68,8 @@ export default function PropertyComparison({ isOpen, onClose, initialProperties 
     }
   }, [isOpen, initialProperties]);
 
-  // Fetch all properties for the comparison search
-  useEffect(() => {
-    if (isOpen) {
-      fetchProperties({}, 'popular').then(result => {
-        if (!result.error) {
-          setAllProperties(result.data);
-        }
-      });
-    }
-  }, [isOpen]);
-
   // Available properties for selection (excluding already selected)
-  const availableProperties = allProperties.filter(property => {
+  const availableProperties = capeVerdeProperties.filter(property => {
     const isNotSelected = !selectedProperties.find(p => p.id === property.id);
     const matchesSearch = property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          property.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -319,11 +307,11 @@ export default function PropertyComparison({ isOpen, onClose, initialProperties 
                               <tr className="border-b">
                                 <td className="p-2 font-medium">Price per m²</td>
                                 {selectedProperties.map((property, index) => {
-                                  const pricesPerSqm = selectedProperties.map(p => p.price_per_sqm ?? 0);
+                                  const pricesPerSqm = selectedProperties.map(p => p.pricePerSqm);
                                   const isWinner = getWinnerIndex(pricesPerSqm, true) === index;
                                   return (
                                     <td key={property.id} className={`p-2 ${isWinner ? 'bg-green-50 font-bold text-green-700' : ''}`}>
-                                      {formatCurrency(property.price_per_sqm ?? 0)}/m²
+                                      {formatCurrency(property.pricePerSqm)}/m²
                                     </td>
                                   );
                                 })}
@@ -331,11 +319,11 @@ export default function PropertyComparison({ isOpen, onClose, initialProperties 
                               <tr className="border-b">
                                 <td className="p-2 font-medium">Total Area</td>
                                 {selectedProperties.map((property, index) => {
-                                  const areas = selectedProperties.map(p => p.total_area ?? 0);
+                                  const areas = selectedProperties.map(p => p.totalArea);
                                   const isWinner = getWinnerIndex(areas) === index;
                                   return (
                                     <td key={property.id} className={`p-2 ${isWinner ? 'bg-green-50 font-bold text-green-700' : ''}`}>
-                                      {property.total_area}m²
+                                      {property.totalArea}m²
                                     </td>
                                   );
                                 })}
@@ -375,11 +363,11 @@ export default function PropertyComparison({ isOpen, onClose, initialProperties 
                               <tr>
                                 <td className="p-2 font-medium">Beach Distance</td>
                                 {selectedProperties.map((property, index) => {
-                                  const distances = selectedProperties.map(p => p.beach_distance || 10000);
+                                  const distances = selectedProperties.map(p => p.beachDistance || 10000);
                                   const isWinner = getWinnerIndex(distances, true) === index;
                                   return (
                                     <td key={property.id} className={`p-2 ${isWinner ? 'bg-green-50 font-bold text-green-700' : ''}`}>
-                                      {property.beach_distance ? `${property.beach_distance}m` : 'N/A'}
+                                      {property.beachDistance ? `${property.beachDistance}m` : 'N/A'}
                                     </td>
                                   );
                                 })}
@@ -553,15 +541,15 @@ export default function PropertyComparison({ isOpen, onClose, initialProperties 
                                   <strong>Island:</strong> {property.island}
                                 </div>
                                 <div>
-                                  <strong>Beach Distance:</strong> {property.beach_distance ? `${property.beach_distance}m` : 'N/A'}
+                                  <strong>Beach Distance:</strong> {property.beachDistance ? `${property.beachDistance}m` : 'N/A'}
                                 </div>
                                 <div>
                                   <strong>Walk Score:</strong> {getPropertyMetrics(property).walkScore}/100
                                 </div>
                               </div>
-                              {property.agent_id && (
+                              {property.agentId && agentDatabase[property.agentId as keyof typeof agentDatabase] && (
                                 <div className="mt-3 pt-3 border-t">
-                                  <strong>Listed by agent</strong>
+                                  <strong>Listed by:</strong> {agentDatabase[property.agentId as keyof typeof agentDatabase].name} - {agentDatabase[property.agentId as keyof typeof agentDatabase].company}
                                 </div>
                               )}
                             </div>

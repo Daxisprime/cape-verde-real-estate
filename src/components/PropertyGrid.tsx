@@ -253,27 +253,51 @@ export default function PropertyGrid({
         </div>
       </div>
 
-      {/* Property Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {propertiesToShow.map((property) => (
-          <VerifiedPropertyCard
-            key={property.id}
-            property={{
-              id: property.id,
-              title: property.title,
-              price: property.price,
-              location: property.location,
-              island: property.island,
-              type: property.type,
-              bedrooms: property.bedrooms,
-              bathrooms: property.bathrooms,
-              totalArea: property.totalArea,
-              images: property.images,
-              features: property.features,
-              isFeatured: property.isFeatured
-            }}
-          />
-        ))}
+      {/* Property Grid — Masonry on mobile, standard grid on desktop */}
+      <div className="columns-2 gap-2 md:block md:columns-auto w-full">
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {propertiesToShow.map((property) => (
+            <VerifiedPropertyCard
+              key={property.id}
+              property={{
+                id: property.id,
+                title: property.title,
+                price: property.price,
+                location: property.location,
+                island: property.island,
+                type: property.type,
+                bedrooms: property.bedrooms,
+                bathrooms: property.bathrooms,
+                totalArea: property.totalArea,
+                images: property.images,
+                features: property.features,
+                isFeatured: property.isFeatured
+              }}
+            />
+          ))}
+        </div>
+        <div className="md:hidden">
+          {propertiesToShow.map((property) => (
+            <div key={property.id} className="break-inside-avoid mb-2 w-full inline-block">
+              <VerifiedPropertyCard
+                property={{
+                  id: property.id,
+                  title: property.title,
+                  price: property.price,
+                  location: property.location,
+                  island: property.island,
+                  type: property.type,
+                  bedrooms: property.bedrooms,
+                  bathrooms: property.bathrooms,
+                  totalArea: property.totalArea,
+                  images: property.images,
+                  features: property.features,
+                  isFeatured: property.isFeatured
+                }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Load More Button */}

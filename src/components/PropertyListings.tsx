@@ -1,65 +1,245 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { TrendingUp, Filter, Grid, List, GitCompare, X, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Grid, List, GitCompare, X } from 'lucide-react';
 import VerifiedPropertyCard from '@/components/VerifiedPropertyCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import PropertyComparison from '@/components/PropertyComparison';
-import { fetchProperties, type Property, type PropertyFilters } from '@/lib/properties';
+import { capeVerdeProperties, type Property } from '@/data/cape-verde-properties';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSearchMode } from '@/contexts/SearchModeContext';
 
 interface PropertyListingsProps {
-  searchFilters?: PropertyFilters;
+  searchFilters?: {
+    location?: string;
+    priceMin?: number;
+    priceMax?: number;
+    propertyType?: string;
+    bedrooms?: number;
+    island?: string;
+  };
   showFilters?: boolean;
   maxProperties?: number;
-  title?: string;
-  subtitle?: string;
 }
 
 type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'size_asc' | 'size_desc' | 'popular';
 type ViewMode = 'grid' | 'list';
 
+const MARKETPLACE_ITEMS: Property[] = [
+  {
+    id: "mkt-001",
+    propertyId: "MKT-001",
+    title: "Premium Building Cement (50kg bags)",
+    price: 850,
+    location: "Praia, Santiago",
+    island: "Santiago",
+    type: "Building Materials & Tools",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=800&h=600&fit=crop"],
+    features: ["Bulk Available", "Delivery"],
+    description: "High-quality Portland cement for construction projects.",
+    coordinates: [-23.5133, 14.9177],
+    pricePerSqm: 0,
+    agentId: "vendor-001",
+    listingDate: "2026-05-20"
+  },
+  {
+    id: "mkt-002",
+    propertyId: "MKT-002",
+    title: "Samsung Smart TV 55\" 4K",
+    price: 65000,
+    location: "Santa Maria, Sal",
+    island: "Sal",
+    type: "Electronics & Computers",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?w=800&h=600&fit=crop"],
+    features: ["Warranty", "Free Setup"],
+    description: "Brand new Samsung 55 inch smart TV with 4K resolution.",
+    coordinates: [-22.9, 16.73],
+    pricePerSqm: 0,
+    agentId: "vendor-002",
+    listingDate: "2026-06-01"
+  },
+  {
+    id: "mkt-003",
+    propertyId: "MKT-003",
+    title: "Professional Plumbing Services",
+    price: 3500,
+    location: "Mindelo, Sao Vicente",
+    island: "Sao Vicente",
+    type: "Maintenance & Repair Services",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?w=800&h=600&fit=crop"],
+    features: ["Licensed", "Emergency Service", "Free Estimate"],
+    description: "Reliable plumbing installation and repair services across Sao Vicente.",
+    coordinates: [-24.98, 16.87],
+    pricePerSqm: 0,
+    agentId: "vendor-003",
+    listingDate: "2026-05-28"
+  },
+  {
+    id: "mkt-004",
+    propertyId: "MKT-004",
+    title: "Modern Kitchen Set - Complete",
+    price: 185000,
+    location: "Espargos, Sal",
+    island: "Sal",
+    type: "Home, Furniture & Appliances",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?w=800&h=600&fit=crop"],
+    features: ["Installation Included", "Custom Design"],
+    description: "Complete modern kitchen cabinetry and appliance package.",
+    coordinates: [-22.93, 16.74],
+    pricePerSqm: 0,
+    agentId: "vendor-004",
+    listingDate: "2026-06-03"
+  },
+  {
+    id: "mkt-005",
+    propertyId: "MKT-005",
+    title: "Legal & Notary Services",
+    price: 15000,
+    location: "Praia, Santiago",
+    island: "Santiago",
+    type: "Professional Services",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/5668882/pexels-photo-5668882.jpeg?w=800&h=600&fit=crop"],
+    features: ["Property Transfers", "Contracts", "Bilingual"],
+    description: "Comprehensive legal services for property transactions and business registrations.",
+    coordinates: [-23.51, 14.92],
+    pricePerSqm: 0,
+    agentId: "vendor-005",
+    listingDate: "2026-05-15"
+  },
+  {
+    id: "mkt-006",
+    propertyId: "MKT-006",
+    title: "Designer Clothing Boutique Collection",
+    price: 4500,
+    location: "Santa Maria, Sal",
+    island: "Sal",
+    type: "Fashion & Retail",
+    bedrooms: 0,
+    bathrooms: 0,
+    totalArea: 0,
+    images: ["https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=800&h=600&fit=crop"],
+    features: ["Local Designs", "Custom Orders"],
+    description: "Curated collection of Cape Verdean designer fashion and accessories.",
+    coordinates: [-22.9, 16.73],
+    pricePerSqm: 0,
+    agentId: "vendor-006",
+    listingDate: "2026-06-05"
+  },
+];
+
 export default function PropertyListings({
   searchFilters = {},
   showFilters = true,
   maxProperties,
-  title = "Featured PropTech Properties in Cape Verde",
-  subtitle = "Discover exceptional properties enhanced with next-generation PropTech features across Cape Verde's beautiful islands"
 }: PropertyListingsProps) {
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<Property[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState<PropertyFilters>(searchFilters);
+  const [currentFilters, setCurrentFilters] = useState(searchFilters);
 
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { searchMode, listingType } = useSearchMode();
 
-  const loadProperties = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const getDynamicTitle = () => {
+    if (searchMode === "markets") return "Marketplace Items & Local Services";
+    if (listingType === "rent") return "Properties for Rent";
+    return "Properties for Sale";
+  };
 
-    const result = await fetchProperties(currentFilters, sortBy, maxProperties);
+  const filteredProperties = useMemo(() => {
+    let filtered: Property[];
 
-    if (result.error) {
-      setError(result.error);
-      setProperties([]);
-      setTotalCount(0);
+    if (searchMode === "markets") {
+      filtered = [...MARKETPLACE_ITEMS];
     } else {
-      setProperties(result.data);
-      setTotalCount(result.count);
+      filtered = [...capeVerdeProperties];
     }
 
-    setIsLoading(false);
-  }, [currentFilters, sortBy, maxProperties]);
+    if (searchMode === "realestate") {
+      if (currentFilters.location) {
+        filtered = filtered.filter(property =>
+          property.location.toLowerCase().includes(currentFilters.location!.toLowerCase()) ||
+          property.island.toLowerCase().includes(currentFilters.location!.toLowerCase())
+        );
+      }
 
-  useEffect(() => {
-    loadProperties();
-  }, [loadProperties]);
+      if (currentFilters.priceMin) {
+        filtered = filtered.filter(property => property.price >= currentFilters.priceMin!);
+      }
+
+      if (currentFilters.priceMax) {
+        filtered = filtered.filter(property => property.price <= currentFilters.priceMax!);
+      }
+
+      if (currentFilters.propertyType && currentFilters.propertyType !== 'all') {
+        filtered = filtered.filter(property =>
+          property.type.toLowerCase() === currentFilters.propertyType!.toLowerCase()
+        );
+      }
+
+      if (currentFilters.bedrooms) {
+        filtered = filtered.filter(property => property.bedrooms >= currentFilters.bedrooms!);
+      }
+
+      if (currentFilters.island && currentFilters.island !== 'all') {
+        filtered = filtered.filter(property => property.island === currentFilters.island);
+      }
+    }
+
+    switch (sortBy) {
+      case 'price_asc':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_desc':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.listingDate).getTime() - new Date(a.listingDate).getTime());
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => new Date(a.listingDate).getTime() - new Date(b.listingDate).getTime());
+        break;
+      case 'size_asc':
+        filtered.sort((a, b) => a.totalArea - b.totalArea);
+        break;
+      case 'size_desc':
+        filtered.sort((a, b) => b.totalArea - a.totalArea);
+        break;
+      case 'popular':
+      default:
+        filtered.sort((a, b) => {
+          if (a.isFeatured && !b.isFeatured) return -1;
+          if (!a.isFeatured && b.isFeatured) return 1;
+          return b.price - a.price;
+        });
+        break;
+    }
+
+    if (maxProperties) {
+      filtered = filtered.slice(0, maxProperties);
+    }
+
+    return filtered;
+  }, [searchMode, listingType, currentFilters, sortBy, maxProperties]);
 
   const handleCompareToggle = (property: Property, selected: boolean) => {
     if (selected) {
@@ -103,10 +283,9 @@ export default function PropertyListings({
     <>
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">{subtitle}</p>
+          {/* Dynamic Mode-dependent Headline */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">{getDynamicTitle()}</h2>
           </div>
 
           {/* Filters and Controls */}
@@ -115,7 +294,7 @@ export default function PropertyListings({
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">
-                    {isLoading ? 'Loading...' : `${properties.length} properties found`}
+                    {filteredProperties.length} {searchMode === "markets" ? "items" : "properties"} found
                   </span>
 
                   {getFilterSummary().length > 0 && (
@@ -140,8 +319,8 @@ export default function PropertyListings({
                       <SelectItem value="price_desc">Price: High to Low</SelectItem>
                       <SelectItem value="newest">Newest First</SelectItem>
                       <SelectItem value="oldest">Oldest First</SelectItem>
-                      <SelectItem value="size_desc">Largest First</SelectItem>
-                      <SelectItem value="size_asc">Smallest First</SelectItem>
+                      {searchMode === "realestate" && <SelectItem value="size_desc">Largest First</SelectItem>}
+                      {searchMode === "realestate" && <SelectItem value="size_asc">Smallest First</SelectItem>}
                     </SelectContent>
                   </Select>
 
@@ -177,7 +356,7 @@ export default function PropertyListings({
                     <div className="flex items-center gap-2">
                       <GitCompare className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-blue-900">
-                        {selectedForComparison.length} properties selected for comparison
+                        {selectedForComparison.length} selected for comparison
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -219,55 +398,53 @@ export default function PropertyListings({
             </Card>
           )}
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
-              <p className="text-gray-600">Loading properties...</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && !isLoading && (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
-                <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-red-800 mb-2">Something went wrong</h3>
-                <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={loadProperties} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-                  Try Again
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Property Grid/List */}
-          {!isLoading && !error && properties.length > 0 && (
-            <div className={
-              viewMode === 'grid'
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            }>
-              {properties.map((property) => (
-                <VerifiedPropertyCard
-                  key={property.id}
-                  property={property}
-                  enableComparison={true}
-                  onCompareToggle={handleCompareToggle}
-                  isInComparison={selectedForComparison.some(p => p.id === property.id)}
-                  className={viewMode === 'list' ? 'max-w-none' : ''}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !error && properties.length === 0 && (
+          {filteredProperties.length > 0 ? (
+            viewMode === 'list' ? (
+              <div className="space-y-4">
+                {filteredProperties.map((property) => (
+                  <VerifiedPropertyCard
+                    key={property.id}
+                    property={property}
+                    enableComparison={searchMode === "realestate"}
+                    onCompareToggle={handleCompareToggle}
+                    isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                    className="max-w-none"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="w-full">
+                <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredProperties.map((property) => (
+                    <VerifiedPropertyCard
+                      key={property.id}
+                      property={property}
+                      enableComparison={searchMode === "realestate"}
+                      onCompareToggle={handleCompareToggle}
+                      isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                    />
+                  ))}
+                </div>
+                <div className="columns-2 gap-2 sm:hidden">
+                  {filteredProperties.map((property) => (
+                    <div key={property.id} className="break-inside-avoid mb-2 w-full inline-block">
+                      <VerifiedPropertyCard
+                        property={property}
+                        enableComparison={searchMode === "realestate"}
+                        onCompareToggle={handleCompareToggle}
+                        isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          ) : (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">🏠</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Properties Found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Results Found</h3>
               <p className="text-gray-600 mb-6">
-                Try adjusting your search criteria to find more properties.
+                Try adjusting your search criteria to find more listings.
               </p>
               <Button onClick={() => setCurrentFilters({})}>
                 Clear All Filters
@@ -275,33 +452,19 @@ export default function PropertyListings({
             </div>
           )}
 
-          {/* Statistics */}
-          {!isLoading && !error && properties.length > 0 && (
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {totalCount}+
-                </div>
-                <div className="text-gray-600">Verified Properties</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-green-600 mb-2">
-                  {new Set(properties.map(p => p.island)).size}
-                </div>
-                <div className="text-gray-600">Islands Covered</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-teal-600 mb-2">
-                  {formatCurrency(Math.round(properties.reduce((sum, p) => sum + Number(p.price), 0) / properties.length))}
-                </div>
-                <div className="text-gray-600">Average Property Price</div>
-              </div>
+          {maxProperties && filteredProperties.length === maxProperties && capeVerdeProperties.length > maxProperties && searchMode === "realestate" && (
+            <div className="text-center mt-12">
+              <Button variant="outline" size="lg">
+                View All Properties
+              </Button>
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {maxProperties} of {capeVerdeProperties.length} properties
+              </p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Property Comparison Modal */}
       {isComparisonOpen && (
         <PropertyComparison
           isOpen={isComparisonOpen}

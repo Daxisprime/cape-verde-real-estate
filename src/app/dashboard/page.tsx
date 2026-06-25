@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Heart, Search, Bell, User, Settings, TrendingUp, MapPin,
   Bed, Bath, Square, Calendar, Clock, Star, ArrowRight,
-  Filter, BarChart3, Home, Bookmark, AlertCircle
+  Filter, BarChart3, Home, Bookmark, AlertCircle, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PropertyManagementDashboard from "@/components/PropertyManagementDashboard";
 import AuthModal from "@/components/AuthModal";
-import { useAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
 interface SavedProperty {
@@ -275,6 +275,18 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold text-gray-900">{savedProperties.length}</p>
                 </div>
                 <Heart className="h-8 w-8 text-red-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Contact Agents</p>
+                  <p className="text-sm text-gray-500 mt-1">Via WhatsApp or phone</p>
+                </div>
+                <MessageSquare className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>

@@ -1,4 +1,4 @@
-import { type Property } from '@/lib/properties';
+import { Property, agentDatabase } from '@/data/cape-verde-properties';
 
 export interface EmailTemplate {
   subject: string;
@@ -87,7 +87,7 @@ export function calculateLeadScore(leadData: Partial<LeadData>, property: Proper
  * Generate lead notification email for agents
  */
 export function generateLeadNotificationEmail(leadData: LeadData, property: Property): EmailTemplate {
-  const agent = { name: 'Property Agent', email: leadData.agentId, phone: '' };
+  const agent = agentDatabase[leadData.agentId];
   const urgencyColor = leadData.urgency === 'high' ? '#ef4444' : leadData.urgency === 'medium' ? '#f59e0b' : '#10b981';
   const scoreColor = (leadData.leadScore || 0) >= 80 ? '#10b981' : (leadData.leadScore || 0) >= 60 ? '#f59e0b' : '#ef4444';
 
@@ -257,7 +257,7 @@ export async function processPropertyInquiry(
     const agentEmail = generateLeadNotificationEmail(leadData, property);
 
     // Send agent notification
-    const agent = { name: 'Property Agent', email: leadData.agentId, phone: '' };
+    const agent = agentDatabase[leadData.agentId];
     if (agent?.email) {
       await sendEmail(agent.email, agentEmail, {
         agent_name: agent.name,

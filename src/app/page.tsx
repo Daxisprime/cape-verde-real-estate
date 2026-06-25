@@ -1,17 +1,12 @@
-import React from 'react';
-import Header from '@/components/Header';
-import HeroSection from '@/components/HeroSection';
-import PropertyListings from '@/components/PropertyListings';
-import Footer from '@/components/Footer';
+import { SearchModeProvider } from '@/contexts/SearchModeContext';
+import HomeContent from '@/components/HomeContent';
 
-// Cape Verde Real Estate Platform - v3.0.0 - Optimized Mobile Performance
+export const dynamic = 'force-static';
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
-      <HeroSection />
-      <PropertyListings />
-      <Footer />
-    </div>
+    <SearchModeProvider>
+      <HomeContent />
+    </SearchModeProvider>
   );
 }
