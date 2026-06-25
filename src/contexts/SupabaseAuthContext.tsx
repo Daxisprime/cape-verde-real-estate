@@ -58,7 +58,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       return null;
     }
-    return data as Profile;
+    const raw = data as Record<string, unknown>;
+    return {
+      ...raw,
+      roles: raw.roles ? (raw.roles as UserRole[]) : (raw.role ? [raw.role as UserRole] : ['buyer']),
+    } as Profile;
   }, [supabase]);
 
   useEffect(() => {

@@ -54,12 +54,15 @@ export type PropertyType = (typeof PROPERTY_TYPES)[number];
 export interface Profile {
   id: string;
   email: string;
-  full_name: string | null;
-  avatar_url: string | null;
+  name: string | null;
+  avatar: string | null;
   phone: string | null;
-  roles: UserRole[];
-  is_verified: boolean;
-  is_active: boolean;
+  role: string | null;
+  roles?: UserRole[];
+  verified: boolean;
+  membership_level: string | null;
+  currency: string | null;
+  language: string | null;
   created_at: string;
   updated_at: string;
 }
