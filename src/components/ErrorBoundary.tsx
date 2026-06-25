@@ -1,121 +1,112 @@
 'use client';
 
-import React from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { Component, type ReactNode, type ErrorInfo } from 'react';
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
-  errorInfo?: React.ErrorInfo;
 }
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode;
+  children: ReactNode;
   fallback?: React.ComponentType<{ error?: Error; reset: () => void }>;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return {
-      hasError: true,
-      error
-    };
+    return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-
-    this.setState({
-      error,
-      errorInfo
-    });
-
-    // In production, you would send this error to a logging service
-    if (process.env.NODE_ENV === 'production') {
-      // Send to error tracking service (Sentry, LogRocket, etc.)
-      console.error('Production error caught:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack
-      });
-    }
   }
 
   reset = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({ hasError: false, error: undefined });
   };
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback;
-        return <FallbackComponent error={this.state.error} reset={this.reset} />;
+        return React.createElement(FallbackComponent, {
+          error: this.state.error,
+          reset: this.reset,
+        });
       }
 
-      return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="max-w-lg w-full">
-            <CardHeader>
-              <CardTitle className="flex items-center text-red-600">
-                <AlertTriangle className="h-6 w-6 mr-2" />
-                Something went wrong
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-600">
-                We encountered an unexpected error. Don't worry, we're working to fix it!
-              </p>
-
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-red-800 mb-2">Error Details (Development):</h4>
-                  <p className="text-sm text-red-700 font-mono">
-                    {this.state.error.message}
-                  </p>
-                  {this.state.error.stack && (
-                    <details className="mt-2">
-                      <summary className="text-sm text-red-600 cursor-pointer">Stack Trace</summary>
-                      <pre className="text-xs text-red-600 mt-2 overflow-auto">
-                        {this.state.error.stack}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              )}
-
-              <div className="flex space-x-3">
-                <Button onClick={this.reset} className="flex-1">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => window.location.href = '/'}
-                  className="flex-1"
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
-                </Button>
-              </div>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-500">
-                  If this problem persists, please contact{' '}
-                  <a href="mailto:support@procv.cv" className="text-blue-600 hover:underline">
-                    support@procv.cv
-                  </a>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      return React.createElement(
+        'div',
+        { className: 'min-h-screen bg-gray-50 flex items-center justify-center p-4' },
+        React.createElement(
+          'div',
+          { className: 'max-w-lg w-full bg-white rounded-lg shadow-md border p-6' },
+          React.createElement(
+            'div',
+            { className: 'flex items-center text-red-600 mb-4' },
+            React.createElement(
+              'svg',
+              {
+                xmlns: 'http://www.w3.org/2000/svg',
+                className: 'h-6 w-6 mr-2',
+                fill: 'none',
+                viewBox: '0 0 24 24',
+                stroke: 'currentColor',
+              },
+              React.createElement('path', {
+                strokeLinecap: 'round',
+                strokeLinejoin: 'round',
+                strokeWidth: 2,
+                d: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z',
+              })
+            ),
+            React.createElement('h2', { className: 'text-xl font-semibold' }, 'Something went wrong')
+          ),
+          React.createElement(
+            'p',
+            { className: 'text-gray-600 mb-6' },
+            'We encountered an unexpected error. Please try refreshing the page.'
+          ),
+          React.createElement(
+            'div',
+            { className: 'flex space-x-3' },
+            React.createElement(
+              'button',
+              {
+                onClick: this.reset,
+                className:
+                  'flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors',
+              },
+              'Try Again'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => {
+                  window.location.href = '/';
+                },
+                className:
+                  'flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors',
+              },
+              'Go Home'
+            )
+          ),
+          React.createElement(
+            'p',
+            { className: 'text-sm text-gray-500 text-center mt-4' },
+            'If this problem persists, please contact ',
+            React.createElement(
+              'a',
+              { href: 'mailto:support@procv.cv', className: 'text-blue-600 hover:underline' },
+              'support@procv.cv'
+            )
+          )
+        )
       );
     }
 
@@ -123,32 +114,56 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
-// Custom fallback component for specific use cases
 export function ErrorFallback({ error, reset }: { error?: Error; reset: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-      <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
-      <h2 className="text-xl font-semibold text-gray-900 mb-2">Oops! Something went wrong</h2>
-      <p className="text-gray-600 text-center mb-6 max-w-md">
-        We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.
-      </p>
-
-      {process.env.NODE_ENV === 'development' && error && (
-        <div className="bg-red-50 p-4 rounded-lg mb-4 max-w-lg w-full">
-          <p className="text-sm text-red-700 font-mono">{error.message}</p>
-        </div>
-      )}
-
-      <div className="flex space-x-4">
-        <Button onClick={reset}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Try Again
-        </Button>
-        <Button variant="outline" onClick={() => window.location.reload()}>
-          Refresh Page
-        </Button>
-      </div>
-    </div>
+  return React.createElement(
+    'div',
+    { className: 'flex flex-col items-center justify-center min-h-[400px] p-8' },
+    React.createElement(
+      'svg',
+      {
+        xmlns: 'http://www.w3.org/2000/svg',
+        className: 'h-12 w-12 text-red-500 mb-4',
+        fill: 'none',
+        viewBox: '0 0 24 24',
+        stroke: 'currentColor',
+      },
+      React.createElement('path', {
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        strokeWidth: 2,
+        d: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z',
+      })
+    ),
+    React.createElement(
+      'h2',
+      { className: 'text-xl font-semibold text-gray-900 mb-2' },
+      'Oops! Something went wrong'
+    ),
+    React.createElement(
+      'p',
+      { className: 'text-gray-600 text-center mb-6 max-w-md' },
+      'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.'
+    ),
+    React.createElement(
+      'div',
+      { className: 'flex space-x-4' },
+      React.createElement(
+        'button',
+        {
+          onClick: reset,
+          className: 'px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors',
+        },
+        'Try Again'
+      ),
+      React.createElement(
+        'button',
+        {
+          onClick: () => window.location.reload(),
+          className: 'px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors',
+        },
+        'Refresh Page'
+      )
+    )
   );
 }
 
