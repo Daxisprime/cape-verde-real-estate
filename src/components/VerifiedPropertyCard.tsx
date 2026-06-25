@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMountedState } from '@/lib/mounting';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 
-import { type Property } from '@/data/cape-verde-properties';
+import { type Property } from '@/lib/properties';
 
 interface VerifiedPropertyCardProps {
   property: Property;
@@ -142,7 +142,7 @@ export default function VerifiedPropertyCard({
               {formatCurrency(property.price)}
             </div>
             <div className="text-sm text-gray-500">
-              {formatCurrency(property.pricePerSqm)}/m²
+              {property.price_per_sqm ? `${formatCurrency(property.price_per_sqm)}/m²` : ''}
             </div>
           </div>
 
@@ -163,7 +163,7 @@ export default function VerifiedPropertyCard({
               )}
               <div className="flex items-center">
                 <Square className="h-4 w-4 mr-1 text-gray-600" />
-                <span>{property.totalArea}m²</span>
+                <span>{property.total_area}m²</span>
               </div>
             </div>
           </div>

@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { agentDatabase, type Property } from '@/data/cape-verde-properties';
+import { type Property } from '@/lib/properties';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { EmailService, type LeadData } from '@/lib/email';
 
@@ -124,7 +124,7 @@ export default function PropertyContactForm({ property, isOpen, onClose }: Prope
     return () => clearInterval(interval);
   }, []);
 
-  const agent = property.agentId ? agentDatabase[property.agentId as keyof typeof agentDatabase] : null;
+  const agent = property.agent_id ? { name: 'Property Agent', email: '', phone: '' } : null;
 
   const handleInputChange = (field: keyof ContactFormData, value: string | number | boolean | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));

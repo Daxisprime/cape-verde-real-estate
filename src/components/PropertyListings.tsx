@@ -1,25 +1,17 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { TrendingUp, Filter, Grid, List, GitCompare, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { TrendingUp, Filter, Grid, List, GitCompare, X, AlertCircle, Loader2 } from 'lucide-react';
 import VerifiedPropertyCard from '@/components/VerifiedPropertyCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import PropertyComparison from '@/components/PropertyComparison';
-import { capeVerdeProperties, type Property } from '@/data/cape-verde-properties';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { fetchProperties, type Property, type PropertyFilters } from '@/lib/properties';
 
 interface PropertyListingsProps {
-  searchFilters?: {
-    location?: string;
-    priceMin?: number;
-    priceMax?: number;
-    propertyType?: string;
-    bedrooms?: number;
-    island?: string;
-  };
+  searchFilters?: PropertyFilters;
   showFilters?: boolean;
   maxProperties?: number;
   title?: string;
@@ -40,82 +32,34 @@ export default function PropertyListings({
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<Property[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState(searchFilters);
+  const [currentFilters, setCurrentFilters] = useState<PropertyFilters>(searchFilters);
 
-  const { user } = useAuth();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter and sort properties
-  const filteredProperties = useMemo(() => {
-    let filtered = [...capeVerdeProperties];
+  const loadProperties = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-    // Apply search filters
-    if (currentFilters.location) {
-      filtered = filtered.filter(property =>
-        property.location.toLowerCase().includes(currentFilters.location!.toLowerCase()) ||
-        property.island.toLowerCase().includes(currentFilters.location!.toLowerCase())
-      );
+    const result = await fetchProperties(currentFilters, sortBy, maxProperties);
+
+    if (result.error) {
+      setError(result.error);
+      setProperties([]);
+      setTotalCount(0);
+    } else {
+      setProperties(result.data);
+      setTotalCount(result.count);
     }
 
-    if (currentFilters.priceMin) {
-      filtered = filtered.filter(property => property.price >= currentFilters.priceMin!);
-    }
-
-    if (currentFilters.priceMax) {
-      filtered = filtered.filter(property => property.price <= currentFilters.priceMax!);
-    }
-
-    if (currentFilters.propertyType && currentFilters.propertyType !== 'all') {
-      filtered = filtered.filter(property =>
-        property.type.toLowerCase() === currentFilters.propertyType!.toLowerCase()
-      );
-    }
-
-    if (currentFilters.bedrooms) {
-      filtered = filtered.filter(property => property.bedrooms >= currentFilters.bedrooms!);
-    }
-
-    if (currentFilters.island && currentFilters.island !== 'all') {
-      filtered = filtered.filter(property => property.island === currentFilters.island);
-    }
-
-    // Apply sorting
-    switch (sortBy) {
-      case 'price_asc':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price_desc':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.listingDate).getTime() - new Date(a.listingDate).getTime());
-        break;
-      case 'oldest':
-        filtered.sort((a, b) => new Date(a.listingDate).getTime() - new Date(b.listingDate).getTime());
-        break;
-      case 'size_asc':
-        filtered.sort((a, b) => a.totalArea - b.totalArea);
-        break;
-      case 'size_desc':
-        filtered.sort((a, b) => b.totalArea - a.totalArea);
-        break;
-      case 'popular':
-      default:
-        // Sort by featured first, then by price desc
-        filtered.sort((a, b) => {
-          if (a.isFeatured && !b.isFeatured) return -1;
-          if (!a.isFeatured && b.isFeatured) return 1;
-          return b.price - a.price;
-        });
-        break;
-    }
-
-    // Limit number of properties if specified
-    if (maxProperties) {
-      filtered = filtered.slice(0, maxProperties);
-    }
-
-    return filtered;
+    setIsLoading(false);
   }, [currentFilters, sortBy, maxProperties]);
+
+  useEffect(() => {
+    loadProperties();
+  }, [loadProperties]);
 
   const handleCompareToggle = (property: Property, selected: boolean) => {
     if (selected) {
@@ -168,14 +112,12 @@ export default function PropertyListings({
           {/* Filters and Controls */}
           {showFilters && (
             <div className="mb-8">
-              {/* Top Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">
-                    {filteredProperties.length} properties found
+                    {isLoading ? 'Loading...' : `${properties.length} properties found`}
                   </span>
 
-                  {/* Active Filters */}
                   {getFilterSummary().length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {getFilterSummary().map((filter, index) => (
@@ -188,7 +130,6 @@ export default function PropertyListings({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Sort Dropdown */}
                   <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Sort by" />
@@ -204,7 +145,6 @@ export default function PropertyListings({
                     </SelectContent>
                   </Select>
 
-                  {/* View Mode Toggle */}
                   <div className="flex border rounded-lg">
                     <Button
                       variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -279,14 +219,36 @@ export default function PropertyListings({
             </Card>
           )}
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
+              <p className="text-gray-600">Loading properties...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
+                <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-red-800 mb-2">Something went wrong</h3>
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={loadProperties} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Property Grid/List */}
-          {filteredProperties.length > 0 ? (
+          {!isLoading && !error && properties.length > 0 && (
             <div className={
               viewMode === 'grid'
                 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                 : "space-y-4"
             }>
-              {filteredProperties.map((property) => (
+              {properties.map((property) => (
                 <VerifiedPropertyCard
                   key={property.id}
                   property={property}
@@ -297,7 +259,10 @@ export default function PropertyListings({
                 />
               ))}
             </div>
-          ) : (
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && properties.length === 0 && (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🏠</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Properties Found</h3>
@@ -310,39 +275,29 @@ export default function PropertyListings({
             </div>
           )}
 
-          {/* Load More or Show All */}
-          {maxProperties && filteredProperties.length === maxProperties && capeVerdeProperties.length > maxProperties && (
-            <div className="text-center mt-12">
-              <Button variant="outline" size="lg">
-                View All Properties
-              </Button>
-              <p className="text-sm text-gray-500 mt-2">
-                Showing {maxProperties} of {capeVerdeProperties.length} properties
-              </p>
+          {/* Statistics */}
+          {!isLoading && !error && properties.length > 0 && (
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  {totalCount}+
+                </div>
+                <div className="text-gray-600">Verified Properties</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-green-600 mb-2">
+                  {new Set(properties.map(p => p.island)).size}
+                </div>
+                <div className="text-gray-600">Islands Covered</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-teal-600 mb-2">
+                  {formatCurrency(Math.round(properties.reduce((sum, p) => sum + Number(p.price), 0) / properties.length))}
+                </div>
+                <div className="text-gray-600">Average Property Price</div>
+              </div>
             </div>
           )}
-
-          {/* Statistics */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {capeVerdeProperties.length}+
-              </div>
-              <div className="text-gray-600">Verified Properties</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {new Set(capeVerdeProperties.map(p => p.island)).size}
-              </div>
-              <div className="text-gray-600">Islands Covered</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-purple-600 mb-2">
-                {formatCurrency(Math.round(capeVerdeProperties.reduce((sum, p) => sum + p.price, 0) / capeVerdeProperties.length))}
-              </div>
-              <div className="text-gray-600">Average Property Price</div>
-            </div>
-          </div>
         </div>
       </section>
 
