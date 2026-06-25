@@ -21,52 +21,17 @@ export default function Header() {
   const { isAuthenticated, profile, signOut: supabaseSignOut, user } = useSupabaseAuth();
   const { t, currentLanguage, setLanguage } = useLanguage();
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+
   const isMarkets = searchMode === "markets";
 
-  const marketStems = ['ceme', 'cemen', 'cement', 'tijo', 'bloc', 'block', 'tile', 'tool', 'car', 'moto', 'mota', 'tv', 'phone', 'iph', 'iphone', 'sofa', 'fridge', 'plumb', 'plumber', 'electri', 'electrician', 'repair', 'service', 'menu', 'food', 'restau', 'restaurant', 'clot', 'clothes', 'shir', 'shirt', 'shoes', 'sap', 'sapato', 'hamm', 'hammer', 'drill', 'paint', 'furni', 'furniture', 'appli', 'appliance', 'bonn', 'tele', 'mart', 'market'];
-  const realEstateStems = ['apart', 'apto', 'apartment', 'villa', 'house', 'casa', 'land', 'plot', 'bed', 'bedroom', 'pent', 'penth', 'penthouse', 'condo', 'condominium', 'rent', 'moradia', 'viv', 'vivenda', 'terr', 'terreno', 't1', 't2', 't3', 't4', 'property', 'flat', 'studio', 'duplex', 'townhouse', 'quar', 'quarto', 'room', 'andar'];
-
-  function fuzzyMatch(input: string, keyword: string): boolean {
-    if (input.length < 4 || keyword.length < 4) return input.includes(keyword) || keyword.startsWith(input);
-    if (input.includes(keyword) || keyword.startsWith(input)) return true;
-    if (Math.abs(input.length - keyword.length) > 2) return false;
-    const shorter = input.length <= keyword.length ? input : keyword;
-    const longer = input.length > keyword.length ? input : keyword;
-    let diffs = 0;
-    let j = 0;
-    for (let i = 0; i < longer.length && diffs <= 1; i++) {
-      if (shorter[j] !== longer[i]) {
-        diffs++;
-        if (shorter.length === longer.length) j++;
-      } else {
-        j++;
-      }
-    }
-    return diffs <= 1;
-  }
-
-  function classifySearchIntent(query: string): "realestate" | "markets" | null {
-    const lower = query.toLowerCase().trim();
-    const words = lower.split(/\s+/);
-    let marketScore = 0;
-    let realEstateScore = 0;
-    for (const word of words) {
-      if (word.length < 2) continue;
-      for (const stem of marketStems) {
-        if (word.startsWith(stem) || stem.startsWith(word) || fuzzyMatch(word, stem)) {
-          marketScore++;
-          break;
-        }
-      }
-      for (const stem of realEstateStems) {
-        if (word.startsWith(stem) || stem.startsWith(word) || fuzzyMatch(word, stem)) {
-          realEstateScore++;
-          break;
-        }
-      }
-    }
-    if (realEstateScore > marketScore) return "realestate";
-    if (marketScore > realEstateScore) return "markets";
+  function classifySearchIntent(input: string): "realestate" | "markets" | null {
+    const q = input.toLowerCase();
+    const isRealEstate = q.includes('pent') || q.includes('apart') || q.includes('casa') || q.includes('vivenda') || q.includes('quarto') || q.includes('terreno') || q.includes('villa') || q.includes('house') || q.includes('moradia') || q.includes('flat') || q.includes('duplex') || q.includes('studio') || q.includes('bedroom') || q.includes('rent') || q.includes('apto') || q.includes('andar') || q.includes('plot') || q.includes('land') || q.includes('condo') || q.includes('townhouse') || /t[1-4]/i.test(q);
+    const isMarketIntent = q.includes('ceme') || q.includes('martelo') || q.includes('carro') || q.includes('iphone') || q.includes('bonnet') || q.includes('roupa') || q.includes('tijolo') || q.includes('hamm') || q.includes('drill') || q.includes('paint') || q.includes('furni') || q.includes('sofa') || q.includes('fridge') || q.includes('plumb') || q.includes('electri') || q.includes('phone') || q.includes('moto') || q.includes('shoe') || q.includes('cloth') || q.includes('tool') || q.includes('block') || q.includes('tile') || q.includes('car ') || q.includes('tv ') || (q.endsWith('car') && q.length <= 5) || (q.endsWith('tv') && q.length <= 4);
+    if (isRealEstate && !isMarketIntent) return "realestate";
+    if (isMarketIntent && !isRealEstate) return "markets";
     return null;
   }
 
@@ -80,18 +45,15 @@ export default function Header() {
     }
   }
 
-  function handleSearchSubmit(query: string) {
-    const intent = classifySearchIntent(query);
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const intent = classifySearchIntent(headerSearchQuery);
     if (intent && intent !== searchMode) {
       setSearchMode(intent);
     }
     setIsResultsViewActive(true);
-  }
-
-  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      handleSearchSubmit(headerSearchQuery);
-    }
+    inputRef.current?.focus();
+    mobileInputRef.current?.focus();
   }
 
   useEffect(() => {
@@ -276,17 +238,17 @@ export default function Header() {
 
           {/* Search bar - only when results view active */}
           {isResultsViewActive && (
-            <div className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0">
+            <form onSubmit={handleFormSubmit} className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0">
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
                   isMarkets ? "text-white/50" : "text-gray-400"
                 }`} />
                 <input
+                  ref={inputRef}
                   type="text"
                   placeholder={t.searchPlaceholder}
                   value={headerSearchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
                   className={`w-full pl-9 pr-3 py-2 rounded-full text-sm outline-none transition ${
                     isMarkets
                       ? "bg-white/15 border border-white/20 text-white placeholder-white/50 focus:bg-white/25 focus:border-white/50"
@@ -294,7 +256,7 @@ export default function Header() {
                   }`}
                 />
               </div>
-            </div>
+            </form>
           )}
         </div>
 
@@ -408,17 +370,19 @@ export default function Header() {
 
       {/* Mobile: search bar when results active */}
       {isResultsViewActive && (
-        <div className="sm:hidden px-4 pb-2">
+        <form onSubmit={handleFormSubmit} className="sm:hidden px-4 pb-2">
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
               isMarkets ? "text-white/50" : "text-gray-400"
             }`} />
             <input
+              ref={mobileInputRef}
               type="text"
+              inputMode="search"
+              enterKeyHint="search"
               placeholder={t.searchPlaceholder}
               value={headerSearchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
               className={`w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition ${
                 isMarkets
                   ? "bg-white/15 border border-white/20 text-white placeholder-white/50"
@@ -426,7 +390,7 @@ export default function Header() {
               }`}
             />
           </div>
-        </div>
+        </form>
       )}
 
       {/* Mobile mode tabs + language selector */}

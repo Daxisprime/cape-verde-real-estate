@@ -72,7 +72,17 @@ export default function HeroSection() {
 
   const handleSearch = () => {
     setHeaderSearchQuery(searchQuery);
+    const q = searchQuery.toLowerCase();
+    const isRealEstate = q.includes('pent') || q.includes('apart') || q.includes('casa') || q.includes('vivenda') || q.includes('quarto') || q.includes('terreno') || q.includes('villa') || q.includes('house') || q.includes('moradia') || q.includes('flat') || q.includes('duplex') || q.includes('studio') || q.includes('bedroom') || q.includes('rent') || q.includes('apto') || q.includes('andar') || q.includes('plot') || q.includes('land') || q.includes('condo') || q.includes('townhouse') || /t[1-4]/i.test(q);
+    const isMarketIntent = q.includes('ceme') || q.includes('martelo') || q.includes('carro') || q.includes('iphone') || q.includes('bonnet') || q.includes('roupa') || q.includes('tijolo') || q.includes('hamm') || q.includes('drill') || q.includes('paint') || q.includes('furni') || q.includes('sofa') || q.includes('fridge') || q.includes('plumb') || q.includes('electri') || q.includes('phone') || q.includes('moto') || q.includes('shoe') || q.includes('cloth') || q.includes('tool') || q.includes('block') || q.includes('tile');
+    if (isRealEstate && !isMarketIntent && searchMode !== "realestate") setSearchMode("realestate");
+    if (isMarketIntent && !isRealEstate && searchMode !== "markets") setSearchMode("markets");
     setIsResultsViewActive(true);
+  };
+
+  const handleHeroFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch();
   };
 
   const getSlogan = () => {
@@ -159,11 +169,13 @@ export default function HeroSection() {
             </div>
 
             {/* Main Search Bar */}
-            <div className="w-full flex items-center bg-white rounded-xl md:rounded-2xl shadow-2xl border border-slate-200 p-1.5 md:p-2 max-w-xl md:max-w-none mx-auto">
+            <form onSubmit={handleHeroFormSubmit} className="w-full flex items-center bg-white rounded-xl md:rounded-2xl shadow-2xl border border-slate-200 p-1.5 md:p-2 max-w-xl md:max-w-none mx-auto">
               <div className="flex-1 relative flex items-center min-w-0">
                 <MapPin className="absolute left-3 md:left-4 h-4 w-4 md:h-5 md:w-5 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
+                  inputMode="search"
+                  enterKeyHint="search"
                   placeholder={searchMode === "realestate"
                     ? "Island or neighborhood..."
                     : "Search items or services..."
@@ -171,12 +183,12 @@ export default function HeroSection() {
                   className="w-full pl-9 md:pl-12 pr-2 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
 
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
+                  type="button"
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
                   className={`flex items-center gap-1.5 p-2.5 md:px-3 md:py-2.5 rounded-lg md:rounded-xl text-xs font-semibold transition-all border ${
                     isFilterOpen
@@ -189,14 +201,14 @@ export default function HeroSection() {
                 </button>
 
                 <button
-                  onClick={handleSearch}
+                  type="submit"
                   className="bg-[#0044FF] hover:bg-[#0033CC] text-white font-bold p-2.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
                 >
                   <Search className="h-4 w-4" />
                   <span className="hidden md:inline">Search</span>
                 </button>
               </div>
-            </div>
+            </form>
 
             {/* Absolute Floating Filter Overlay */}
             {isFilterOpen && (
