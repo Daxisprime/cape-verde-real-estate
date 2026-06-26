@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Grid, List, GitCompare, X } from 'lucide-react';
 import VerifiedPropertyCard from '@/components/VerifiedPropertyCard';
+import PropertyDetailDrawer, { type PropertyDrawerItem } from '@/components/PropertyDetailDrawer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -158,6 +159,27 @@ export default function PropertyListings({
 
   const { user } = useAuth();
   const { searchMode, listingType } = useSearchMode();
+  const [selectedDrawerProperty, setSelectedDrawerProperty] = useState<PropertyDrawerItem | null>(null);
+
+  function handlePropertySelect(property: Property) {
+    setSelectedDrawerProperty({
+      id: property.id,
+      title: property.title,
+      price: property.price,
+      location: property.location,
+      island: property.island,
+      type: property.type,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      area: property.totalArea,
+      image: property.images?.[0] || '',
+      images: property.images || [],
+      coordinates: property.coordinates,
+      featured: property.isFeatured || false,
+      description: property.description || '',
+      features: property.features || [],
+    });
+  }
 
   const getDynamicTitle = () => {
     if (searchMode === "markets") return "Marketplace Items & Local Services";
@@ -409,6 +431,7 @@ export default function PropertyListings({
                     enableComparison={searchMode === "realestate"}
                     onCompareToggle={handleCompareToggle}
                     isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                    onSelect={handlePropertySelect}
                     className="max-w-none"
                   />
                 ))}
@@ -423,6 +446,7 @@ export default function PropertyListings({
                       enableComparison={searchMode === "realestate"}
                       onCompareToggle={handleCompareToggle}
                       isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                      onSelect={handlePropertySelect}
                     />
                   ))}
                 </div>
@@ -434,6 +458,7 @@ export default function PropertyListings({
                         enableComparison={searchMode === "realestate"}
                         onCompareToggle={handleCompareToggle}
                         isInComparison={selectedForComparison.some(p => p.id === property.id)}
+                        onSelect={handlePropertySelect}
                       />
                     </div>
                   ))}
@@ -472,6 +497,8 @@ export default function PropertyListings({
           initialProperties={selectedForComparison}
         />
       )}
+
+      <PropertyDetailDrawer property={selectedDrawerProperty} onClose={() => setSelectedDrawerProperty(null)} />
     </>
   );
 }

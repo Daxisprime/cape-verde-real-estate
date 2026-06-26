@@ -21,6 +21,7 @@ interface VerifiedPropertyCardProps {
   enableComparison?: boolean;
   onCompareToggle?: (property: Property, selected: boolean) => void;
   isInComparison?: boolean;
+  onSelect?: (property: Property) => void;
 }
 
 export default function VerifiedPropertyCard({
@@ -29,7 +30,8 @@ export default function VerifiedPropertyCard({
   className = '',
   enableComparison = false,
   onCompareToggle,
-  isInComparison = false
+  isInComparison = false,
+  onSelect
 }: VerifiedPropertyCardProps) {
   const router = useRouter();
   const isMounted = useMountedState();
@@ -38,11 +40,14 @@ export default function VerifiedPropertyCard({
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const handleCardClick = () => {
-    // Add to viewing history
     if (user) {
       addToViewingHistory(property.id);
     }
-    router.push(`/property/${property.id}`);
+    if (onSelect) {
+      onSelect(property);
+    } else {
+      router.push(`/property/${property.id}`);
+    }
   };
 
   const handleFavoriteToggle = (e: React.MouseEvent) => {

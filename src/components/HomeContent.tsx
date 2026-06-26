@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import PropertyListings from '@/components/PropertyListings';
 import ResultsFilterStrip from '@/components/ResultsFilterStrip';
 import MarketsView from '@/components/MarketsView';
+import PropertyDetailDrawer, { type PropertyDrawerItem } from '@/components/PropertyDetailDrawer';
 import Footer from '@/components/Footer';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { capeVerdeProperties } from '@/data/cape-verde-properties';
@@ -37,6 +37,7 @@ export default function HomeContent() {
   const { listings: liveRealEstate, isLive } = useListings();
   const [isMapViewActive, setIsMapViewActive] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyDrawerItem | null>(null);
 
   // One-way gate scroll listener: removed once triggered
   useEffect(() => {
@@ -61,7 +62,6 @@ export default function HomeContent() {
   }, [isResultsViewActive]);
 
   const filteredProperties = useMemo(() => {
-    // Merge live listings with mock data
     const liveMapped = liveRealEstate.map(item => ({
       id: item.id,
       title: item.title,
@@ -76,10 +76,44 @@ export default function HomeContent() {
       images: item.images || [],
       coordinates: [item.longitude || 0, item.latitude || 0] as [number, number],
       featured: item.is_featured || false,
+      description: item.description || '',
+      features: [] as string[],
     }));
     const base = isLive && liveMapped.length > 0
-      ? [...liveMapped, ...capeVerdeProperties]
-      : capeVerdeProperties;
+      ? [...liveMapped, ...capeVerdeProperties.map(p => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          location: p.location,
+          island: p.island,
+          type: p.type,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          area: p.totalArea,
+          image: p.images[0] || '',
+          images: p.images,
+          coordinates: p.coordinates,
+          featured: p.isFeatured || false,
+          description: p.description || '',
+          features: p.features || [],
+        }))]
+      : capeVerdeProperties.map(p => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          location: p.location,
+          island: p.island,
+          type: p.type,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          area: p.totalArea,
+          image: p.images[0] || '',
+          images: p.images,
+          coordinates: p.coordinates,
+          featured: p.isFeatured || false,
+          description: p.description || '',
+          features: p.features || [],
+        }));
 
     return base.filter(property => {
       const matchesQuery = !headerSearchQuery ||
@@ -105,6 +139,26 @@ export default function HomeContent() {
     if (!hoveredId) return null;
     return mapMarkers.find(m => m.id === hoveredId) || null;
   }, [hoveredId, mapMarkers]);
+
+  function handlePropertyClick(property: typeof filteredProperties[number]) {
+    setSelectedProperty({
+      id: property.id,
+      title: property.title,
+      price: property.price,
+      location: property.location,
+      island: property.island,
+      type: property.type,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      area: property.area,
+      image: property.image,
+      images: property.images,
+      coordinates: property.coordinates,
+      featured: property.featured,
+      description: property.description,
+      features: property.features,
+    });
+  }
 
   // === LOCKED RESULTS VIEW ===
 
@@ -141,10 +195,10 @@ export default function HomeContent() {
             </p>
             <div className="space-y-2">
               {filteredProperties.slice(0, 20).map(property => (
-                <Link
+                <div
                   key={property.id}
-                  href={`/property/${property.id}`}
-                  className={`flex gap-3 p-2 rounded-lg transition border ${
+                  onClick={() => handlePropertyClick(property)}
+                  className={`flex gap-3 p-2 rounded-lg transition border cursor-pointer ${
                     hoveredId === property.id
                       ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
                       : 'border-gray-100 hover:bg-gray-50'
@@ -153,22 +207,22 @@ export default function HomeContent() {
                   onMouseLeave={() => setHoveredId(null)}
                 >
                   <img
-                    src={property.images[0]}
-                    alt={property.title}
+                    src={property.images?.[0] || property.image}
+                    alt={property.title || 'Property'}
                     className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm text-gray-900 truncate">{property.title}</p>
+                    <p className="font-bold text-sm text-gray-900 truncate">{property.title || 'Untitled'}</p>
                     <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-3 w-3" /> {property.location}
+                      <MapPin className="h-3 w-3" /> {property.location || property.island || 'Cape Verde'}
                     </p>
-                    <p className="font-black text-sm text-gray-800 mt-1">{formatPrice(property.price)}</p>
+                    <p className="font-black text-sm text-gray-800 mt-1">{formatPrice(property.price || 0)}</p>
                     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-400">
-                      <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>
-                      <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>
+                      {property.bedrooms > 0 && <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>}
+                      {property.bathrooms > 0 && <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>}
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
@@ -177,6 +231,8 @@ export default function HomeContent() {
             <SafeLeafletMap items={mapMarkers} activeItem={hoveredMapItem} onPinClick={() => {}} />
           </div>
         </div>
+
+        <PropertyDetailDrawer property={selectedProperty} onClose={() => setSelectedProperty(null)} />
       </div>
     );
   }
@@ -204,22 +260,22 @@ export default function HomeContent() {
           {/* Masonry grid */}
           <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
             {filteredProperties.slice(0, 24).map((property, index) => (
-              <Link
+              <div
                 key={property.id}
-                href={`/property/${property.id}`}
-                className="break-inside-avoid inline-block w-full mb-3"
+                onClick={() => handlePropertyClick(property)}
+                className="break-inside-avoid inline-block w-full mb-3 cursor-pointer"
                 onMouseEnter={() => setHoveredId(property.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
-                <div className={`rounded-xl bg-white overflow-hidden border transition-all duration-200 cursor-pointer group ${
+                <div className={`rounded-xl bg-white overflow-hidden border transition-all duration-200 group ${
                   hoveredId === property.id
                     ? 'border-blue-500 shadow-lg ring-2 ring-blue-100'
                     : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
                 }`}>
                   <div className="relative overflow-hidden">
                     <img
-                      src={property.images[0]}
-                      alt={property.title}
+                      src={property.images?.[0] || property.image}
+                      alt={property.title || 'Property'}
                       className={`w-full object-cover group-hover:scale-[1.03] transition-transform duration-300 ${
                         index % 3 === 0 ? 'h-48' : index % 3 === 1 ? 'h-56' : 'h-40'
                       }`}
@@ -229,24 +285,26 @@ export default function HomeContent() {
                     </span>
                   </div>
                   <div className="p-2.5">
-                    <p className="font-extrabold text-sm text-gray-900">{formatPrice(property.price)}</p>
-                    <h3 className="font-medium text-xs text-gray-700 line-clamp-1 mt-0.5">{property.title}</h3>
+                    <p className="font-extrabold text-sm text-gray-900">{formatPrice(property.price || 0)}</p>
+                    <h3 className="font-medium text-xs text-gray-700 line-clamp-1 mt-0.5">{property.title || 'Untitled'}</h3>
                     <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-1">
-                      <MapPin className="h-2.5 w-2.5" /> {property.location}
+                      <MapPin className="h-2.5 w-2.5" /> {property.location || property.island || 'Cape Verde'}
                     </p>
                     <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-500">
-                      <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>
-                      <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>
-                      {property.totalArea > 0 && (
-                        <span>{property.totalArea}m&sup2;</span>
+                      {property.bedrooms > 0 && <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{property.bedrooms}</span>}
+                      {property.bathrooms > 0 && <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{property.bathrooms}</span>}
+                      {property.area > 0 && (
+                        <span>{property.area}m&sup2;</span>
                       )}
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>
+
+        <PropertyDetailDrawer property={selectedProperty} onClose={() => setSelectedProperty(null)} />
       </div>
     );
   }
