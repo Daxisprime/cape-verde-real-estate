@@ -25,6 +25,8 @@ import {
 
 type ListingStatus = "active" | "reviewing" | "closed";
 
+const PLACEHOLDER_IMAGE = "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?w=800&h=400&fit=crop";
+
 interface ManagedListing extends MockVendorListing {
   status: ListingStatus;
 }
@@ -68,11 +70,11 @@ export default function MyStorePage() {
       const live: ManagedListing[] = liveListings.map(item => ({
         id: item.id,
         mode: 'real_estate' as const,
-        title: item.title,
-        price: item.price,
-        island: item.island,
+        title: item.title || 'Untitled Listing',
+        price: item.price || 0,
+        island: item.island || 'Cape Verde',
         zone: item.location || '',
-        images: item.images?.length ? item.images : ['https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400'],
+        images: item.images?.length ? item.images : [PLACEHOLDER_IMAGE],
         bedrooms: item.bedrooms || null,
         bathrooms: item.bathrooms || null,
         square_meters: item.total_area || null,
@@ -367,13 +369,11 @@ export default function MyStorePage() {
                   )}
 
                   {/* Image */}
-                  {listing.images?.[0] && (
-                    <img
-                      src={listing.images[0]}
-                      alt={listing.title}
-                      className={`w-full h-40 object-cover ${listing.status === "closed" ? "opacity-60 grayscale" : ""}`}
-                    />
-                  )}
+                  <img
+                    src={listing.images?.[0] || PLACEHOLDER_IMAGE}
+                    alt={listing.title || "Listing"}
+                    className={`w-full h-40 object-cover ${listing.status === "closed" ? "opacity-60 grayscale" : ""}`}
+                  />
 
                   {/* Content */}
                   <div className="p-4">
@@ -386,25 +386,25 @@ export default function MyStorePage() {
                         {listing.mode === "real_estate" ? "Property" : "Item / Service"}
                       </span>
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{listing.title}</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{listing.title || "Untitled Listing"}</h3>
                     <p className="text-base font-bold text-gray-900 mt-2">
-                      {listing.price.toLocaleString()} <span className="text-xs font-medium text-gray-400">CVE</span>
+                      {(listing.price ?? 0).toLocaleString()} <span className="text-xs font-medium text-gray-400">CVE</span>
                     </p>
 
                     <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
                       <MapPin className="h-3 w-3" />
-                      <span>{listing.zone ? `${listing.zone}, ` : ""}{listing.island}</span>
+                      <span>{listing.zone ? `${listing.zone}, ` : ""}{listing.island || "Cape Verde"}</span>
                     </div>
 
                     {listing.mode === "real_estate" && (
                       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                        {listing.bedrooms && (
+                        {listing.bedrooms != null && listing.bedrooms > 0 && (
                           <span className="flex items-center gap-1"><Bed className="h-3 w-3" />{listing.bedrooms}</span>
                         )}
-                        {listing.bathrooms && (
+                        {listing.bathrooms != null && listing.bathrooms > 0 && (
                           <span className="flex items-center gap-1"><Bath className="h-3 w-3" />{listing.bathrooms}</span>
                         )}
-                        {listing.square_meters && (
+                        {listing.square_meters != null && listing.square_meters > 0 && (
                           <span className="flex items-center gap-1"><Ruler className="h-3 w-3" />{listing.square_meters}m&sup2;</span>
                         )}
                       </div>
