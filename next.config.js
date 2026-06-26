@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -11,7 +10,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  skipTrailingSlashRedirect: true,
   transpilePackages: ['leaflet.markercluster'],
 };
 
