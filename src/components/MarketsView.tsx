@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus } from 'lucide-react';
-import { useListings } from '@/hooks/useListings';
 import { useMarketplace, type MarketplaceItem } from '@/hooks/useMarketplace';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
 import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
@@ -178,7 +177,6 @@ export default function MarketsView() {
   const router = useRouter();
   const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
   const { t } = useLanguage();
-  const { listings: liveItems } = useListings();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -193,22 +191,6 @@ export default function MarketsView() {
   const { items: marketplaceDbItems } = useMarketplace({ category: selectedCategory || undefined });
 
   const itemsPool = useMemo(() => {
-    const liveFormatted = liveItems.map(item => ({
-      id: item.id,
-      title: item.title,
-      price: item.price,
-      location: `${item.location || ''}, ${item.island}`.replace(/^, /, ''),
-      category: item.property_type || 'Other',
-      subcategory: null as string | null,
-      image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
-      posted: new Date(item.created_at).toLocaleDateString(),
-      coordinates: (item.latitude && item.longitude ? [item.latitude, item.longitude] : [0, 0]) as [number, number],
-      is_featured: item.is_featured || false,
-      is_premium: item.is_featured || false,
-      vendor_avatar: null as string | null,
-      facebook_handle: '',
-    }));
-
     const dbFormatted = marketplaceDbItems.map(item => ({
       id: item.id,
       title: item.title,
@@ -225,14 +207,14 @@ export default function MarketsView() {
       facebook_handle: '',
     }));
 
-    const allItems = [...dbFormatted, ...liveFormatted, ...MARKETPLACE_ITEMS];
+    const allItems = [...dbFormatted, ...MARKETPLACE_ITEMS];
     const seen = new Set<string>();
     return allItems.filter(item => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
       return true;
     });
-  }, [liveItems, marketplaceDbItems]);
+  }, [marketplaceDbItems]);
 
   const filteredItems = useMemo(() => {
     const filtered = itemsPool.filter(item => {
