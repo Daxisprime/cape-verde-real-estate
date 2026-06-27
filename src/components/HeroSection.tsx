@@ -5,21 +5,6 @@ import { Search, MapPin, SlidersHorizontal, X, Home, Tag } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const CAPE_VERDE_HERO_IMAGES = [
-  "https://images.pexels.com/photos/13721671/pexels-photo-13721671.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/13721658/pexels-photo-13721658.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/13721649/pexels-photo-13721649.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/4388167/pexels-photo-4388167.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/13721679/pexels-photo-13721679.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/4388164/pexels-photo-4388164.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/13721683/pexels-photo-13721683.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/4552362/pexels-photo-4552362.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/4388159/pexels-photo-4388159.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/13721690/pexels-photo-13721690.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/13721695/pexels-photo-13721695.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/4388157/pexels-photo-4388157.jpeg?auto=compress&cs=tinysrgb&w=1920",
-];
-
 const PROPERTY_TYPES = ["All", "Apartment", "Villa", "Land"];
 const BEDROOM_OPTIONS = [
   { label: "Any", value: "0" },
@@ -41,7 +26,6 @@ const MARKETPLACE_CATEGORIES = [
 
 export default function HeroSection() {
   const { t } = useLanguage();
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
@@ -55,25 +39,6 @@ export default function HeroSection() {
   const heroInputRef = useRef<HTMLInputElement>(null);
   const heroAutocompleteRef = useRef<HTMLDivElement>(null);
   const { searchMode, setSearchMode, listingType, setListingType, setIsResultsViewActive, setHeaderSearchQuery } = useSearchMode();
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const STORAGE_KEY_DATE = 'cv_hero_date';
-    const STORAGE_KEY_INDEX = 'cv_hero_index';
-
-    const todayStr = new Date().toDateString();
-    const savedDate = localStorage.getItem(STORAGE_KEY_DATE);
-    let idx = parseInt(localStorage.getItem(STORAGE_KEY_INDEX) || '0', 10);
-
-    if (savedDate !== todayStr) {
-      idx = (idx + 1) % CAPE_VERDE_HERO_IMAGES.length;
-      localStorage.setItem(STORAGE_KEY_DATE, todayStr);
-      localStorage.setItem(STORAGE_KEY_INDEX, String(idx));
-    }
-
-    setCurrentIndex(idx);
-  }, []);
 
   useEffect(() => {
     if (!isFilterOpen && !showHeroAutocomplete) return;
@@ -135,15 +100,11 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out z-0"
-        style={{ backgroundImage: `url(${CAPE_VERDE_HERO_IMAGES[currentIndex]})` }}
-      />
-      <div className="absolute inset-0 bg-black/40 z-10" />
+    <section className="relative w-full h-[480px] md:h-[520px] flex flex-col overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-blue-950 to-slate-900 w-full h-[480px] md:h-[520px] z-0" />
 
       {/* Centered content area */}
-      <div className="relative z-20 flex-1 flex items-center justify-center">
+      <div className="relative z-10 text-white flex-1 flex items-center justify-center">
         <div className="w-full max-w-2xl mx-auto px-4 text-center flex flex-col items-center gap-8">
           {/* Dynamic 3-way Slogan - scaled for desktop */}
           <h2 className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-white drop-shadow-md transition-all duration-200 lg:whitespace-nowrap max-w-max mx-auto">
