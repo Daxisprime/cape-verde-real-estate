@@ -41,8 +41,7 @@ const MARKETPLACE_CATEGORIES = [
 
 export default function HeroSection() {
   const { t } = useLanguage();
-  const [backgroundImage, setBackgroundImage] = useState(CAPE_VERDE_HERO_IMAGES[0]);
-  const [imageReady, setImageReady] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
@@ -65,24 +64,15 @@ export default function HeroSection() {
 
     const todayStr = new Date().toDateString();
     const savedDate = localStorage.getItem(STORAGE_KEY_DATE);
-    let currentIndex = parseInt(localStorage.getItem(STORAGE_KEY_INDEX) || '0', 10);
+    let idx = parseInt(localStorage.getItem(STORAGE_KEY_INDEX) || '0', 10);
 
     if (savedDate !== todayStr) {
-      currentIndex = (currentIndex + 1) % CAPE_VERDE_HERO_IMAGES.length;
+      idx = (idx + 1) % CAPE_VERDE_HERO_IMAGES.length;
       localStorage.setItem(STORAGE_KEY_DATE, todayStr);
-      localStorage.setItem(STORAGE_KEY_INDEX, String(currentIndex));
+      localStorage.setItem(STORAGE_KEY_INDEX, String(idx));
     }
 
-    const img = new Image();
-    img.src = CAPE_VERDE_HERO_IMAGES[currentIndex];
-    img.onload = () => {
-      setBackgroundImage(CAPE_VERDE_HERO_IMAGES[currentIndex]);
-      setImageReady(true);
-    };
-    img.onerror = () => {
-      setBackgroundImage(CAPE_VERDE_HERO_IMAGES[currentIndex]);
-      setImageReady(true);
-    };
+    setCurrentIndex(idx);
   }, []);
 
   useEffect(() => {
@@ -147,17 +137,13 @@ export default function HeroSection() {
   return (
     <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden">
       <div
-        className="absolute inset-0 z-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          opacity: imageReady ? 1 : 0,
-        }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out z-0"
+        style={{ backgroundImage: `url(${CAPE_VERDE_HERO_IMAGES[currentIndex]})` }}
       />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-slate-900/50 via-slate-900/30 to-slate-900/50" />
-
+      <div className="absolute inset-0 bg-black/40 z-10" />
 
       {/* Centered content area */}
-      <div className="relative z-10 flex-1 flex items-center justify-center">
+      <div className="relative z-20 flex-1 flex items-center justify-center">
         <div className="w-full max-w-2xl mx-auto px-4 text-center flex flex-col items-center gap-8">
           {/* Dynamic 3-way Slogan - scaled for desktop */}
           <h2 className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-white drop-shadow-md transition-all duration-200 lg:whitespace-nowrap max-w-max mx-auto">
