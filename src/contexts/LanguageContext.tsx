@@ -185,6 +185,27 @@ export interface Translations {
   properties: string;
   list: string;
   loadingMap: string;
+
+  // Marketplace & Drawers
+  featuredProperties: string;
+  featuredItems: string;
+  featured: string;
+  itemsFound: string;
+  noItemsFound: string;
+  beFirstToPost: string;
+  postFirstAd: string;
+  contactAgent: string;
+  contactSeller: string;
+  sendMessage: string;
+  sending: string;
+  inquirySent: string;
+  name: string;
+  email: string;
+  phoneOptional: string;
+  message: string;
+  callAgent: string;
+  location: string;
+  price: string;
 }
 
 // Translations data
@@ -361,6 +382,27 @@ const translations: Record<LanguageCode, Translations> = {
     properties: 'Properties',
     list: 'List',
     loadingMap: 'Loading Map...',
+
+    // Marketplace & Drawers
+    featuredProperties: 'Featured Properties',
+    featuredItems: 'Featured Items',
+    featured: 'Featured',
+    itemsFound: 'items found',
+    noItemsFound: 'No items found',
+    beFirstToPost: 'Be the first to post an ad! List your items, vehicles, services, or anything else for the community.',
+    postFirstAd: 'Post Your First Ad',
+    contactAgent: 'Contact Agent',
+    contactSeller: 'Contact Seller',
+    sendMessage: 'Send Message',
+    sending: 'Sending...',
+    inquirySent: 'Inquiry sent successfully!',
+    name: 'Name',
+    email: 'Email',
+    phoneOptional: 'Phone (optional)',
+    message: 'Message',
+    callAgent: 'Call Agent',
+    location: 'Location',
+    price: 'Price',
   },
   pt: {
     // UI Navigation
@@ -534,6 +576,27 @@ const translations: Record<LanguageCode, Translations> = {
     properties: 'Propriedades',
     list: 'Lista',
     loadingMap: 'A carregar mapa...',
+
+    // Marketplace & Drawers
+    featuredProperties: 'Imóveis em Destaque',
+    featuredItems: 'Artigos em Destaque',
+    featured: 'Destaque',
+    itemsFound: 'artigos encontrados',
+    noItemsFound: 'Nenhum artigo encontrado',
+    beFirstToPost: 'Seja o primeiro a publicar! Anuncie os seus artigos, veículos, serviços ou qualquer outra coisa para a comunidade.',
+    postFirstAd: 'Publicar Primeiro Anúncio',
+    contactAgent: 'Contactar Agente',
+    contactSeller: 'Contactar Vendedor',
+    sendMessage: 'Enviar Mensagem',
+    sending: 'A enviar...',
+    inquirySent: 'Mensagem enviada com sucesso!',
+    name: 'Nome',
+    email: 'Email',
+    phoneOptional: 'Telefone (opcional)',
+    message: 'Mensagem',
+    callAgent: 'Ligar Agente',
+    location: 'Localização',
+    price: 'Preço',
   },
   fr: {
     // UI Navigation
@@ -698,6 +761,26 @@ const translations: Record<LanguageCode, Translations> = {
     properties: 'Propriétés',
     list: 'Liste',
     loadingMap: 'Chargement de la carte...',
+
+    featuredProperties: 'Propriétés en Vedette',
+    featuredItems: 'Articles en Vedette',
+    featured: 'Vedette',
+    itemsFound: 'articles trouvés',
+    noItemsFound: 'Aucun article trouvé',
+    beFirstToPost: 'Soyez le premier à publier! Listez vos articles, véhicules, services ou autre pour la communauté.',
+    postFirstAd: 'Publier Votre Première Annonce',
+    contactAgent: 'Contacter Agent',
+    contactSeller: 'Contacter Vendeur',
+    sendMessage: 'Envoyer Message',
+    sending: 'Envoi...',
+    inquirySent: 'Demande envoyée avec succès!',
+    name: 'Nom',
+    email: 'Email',
+    phoneOptional: 'Téléphone (optionnel)',
+    message: 'Message',
+    callAgent: 'Appeler Agent',
+    location: 'Emplacement',
+    price: 'Prix',
   },
   cv: {
     // UI Navigation
@@ -862,6 +945,26 @@ const translations: Record<LanguageCode, Translations> = {
     properties: 'Propriedadi',
     list: 'Lista',
     loadingMap: 'Ta karega mapa...',
+
+    featuredProperties: 'Kasa Spesial',
+    featuredItems: 'Artigu Spesial',
+    featured: 'Spesial',
+    itemsFound: 'artigu encontradu',
+    noItemsFound: 'Nenhun artigu encontradu',
+    beFirstToPost: 'Siña primeiru a publika! Ponhe bu artigu, veíkulu, servisu o kalker kusa pa komunidadi.',
+    postFirstAd: 'Publika Primeiru Anúnsiu',
+    contactAgent: 'Kontakta Agenti',
+    contactSeller: 'Kontakta Vendedor',
+    sendMessage: 'Manda Mensajen',
+    sending: 'Ta manda...',
+    inquirySent: 'Mensajen mandadu ku susesu!',
+    name: 'Nomi',
+    email: 'Email',
+    phoneOptional: 'Telefoni (opsional)',
+    message: 'Mensajen',
+    callAgent: 'Liga pa Agenti',
+    location: 'Lokalizasão',
+    price: 'Presu',
   }
 };
 

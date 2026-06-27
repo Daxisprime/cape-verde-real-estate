@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, Clock, User, Send, ExternalLink } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CVE_TO_EUR = 0.00907;
 
@@ -48,6 +49,7 @@ interface MarketplaceItemDrawerProps {
 }
 
 export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItemDrawerProps) {
+  const { t } = useLanguage();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showEur, setShowEur] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -427,14 +429,13 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
 
                     {inquiryStatus === 'sent' ? (
                       <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
-                        <p className="text-sm font-medium text-green-800">Inquiry sent!</p>
-                        <p className="text-xs text-green-600 mt-0.5">The seller will contact you shortly.</p>
+                        <p className="text-sm font-medium text-green-800">{t.inquirySent}</p>
                       </div>
                     ) : (
                       <form onSubmit={handleInquirySubmit} className="space-y-3">
                         <input
                           type="text"
-                          placeholder="Full Name"
+                          placeholder={t.name}
                           required
                           value={inquiryForm.fullName}
                           onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
@@ -442,7 +443,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                         />
                         <input
                           type="email"
-                          placeholder="Email Address"
+                          placeholder={t.email}
                           required
                           value={inquiryForm.email}
                           onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
@@ -450,7 +451,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                         />
                         <input
                           type="tel"
-                          placeholder="Phone Number (optional)"
+                          placeholder={t.phoneOptional}
                           value={inquiryForm.phone}
                           onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
                           className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
@@ -467,7 +468,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                           className="w-full py-3 rounded-lg bg-[#0044FF] text-white text-sm font-semibold hover:bg-[#0033CC] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                         >
                           <Send className="w-4 h-4" />
-                          {inquiryStatus === 'sending' ? 'Sending...' : 'Send Inquiry'}
+                          {inquiryStatus === 'sending' ? t.sending : t.sendMessage}
                         </button>
                         {inquiryStatus === 'error' && (
                           <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>
@@ -527,14 +528,13 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
 
                   {inquiryStatus === 'sent' ? (
                     <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
-                      <p className="text-sm font-medium text-green-800">Inquiry sent!</p>
-                      <p className="text-xs text-green-600 mt-0.5">The seller will contact you shortly.</p>
+                      <p className="text-sm font-medium text-green-800">{t.inquirySent}</p>
                     </div>
                   ) : (
                     <form onSubmit={handleInquirySubmit} className="space-y-3">
                       <input
                         type="text"
-                        placeholder="Full Name"
+                        placeholder={t.name}
                         required
                         value={inquiryForm.fullName}
                         onChange={(e) => setInquiryForm(f => ({ ...f, fullName: e.target.value }))}
@@ -542,7 +542,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                       />
                       <input
                         type="email"
-                        placeholder="Email Address"
+                        placeholder={t.email}
                         required
                         value={inquiryForm.email}
                         onChange={(e) => setInquiryForm(f => ({ ...f, email: e.target.value }))}
@@ -550,7 +550,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                       />
                       <input
                         type="tel"
-                        placeholder="Phone Number (optional)"
+                        placeholder={t.phoneOptional}
                         value={inquiryForm.phone}
                         onChange={(e) => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
@@ -567,7 +567,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                         className="w-full py-2.5 rounded-lg bg-[#0044FF] text-white text-sm font-semibold hover:bg-[#0033CC] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                       >
                         <Send className="w-4 h-4" />
-                        {inquiryStatus === 'sending' ? 'Sending...' : 'Send Inquiry'}
+                        {inquiryStatus === 'sending' ? t.sending : t.sendMessage}
                       </button>
                       {inquiryStatus === 'error' && (
                         <p className="text-xs text-red-500 text-center">Failed to send. Please try again.</p>

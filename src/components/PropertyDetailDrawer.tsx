@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle, Globe } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PropertyDrawerItem {
   id: string;
@@ -44,6 +45,7 @@ interface PropertyDetailDrawerProps {
 export type { PropertyDrawerItem };
 
 export default function PropertyDetailDrawer({ property, onClose }: PropertyDetailDrawerProps) {
+  const { t } = useLanguage();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [seller, setSeller] = useState<SellerProfile | null>(null);
@@ -341,7 +343,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
               >
                 <Phone className="h-4 w-4" />
-                Call Agent
+                {t.callAgent}
               </a>
               <a
                 href={`https://wa.me/${(sellerWhatsApp || '2389000000').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
@@ -372,14 +374,15 @@ function InquiryForm({
   onChange: (f: { name: string; email: string; phone: string; message: string }) => void;
   onSubmit: (e: React.FormEvent) => void;
 }) {
+  const { t } = useLanguage();
+
   if (status === 'sent') {
     return (
       <div className="p-4 rounded-xl bg-green-50 border border-green-200">
         <div className="flex items-center gap-2 mb-1">
           <CheckCircle className="h-5 w-5 text-green-600" />
-          <p className="text-sm font-bold text-green-800">Inquiry Sent Successfully!</p>
+          <p className="text-sm font-bold text-green-800">{t.inquirySent}</p>
         </div>
-        <p className="text-xs text-green-600 ml-7">The agent will review your request shortly.</p>
       </div>
     );
   }
@@ -388,12 +391,12 @@ function InquiryForm({
 
   return (
     <form onSubmit={onSubmit} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
-      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contactar Agente</h3>
+      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.contactAgent}</h3>
 
       <div className="grid grid-cols-2 gap-2">
         <input
           type="text"
-          placeholder="Nome"
+          placeholder={t.name}
           required
           value={form.name}
           onChange={(e) => onChange({ ...form, name: e.target.value })}
@@ -401,7 +404,7 @@ function InquiryForm({
         />
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t.email}
           required
           value={form.email}
           onChange={(e) => onChange({ ...form, email: e.target.value })}
@@ -411,7 +414,7 @@ function InquiryForm({
 
       <input
         type="tel"
-        placeholder="Telefone (opcional)"
+        placeholder={t.phoneOptional}
         value={form.phone}
         onChange={(e) => onChange({ ...form, phone: e.target.value })}
         className={inputCls}
@@ -438,7 +441,7 @@ function InquiryForm({
         ) : (
           <Send className="h-4 w-4" />
         )}
-        {status === 'sending' ? 'Enviando...' : 'Enviar Mensagem'}
+        {status === 'sending' ? t.sending : t.sendMessage}
       </button>
     </form>
   );

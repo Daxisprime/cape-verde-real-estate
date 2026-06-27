@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Star, MapPin, Bed, Bath } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { capeVerdeProperties } from "@/data/cape-verde-properties";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FeaturedItem {
   id: string;
@@ -29,6 +30,7 @@ function formatPrice(price: number): string {
 }
 
 export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarouselProps) {
+  const { t } = useLanguage();
   const [items, setItems] = useState<FeaturedItem[]>([]);
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarousel
 
   if (items.length === 0) return null;
 
-  const title = mode === "realestate" ? "Imoveis em Destaque" : "Artigos em Destaque";
+  const title = mode === "realestate" ? t.featuredProperties : t.featuredItems;
 
   return (
     <section className="w-full mb-6">
@@ -154,7 +156,7 @@ export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarousel
                 <div className="absolute top-2.5 left-2.5">
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full uppercase tracking-wider shadow-md">
                     <Star className="h-3 w-3 fill-white" />
-                    Destaque
+                    {t.featured}
                   </span>
                 </div>
                 <div className="absolute bottom-2.5 left-2.5">

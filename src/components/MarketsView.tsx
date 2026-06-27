@@ -15,7 +15,7 @@ const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
   {
     ssr: false,
-    loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400 text-sm">Loading Map...</div>
+    loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400 text-sm"></div>
   }
 );
 
@@ -450,7 +450,7 @@ export default function MarketsView() {
               <FeaturedCarousel mode="markets" />
 
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 sm:mb-3 px-1">
-                {filteredItems.length} items found
+                {filteredItems.length} {t.itemsFound}
                 {selectedCategory && <span className="text-[#0044FF]"> in {selectedCategory}</span>}
                 {selectedSubcategory && <span className="text-slate-500"> / {selectedSubcategory}</span>}
               </p>
@@ -542,17 +542,17 @@ export default function MarketsView() {
                     <Package className="w-10 h-10 text-slate-300" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-800 mb-2">
-                    No items found{selectedCategory ? ` in ${selectedCategory}` : ''} yet
+                    {t.noItemsFound}{selectedCategory ? ` in ${selectedCategory}` : ''}
                   </h3>
                   <p className="text-sm text-slate-500 max-w-md mb-6">
-                    Be the first to post an ad in Cape Verde! List your items, vehicles, services, or anything else for the community.
+                    {t.beFirstToPost}
                   </p>
                   <button
                     onClick={() => router.push('/sell')}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
-                    Post Your First Ad
+                    {t.postFirstAd}
                   </button>
                 </div>
               )}
