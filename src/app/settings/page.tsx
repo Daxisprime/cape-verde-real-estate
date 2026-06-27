@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   User, Settings, Shield, Bell, Eye, EyeOff, Camera,
   Save, Trash2, Mail, Phone, Globe, Palette,
   CreditCard, UserCheck, AlertTriangle, CheckCircle,
-  Lock, Smartphone, Languages, Link2
+  Lock, Smartphone, Languages, Link2, Loader2
 } from "lucide-react";
 import UserLinksManager from "@/components/UserLinksManager";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -29,13 +29,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const { user, isAuthenticated, updateProfile, changePassword, logout } = useAuth();
+  const { refreshProfile } = useSupabaseAuth();
   const { toast } = useToast();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
@@ -213,6 +216,55 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1048576) {
+      toast({ title: "File Too Large", description: "Please choose an image under 1MB.", variant: "destructive" });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) throw new Error("Supabase not configured");
+
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("Not authenticated");
+
+      const ext = file.name.split('.').pop() || 'jpg';
+      const filePath = `${authUser.id}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      await supabase.from('profiles').update({ avatar: avatarUrl }).eq('id', authUser.id);
+      setProfileData(prev => ({ ...prev, avatar: avatarUrl }));
+      await refreshProfile();
+
+      toast({ title: "Photo Updated", description: "Your profile photo has been updated." });
+    } catch (err: unknown) {
+      // Fallback: use FileReader for local preview
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setProfileData(prev => ({ ...prev, avatar: dataUrl }));
+      };
+      reader.readAsDataURL(file);
+      toast({ title: "Upload Issue", description: "Photo saved locally. It may not persist across sessions.", variant: "destructive" });
+    } finally {
+      setIsUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -279,16 +331,46 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Avatar Section */}
                 <div className="flex items-center space-x-6">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={profileData.avatar} alt={profileData.name} />
-                    <AvatarFallback className="text-lg">
-                      {profileData.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative group">
+                    <Avatar className="h-24 w-24 ring-2 ring-gray-100">
+                      <AvatarImage src={profileData.avatar} alt={profileData.name} />
+                      <AvatarFallback className="text-lg bg-blue-50 text-blue-700">
+                        {profileData.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                      className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                      ) : (
+                        <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </button>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </div>
                   <div>
-                    <Button variant="outline" size="sm">
-                      <Camera className="h-4 w-4 mr-2" />
-                      Change Photo
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4 mr-2" />
+                      )}
+                      {isUploadingAvatar ? 'Uploading...' : 'Change Photo'}
                     </Button>
                     <p className="text-sm text-gray-500 mt-2">
                       JPG, GIF or PNG. 1MB max.

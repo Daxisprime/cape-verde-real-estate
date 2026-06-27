@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 import {
   Phone,
   MessageCircle,
@@ -40,6 +42,7 @@ const STATUS_TABS: { key: ListingStatus; label: string }[] = [
 export default function MyStorePage() {
   const { isAuthenticated, profile, user } = useSupabaseAuth();
   const { listings: liveListings, loading: listingsLoading } = useMyListings();
+  const router = useRouter();
   const fallbackVendor = mockProfiles[0];
 
   const vendorName = profile?.name || fallbackVendor.full_name;
@@ -107,9 +110,17 @@ export default function MyStorePage() {
     setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: "active" as ListingStatus } : l)));
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    const supabase = createSupabaseBrowserClient();
+    if (supabase) {
+      await supabase.from('properties').delete().eq('id', id);
+    }
     setListings((prev) => prev.filter((l) => l.id !== id));
     setDeleteTarget(null);
+  };
+
+  const handleEdit = (id: string) => {
+    router.push(`/sell?edit=${id}`);
   };
 
   const handleWhatsApp = () => {
@@ -334,7 +345,10 @@ export default function MyStorePage() {
                   {/* Active Card Controls */}
                   {listing.status === "active" && (
                     <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm">
+                      <button
+                        onClick={() => handleEdit(listing.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm"
+                      >
                         <Pencil className="h-3 w-3" />
                         Edit
                       </button>
@@ -343,7 +357,13 @@ export default function MyStorePage() {
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm"
                       >
                         <Archive className="h-3 w-3" />
-                        Mark as Sold
+                        Sold
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(listing.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-red-200 rounded-md text-red-600 hover:bg-red-50 shadow-sm"
+                      >
+                        <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
                   )}
