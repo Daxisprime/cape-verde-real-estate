@@ -6,10 +6,10 @@ import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const CAPE_VERDE_HERO_IMAGES = [
-  '/hero-sal.jpg',
-  '/hero-mindelo.jpg',
-  '/hero-praia.jpg',
-  '/hero-tarrafal.jpg',
+  '/hero-sal-pier.jpg',
+  '/hero-mindelo-bay.jpg',
+  '/hero-paul-valley.jpg',
+  '/hero-praia-capital.jpg',
 ];
 
 const PROPERTY_TYPES = ["All", "Apartment", "Villa", "Land"];
@@ -49,10 +49,17 @@ export default function HeroSection() {
   const { searchMode, setSearchMode, listingType, setListingType, setIsResultsViewActive, setHeaderSearchQuery } = useSearchMode();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % CAPE_VERDE_HERO_IMAGES.length);
-    }, 6000);
-    return () => clearInterval(interval);
+    const today = new Date().toDateString();
+    const lastSavedDate = localStorage.getItem('hero_bg_date');
+    const savedIndex = parseInt(localStorage.getItem('hero_bg_index') || '0', 10);
+    if (lastSavedDate !== today) {
+      const nextIndex = (savedIndex + 1) % CAPE_VERDE_HERO_IMAGES.length;
+      setCurrentIndex(nextIndex);
+      localStorage.setItem('hero_bg_date', today);
+      localStorage.setItem('hero_bg_index', String(nextIndex));
+    } else {
+      setCurrentIndex(savedIndex);
+    }
   }, []);
 
   useEffect(() => {
