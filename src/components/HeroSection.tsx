@@ -145,12 +145,15 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden bg-slate-900">
+    <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden">
       <div
-        className={`absolute inset-0 z-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${imageReady ? 'opacity-100' : 'opacity-0'}`}
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+        className="absolute inset-0 z-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          opacity: imageReady ? 1 : 0,
+        }}
       />
-      <div className="absolute inset-0 z-[1] bg-slate-950/40 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-slate-900/50 via-slate-900/30 to-slate-900/50" />
 
 
       {/* Centered content area */}

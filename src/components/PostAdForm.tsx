@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { ImagePlus, X, Loader2, MapPin, Facebook } from "lucide-react";
 import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage, type Translations } from "@/contexts/LanguageContext";
+import AuthModal from "@/components/AuthModal";
 
 const LeafletPicker = dynamic(() => import("@/components/LeafletCoordinatePicker"), {
   ssr: false,
@@ -131,6 +132,8 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const [facebookHandle, setFacebookHandle] = useState("");
   const [twitterHandle, setTwitterHandle] = useState("");
   const [condition, setCondition] = useState<"new" | "used">("used");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!editData;
@@ -184,6 +187,16 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     e.preventDefault();
     if (!title || !price || !island || !category) return;
 
+    if (!user) {
+      setPendingSubmit(true);
+      setShowAuthModal(true);
+      return;
+    }
+
+    await executeSubmit();
+  };
+
+  const executeSubmit = useCallback(async () => {
     setStatus("submitting");
     setErrorMessage("");
 
@@ -208,7 +221,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     try {
       const supabase = createSupabaseBrowserClient();
       if (!supabase) throw new Error("Supabase not configured");
-      if (!sellerId) throw new Error("You must be signed in to post an ad");
+      if (!sellerId) throw new Error("Authentication required");
 
       // Upload new images (skip for existing URL previews from edit mode)
       const imageUrls: string[] = [];
@@ -336,6 +349,18 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       setErrorMessage(msg);
       setStatus("error");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, title, price, island, category, description, municipality, dealType, bedrooms, bathrooms, squareMeters, coordinates, images, previews, condition, facebookHandle, twitterHandle, isEditing, editData, isPropertyCategory, onAdCreated]);
+
+  useEffect(() => {
+    if (pendingSubmit && user) {
+      setPendingSubmit(false);
+      executeSubmit();
+    }
+  }, [pendingSubmit, user, executeSubmit]);
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
   };
 
   const inputCls = "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white";
@@ -657,6 +682,15 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             Dismiss
           </button>
         </div>
+      )}
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => { setShowAuthModal(false); setPendingSubmit(false); }}
+          defaultTab="register"
+          onSuccess={handleAuthSuccess}
+        />
       )}
     </form>
   );
