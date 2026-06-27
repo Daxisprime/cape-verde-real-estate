@@ -5,16 +5,19 @@ import { Search, MapPin, SlidersHorizontal, X, Home, Tag } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const CV_9_ISLAND_IMAGES = [
-  "https://images.unsplash.com/photo-1591017609590-2cd7c6a0e4ac?w=1920&q=75",
-  "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?w=1920&q=75",
-  "https://images.unsplash.com/photo-1586500036706-41963a36c921?w=1920&q=75",
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=75",
-  "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1920&q=75",
-  "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1920&q=75",
-  "https://images.unsplash.com/photo-1548013146-72479768bada?w=1920&q=75",
-  "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=75",
-  "https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1920&q=75"
+const CAPE_VERDE_HERO_IMAGES = [
+  "https://images.pexels.com/photos/13721671/pexels-photo-13721671.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/13721658/pexels-photo-13721658.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/13721649/pexels-photo-13721649.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/4388167/pexels-photo-4388167.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/13721679/pexels-photo-13721679.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/4388164/pexels-photo-4388164.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/13721683/pexels-photo-13721683.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/4552362/pexels-photo-4552362.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/4388159/pexels-photo-4388159.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/13721690/pexels-photo-13721690.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/13721695/pexels-photo-13721695.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/4388157/pexels-photo-4388157.jpeg?auto=compress&cs=tinysrgb&w=1920",
 ];
 
 const PROPERTY_TYPES = ["All", "Apartment", "Villa", "Land"];
@@ -38,7 +41,8 @@ const MARKETPLACE_CATEGORIES = [
 
 export default function HeroSection() {
   const { t } = useLanguage();
-  const [backgroundImage, setBackgroundImage] = useState(CV_9_ISLAND_IMAGES[0]);
+  const [backgroundImage, setBackgroundImage] = useState(CAPE_VERDE_HERO_IMAGES[0]);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
@@ -55,13 +59,30 @@ export default function HeroSection() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now.getTime() - start.getTime();
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor(diff / oneDay);
-    const activeIndex = dayOfYear % CV_9_ISLAND_IMAGES.length;
-    setBackgroundImage(CV_9_ISLAND_IMAGES[activeIndex]);
+
+    const STORAGE_KEY_DATE = 'cv_hero_date';
+    const STORAGE_KEY_INDEX = 'cv_hero_index';
+
+    const todayStr = new Date().toDateString();
+    const savedDate = localStorage.getItem(STORAGE_KEY_DATE);
+    let currentIndex = parseInt(localStorage.getItem(STORAGE_KEY_INDEX) || '0', 10);
+
+    if (savedDate !== todayStr) {
+      currentIndex = (currentIndex + 1) % CAPE_VERDE_HERO_IMAGES.length;
+      localStorage.setItem(STORAGE_KEY_DATE, todayStr);
+      localStorage.setItem(STORAGE_KEY_INDEX, String(currentIndex));
+    }
+
+    const img = new Image();
+    img.src = CAPE_VERDE_HERO_IMAGES[currentIndex];
+    img.onload = () => {
+      setBackgroundImage(CAPE_VERDE_HERO_IMAGES[currentIndex]);
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      setBackgroundImage(CAPE_VERDE_HERO_IMAGES[currentIndex]);
+      setImageLoaded(true);
+    };
   }, []);
 
   useEffect(() => {
@@ -124,10 +145,11 @@ export default function HeroSection() {
   };
 
   return (
-    <section
-      className="relative w-full h-[72vh] min-h-[500px] flex flex-col bg-cover bg-center transition-all duration-1000 ease-in-out"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
-    >
+    <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden">
+      <div
+        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      />
       <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
 
 
