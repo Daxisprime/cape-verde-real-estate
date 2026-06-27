@@ -84,9 +84,15 @@ function createPremiumPinHtml(item: MapMarkerLight, isActive: boolean): string {
     </div>`;
   }
 
-  // Featured (non-premium) pin
+  // Featured (non-premium) pin - vibrant amber-gold with star
   if (isFeatured) {
-    return `<div class="bg-amber-500 text-white border-2 border-amber-300 font-black text-[10px] w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.15)' : 'scale(1.05)'};">${priceLabel}</div>`;
+    return `<div class="relative flex items-center justify-center" style="width:46px;height:46px;">
+      <div class="absolute inset-0 rounded-full bg-amber-400/25 animate-pulse"></div>
+      <div class="relative bg-gradient-to-br from-amber-400 to-orange-500 text-white border-2 border-amber-300 font-black text-[10px] w-11 h-11 rounded-full flex items-center justify-center shadow-lg shadow-amber-300/40 z-10" style="cursor:pointer;transition:all 0.2s ease;transform:${isActive ? 'scale(1.2)' : 'scale(1.05)'};">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1" class="absolute top-0.5 right-0.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        ${priceLabel}
+      </div>
+    </div>`;
   }
 
   // Active standard pin

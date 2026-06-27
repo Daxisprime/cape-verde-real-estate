@@ -135,9 +135,9 @@ export default function HomeContent() {
       longitude: p.coordinates[0],
       price: p.price,
       title: p.title,
-      listing_type: listingType,
+      is_featured: p.featured,
     }));
-  }, [filteredProperties, listingType]);
+  }, [filteredProperties]);
 
   const hoveredMapItem = useMemo(() => {
     if (!hoveredId) return null;

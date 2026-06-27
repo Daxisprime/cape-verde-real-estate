@@ -136,41 +136,44 @@ export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarousel
         <span className="text-xs text-gray-400 font-medium">({items.length})</span>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-1 snap-x snap-mandatory -mx-1">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-1 snap-x snap-mandatory -mx-1">
         {items.map((item) => (
           <div
             key={item.id}
             onClick={() => onItemClick?.(item)}
-            className="snap-start flex-shrink-0 w-[240px] sm:w-[260px] cursor-pointer group"
+            className="snap-start flex-shrink-0 w-[280px] sm:w-[320px] cursor-pointer group"
           >
-            <div className="rounded-xl overflow-hidden border border-amber-100 shadow-sm hover:shadow-lg hover:border-amber-200 transition-all bg-white">
-              <div className="relative h-32 overflow-hidden">
+            <div className="rounded-2xl overflow-hidden border-2 border-amber-200/80 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-200/60 hover:border-amber-300 transition-all bg-gradient-to-b from-amber-50/40 to-white">
+              <div className="relative h-44 sm:h-48 overflow-hidden">
                 <img
                   src={item.image || "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?w=800"}
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute top-2 left-2">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold bg-amber-400 text-white rounded-full uppercase tracking-wider shadow-sm">
-                    <Star className="h-2.5 w-2.5 fill-white" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                <div className="absolute top-2.5 left-2.5">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full uppercase tracking-wider shadow-md">
+                    <Star className="h-3 w-3 fill-white" />
                     Destaque
                   </span>
                 </div>
+                <div className="absolute bottom-2.5 left-2.5">
+                  <p className="font-black text-lg text-white drop-shadow-lg">{formatPrice(item.price)}</p>
+                </div>
               </div>
-              <div className="p-3">
-                <p className="font-extrabold text-sm text-gray-900">{formatPrice(item.price)}</p>
-                <h3 className="text-xs font-medium text-gray-700 line-clamp-1 mt-0.5">{item.title}</h3>
-                <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-1">
-                  <MapPin className="h-2.5 w-2.5" />
+              <div className="p-4">
+                <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">{item.title}</h3>
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-1.5">
+                  <MapPin className="h-3 w-3 text-amber-500" />
                   {item.location || item.island}
                 </p>
                 {mode === "realestate" && (item.bedrooms || item.bathrooms) && (
-                  <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-500">
+                  <div className="flex items-center gap-3 mt-2.5 text-xs text-gray-600">
                     {item.bedrooms && item.bedrooms > 0 && (
-                      <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{item.bedrooms}</span>
+                      <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full"><Bed className="h-3 w-3" />{item.bedrooms}</span>
                     )}
                     {item.bathrooms && item.bathrooms > 0 && (
-                      <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{item.bathrooms}</span>
+                      <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full"><Bath className="h-3 w-3" />{item.bathrooms}</span>
                     )}
                   </div>
                 )}
