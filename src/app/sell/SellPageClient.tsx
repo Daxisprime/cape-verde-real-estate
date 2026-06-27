@@ -66,6 +66,7 @@ export default function SellPageClient() {
               island: item.island || "",
               municipality: item.municipality,
               category: item.category,
+              condition: item.condition || "used",
               images: item.images,
               mode: "item_service",
             });

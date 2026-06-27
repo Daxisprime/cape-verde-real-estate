@@ -93,6 +93,7 @@ export interface ListingEditData {
   property_type?: string | null;
   category?: string | null;
   listing_type?: string | null;
+  condition?: string | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   total_area?: number | null;
@@ -129,6 +130,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [facebookHandle, setFacebookHandle] = useState("");
   const [twitterHandle, setTwitterHandle] = useState("");
+  const [condition, setCondition] = useState<"new" | "used">("used");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!editData;
@@ -145,6 +147,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     setBedrooms(editData.bedrooms ? String(editData.bedrooms) : "");
     setBathrooms(editData.bathrooms ? String(editData.bathrooms) : "");
     setSquareMeters(editData.total_area ? String(editData.total_area) : editData.square_meters ? String(editData.square_meters) : "");
+    setCondition((editData.condition as "new" | "used") || "used");
     if (editData.latitude && editData.longitude) {
       setCoordinates([editData.latitude, editData.longitude]);
     }
@@ -266,6 +269,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           description: description || null,
           price_cve: parseFloat(price),
           category,
+          condition,
           island,
           municipality: municipality || null,
           images: imageUrls,
@@ -281,7 +285,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         } else {
           const { error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, user_id: sellerId, status: "active", condition: "used" } as never);
+            .insert({ ...marketPayload, user_id: sellerId, status: "active" } as never);
           if (error) throw error;
         }
       }
@@ -321,6 +325,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         setBedrooms("");
         setBathrooms("");
         setSquareMeters("");
+        setCondition("used");
         setCoordinates(null);
         setImages([]);
         setPreviews([]);
@@ -541,6 +546,33 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
                 className={inputCls}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Marketplace-Specific: Condition */}
+      {!isPropertyCategory && category && (
+        <div>
+          <label className="text-xs font-medium text-gray-600 mb-1.5 block">{t.condition}</label>
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setCondition("new")}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                condition === "new" ? "bg-[#2563EB] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {t.newItem}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCondition("used")}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                condition === "used" ? "bg-[#2563EB] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {t.usedItem}
+            </button>
           </div>
         </div>
       )}
