@@ -6,8 +6,10 @@ import Header from "@/components/Header";
 import PostAdForm, { ListingEditData } from "@/components/PostAdForm";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SellPageClient() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -89,21 +91,21 @@ export default function SellPageClient() {
           className="inline-flex items-center gap-1.5 px-3 py-2 mb-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          {t.back}
         </button>
 
         <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
           <h1 className="text-lg font-bold text-gray-900 mb-1">
-            {editId ? "Edit Listing" : "Create New Listing"}
+            {editId ? t.editListing : t.createNewListing}
           </h1>
           <p className="text-sm text-gray-500 mb-6">
-            {editId ? "Update your listing details below." : "Post a property, item, or service to the marketplace."}
+            {editId ? t.updateDetails : t.postDescription}
           </p>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-              <span className="ml-2 text-sm text-gray-500">Loading listing data...</span>
+              <span className="ml-2 text-sm text-gray-500">{t.loadingData}</span>
             </div>
           ) : (
             <PostAdForm vendorId="vendor-1" editData={editData} />

@@ -6,10 +6,11 @@ import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useLanguage, type Translations } from "@/contexts/LanguageContext";
 
 const LeafletPicker = dynamic(() => import("@/components/LeafletCoordinatePicker"), {
   ssr: false,
-  loading: () => <div className="w-full h-40 bg-slate-100 rounded-lg animate-pulse flex items-center justify-center text-xs text-slate-400">Loading map...</div>,
+  loading: () => <div className="w-full h-40 bg-slate-100 rounded-lg animate-pulse flex items-center justify-center text-xs text-slate-400"></div>,
 });
 
 const PROPERTY_TYPES = ["House", "Apartment", "Villa", "Land", "Duplex", "Studio", "Penthouse", "Townhouse"];
@@ -26,6 +27,30 @@ const MARKET_CATEGORIES = [
   "Maintenance & Repair Services",
   "Professional & Event Services",
 ];
+
+const PROPERTY_TYPE_KEYS: Record<string, keyof Translations> = {
+  "House": "house",
+  "Apartment": "apartment",
+  "Villa": "villa",
+  "Land": "land",
+  "Duplex": "duplex",
+  "Studio": "studio",
+  "Penthouse": "penthouse",
+  "Townhouse": "townhouse",
+};
+
+const MARKET_CATEGORY_KEYS: Record<string, keyof Translations> = {
+  "Vehicles & Automotive": "catVehicles",
+  "Electronics & Computers": "catElectronics",
+  "Home, Furniture & Appliances": "catHomeFurniture",
+  "Building Materials & Tools": "catBuildingMaterials",
+  "Restaurants & Menus (Takeaway)": "catRestaurants",
+  "Fashion, Clothing & Retail": "catFashion",
+  "Babies & Kids Items": "catBabiesKids",
+  "Pets & Animal Supplies": "catPets",
+  "Maintenance & Repair Services": "catMaintenance",
+  "Professional & Event Services": "catProfessionalServices",
+};
 
 const ALL_CATEGORIES = [
   { group: "Real Estate", items: PROPERTY_TYPES },
@@ -86,6 +111,7 @@ interface PostAdFormProps {
 
 export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const { user } = useSupabaseAuth();
+  const { t } = useLanguage();
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -325,7 +351,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-5">
       {/* Photo Upload */}
       <div>
-        <p className="text-xs font-medium text-gray-600 mb-2">Photos ({images.length}/6)</p>
+        <p className="text-xs font-medium text-gray-600 mb-2">{t.photos} ({images.length}/6)</p>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {previews.map((src, i) => (
             <div key={i} className="relative w-[72px] h-[72px] rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
@@ -362,27 +388,30 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
 
       {/* Category Dropdown */}
       <div>
-        <label className="text-xs font-medium text-gray-600 mb-1 block">Category</label>
+        <label className="text-xs font-medium text-gray-600 mb-1 block">{t.category}</label>
         <select
           required
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className={inputCls}
         >
-          <option value="">Select a category...</option>
-          {ALL_CATEGORIES.map((group) => (
-            <optgroup key={group.group} label={group.group}>
-              {group.items.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </optgroup>
-          ))}
+          <option value="">{t.category}...</option>
+          <optgroup label={t.realEstate}>
+            {PROPERTY_TYPES.map((item) => (
+              <option key={item} value={item}>{t[PROPERTY_TYPE_KEYS[item]] || item}</option>
+            ))}
+          </optgroup>
+          <optgroup label={t.markets}>
+            {MARKET_CATEGORIES.map((item) => (
+              <option key={item} value={item}>{t[MARKET_CATEGORY_KEYS[item]] || item}</option>
+            ))}
+          </optgroup>
         </select>
       </div>
 
       {/* Title */}
       <div>
-        <label className="text-xs font-medium text-gray-600 mb-1 block">Title</label>
+        <label className="text-xs font-medium text-gray-600 mb-1 block">{t.title}</label>
         <input
           type="text"
           placeholder="e.g. 3-Bedroom Villa in Sal"
@@ -395,7 +424,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
 
       {/* Description */}
       <div>
-        <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
+        <label className="text-xs font-medium text-gray-600 mb-1 block">{t.description}</label>
         <textarea
           rows={3}
           placeholder="Describe your listing..."
@@ -407,7 +436,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
 
       {/* Price */}
       <div>
-        <label className="text-xs font-medium text-gray-600 mb-1 block">Price (CVE)</label>
+        <label className="text-xs font-medium text-gray-600 mb-1 block">{t.priceCVE}</label>
         <input
           type="number"
           placeholder="0"
@@ -422,7 +451,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       {/* Location: Island + Municipality */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Island</label>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">{t.island}</label>
           <select
             required
             value={island}
@@ -436,7 +465,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           </select>
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Municipality</label>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">{t.municipality}</label>
           <input
             type="text"
             placeholder="Zone / Area"
@@ -450,11 +479,11 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       {/* Property-Specific Fields */}
       {isPropertyCategory && (
         <div className="p-4 rounded-lg bg-blue-50/50 border border-blue-100 space-y-3">
-          <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">Property Details</p>
+          <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">{t.propertyType}</p>
 
           {/* Deal Type Toggle */}
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-1.5 block">Deal Type</label>
+            <label className="text-xs font-medium text-gray-600 mb-1.5 block">{t.dealType}</label>
             <div className="flex rounded-lg border border-gray-200 overflow-hidden">
               <button
                 type="button"
@@ -463,7 +492,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
                   dealType === "sale" ? "bg-[#2563EB] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                For Sale
+                {t.forSale}
               </button>
               <button
                 type="button"
@@ -472,7 +501,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
                   dealType === "rent" ? "bg-[#2563EB] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                For Rent
+                {t.forRent}
               </button>
             </div>
           </div>
@@ -480,7 +509,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           {/* Beds, Baths, Area */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Bedrooms</label>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">{t.bedrooms}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -491,7 +520,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Bathrooms</label>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">{t.bathrooms}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -502,7 +531,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Area (m&sup2;)</label>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">{t.areaM2}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -520,7 +549,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
-          <span className="text-xs font-medium text-gray-600">Pin Location (Optional)</span>
+          <span className="text-xs font-medium text-gray-600">{t.pinLocation}</span>
         </div>
         <div className="rounded-lg overflow-hidden border border-gray-200">
           <LeafletPicker
@@ -580,7 +609,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         className="w-full py-3 rounded-lg bg-[#2563EB] text-white text-sm font-semibold hover:bg-[#1D4ED8] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
-        {status === "submitting" ? (isEditing ? "Saving..." : "Posting...") : isEditing ? "Guardar Alteracoes" : isPropertyCategory ? "List Property" : "Post Ad"}
+        {status === "submitting" ? (isEditing ? "..." : "...") : isEditing ? t.editListing : isPropertyCategory ? t.listProperty : t.postAdButton}
       </button>
 
       {status === "error" && (

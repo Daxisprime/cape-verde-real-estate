@@ -13,13 +13,14 @@ import Footer from '@/components/Footer';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { capeVerdeProperties } from '@/data/cape-verde-properties';
 import { useListings } from '@/hooks/useListings';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPin, Bed, Bath } from 'lucide-react';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
   {
     ssr: false,
-    loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
+    loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">{/* Loading Map */}</div>
   }
 );
 
@@ -30,6 +31,7 @@ function formatPrice(price: number): string {
 }
 
 export default function HomeContent() {
+  const { t } = useLanguage();
   const {
     isResultsViewActive, setIsResultsViewActive,
     searchMode, listingType, headerSearchQuery,
@@ -189,14 +191,14 @@ export default function HomeContent() {
           onClick={() => setIsMapViewActive(false)}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
         >
-          <span aria-hidden>&#x1F4CB;</span> List
+          <span aria-hidden>&#x1F4CB;</span> {t.list}
         </button>
 
         <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden relative">
           {/* Left listing feed */}
           <div className="w-full md:w-[450px] lg:w-[500px] h-full overflow-y-auto z-10 px-3 pt-4 pb-24 border-r border-gray-100 bg-white">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              {filteredProperties.length} Properties
+              {filteredProperties.length} {t.properties}
             </p>
             <div className="space-y-2">
               {filteredProperties.slice(0, 20).map(property => (
@@ -254,7 +256,7 @@ export default function HomeContent() {
           onClick={() => setIsMapViewActive(true)}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
         >
-          <span aria-hidden>&#x1F5FA;&#xFE0F;</span> Map
+          <span aria-hidden>&#x1F5FA;&#xFE0F;</span> {t.map}
         </button>
 
         <div className="relative w-full max-w-7xl mx-auto px-3 pt-4 pb-24">
@@ -282,7 +284,7 @@ export default function HomeContent() {
           />
 
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            {filteredProperties.length} Available Properties
+            {filteredProperties.length} {t.availableProperties}
           </p>
 
           {/* Masonry grid */}
@@ -309,7 +311,7 @@ export default function HomeContent() {
                       }`}
                     />
                     <span className="absolute top-2 left-2 text-[9px] font-bold bg-white/90 backdrop-blur-sm text-[#2563EB] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      {listingType === 'rent' ? 'Rent' : 'Sale'}
+                      {listingType === 'rent' ? t.forRent : t.forSale}
                     </span>
                   </div>
                   <div className="p-2.5">

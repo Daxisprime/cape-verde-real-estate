@@ -135,6 +135,56 @@ export interface Translations {
   investmentProperties: string;
   marketReports: string;
   personalizedAdvice: string;
+
+  // Categories - Property Types
+  villa: string;
+  duplex: string;
+  studio: string;
+  penthouse: string;
+
+  // Categories - Market
+  catVehicles: string;
+  catElectronics: string;
+  catHomeFurniture: string;
+  catBuildingMaterials: string;
+  catRestaurants: string;
+  catFashion: string;
+  catBabiesKids: string;
+  catPets: string;
+  catMaintenance: string;
+  catProfessionalServices: string;
+
+  // Form labels
+  photos: string;
+  category: string;
+  title: string;
+  description: string;
+  priceCVE: string;
+  island: string;
+  municipality: string;
+  dealType: string;
+  forSale: string;
+  forRent: string;
+  bathrooms: string;
+  areaM2: string;
+  pinLocation: string;
+  postAdButton: string;
+  promoteAd: string;
+  sellButton: string;
+
+  // Sell/Edit page
+  createNewListing: string;
+  editListing: string;
+  updateDetails: string;
+  postDescription: string;
+  back: string;
+  loadingData: string;
+
+  // Results view
+  availableProperties: string;
+  properties: string;
+  list: string;
+  loadingMap: string;
 }
 
 // Translations data
@@ -260,7 +310,57 @@ const translations: Record<LanguageCode, Translations> = {
     readyToInvest: 'Ready to Invest?',
     investmentProperties: 'Investment Properties',
     marketReports: 'Market Reports',
-    personalizedAdvice: 'Get personalized investment advice from our market experts and discover the best opportunities across Cape Verde\'s growing property market.'
+    personalizedAdvice: 'Get personalized investment advice from our market experts and discover the best opportunities across Cape Verde\'s growing property market.',
+
+    // Categories - Property Types
+    villa: 'Villa',
+    duplex: 'Duplex',
+    studio: 'Studio',
+    penthouse: 'Penthouse',
+
+    // Categories - Market
+    catVehicles: 'Vehicles & Automotive',
+    catElectronics: 'Electronics & Computers',
+    catHomeFurniture: 'Home, Furniture & Appliances',
+    catBuildingMaterials: 'Building Materials & Tools',
+    catRestaurants: 'Restaurants & Menus (Takeaway)',
+    catFashion: 'Fashion, Clothing & Retail',
+    catBabiesKids: 'Babies & Kids Items',
+    catPets: 'Pets & Animal Supplies',
+    catMaintenance: 'Maintenance & Repair Services',
+    catProfessionalServices: 'Professional & Event Services',
+
+    // Form labels
+    photos: 'Photos',
+    category: 'Category',
+    title: 'Title',
+    description: 'Description',
+    priceCVE: 'Price (CVE)',
+    island: 'Island',
+    municipality: 'Municipality',
+    dealType: 'Deal Type',
+    forSale: 'For Sale',
+    forRent: 'For Rent',
+    bathrooms: 'Bathrooms',
+    areaM2: 'Area (m\u00B2)',
+    pinLocation: 'Pin Location (Optional)',
+    postAdButton: 'Post Ad',
+    promoteAd: 'Promote Ad',
+    sellButton: '+ SELL',
+
+    // Sell/Edit page
+    createNewListing: 'Create New Listing',
+    editListing: 'Edit Listing',
+    updateDetails: 'Update your listing details below.',
+    postDescription: 'Post a property, item, or service to the marketplace.',
+    back: 'Back',
+    loadingData: 'Loading listing data...',
+
+    // Results view
+    availableProperties: 'Available Properties',
+    properties: 'Properties',
+    list: 'List',
+    loadingMap: 'Loading Map...',
   },
   pt: {
     // UI Navigation
@@ -383,7 +483,57 @@ const translations: Record<LanguageCode, Translations> = {
     readyToInvest: 'Pronto para Investir?',
     investmentProperties: 'Propriedades de Investimento',
     marketReports: 'Relatórios de Mercado',
-    personalizedAdvice: 'Obtenha conselhos de investimento personalizados dos nossos especialistas de mercado e descubra as melhores oportunidades no crescente mercado imobiliário de Cabo Verde.'
+    personalizedAdvice: 'Obtenha conselhos de investimento personalizados dos nossos especialistas de mercado e descubra as melhores oportunidades no crescente mercado imobiliário de Cabo Verde.',
+
+    // Categories - Property Types
+    villa: 'Vivenda',
+    duplex: 'Duplex',
+    studio: 'Estúdio',
+    penthouse: 'Cobertura',
+
+    // Categories - Market
+    catVehicles: 'Veículos e Automóvel',
+    catElectronics: 'Eletrónicos e Computadores',
+    catHomeFurniture: 'Casa, Móveis e Eletrodomésticos',
+    catBuildingMaterials: 'Materiais de Construção e Ferramentas',
+    catRestaurants: 'Restaurantes e Menus (Takeaway)',
+    catFashion: 'Moda, Roupa e Retalho',
+    catBabiesKids: 'Bebés e Crianças',
+    catPets: 'Animais e Acessórios',
+    catMaintenance: 'Manutenção e Reparação',
+    catProfessionalServices: 'Serviços Profissionais e Eventos',
+
+    // Form labels
+    photos: 'Fotos',
+    category: 'Categoria',
+    title: 'Título',
+    description: 'Descrição',
+    priceCVE: 'Preço (CVE)',
+    island: 'Ilha',
+    municipality: 'Município',
+    dealType: 'Tipo de Negócio',
+    forSale: 'Venda',
+    forRent: 'Arrendamento',
+    bathrooms: 'Casas de Banho',
+    areaM2: 'Área (m²)',
+    pinLocation: 'Localização no Mapa (Opcional)',
+    postAdButton: 'Publicar Anúncio',
+    promoteAd: 'Promover Anúncio',
+    sellButton: '+ VENDER',
+
+    // Sell/Edit page
+    createNewListing: 'Criar Novo Anúncio',
+    editListing: 'Editar Anúncio',
+    updateDetails: 'Atualize os detalhes do seu anúncio abaixo.',
+    postDescription: 'Publique uma propriedade, artigo ou serviço no mercado.',
+    back: 'Voltar',
+    loadingData: 'A carregar dados...',
+
+    // Results view
+    availableProperties: 'Propriedades Disponíveis',
+    properties: 'Propriedades',
+    list: 'Lista',
+    loadingMap: 'A carregar mapa...',
   },
   fr: {
     // UI Navigation
@@ -506,7 +656,48 @@ const translations: Record<LanguageCode, Translations> = {
     readyToInvest: 'Prêt à Investir?',
     investmentProperties: 'Propriétés d\'Investissement',
     marketReports: 'Rapports de Marché',
-    personalizedAdvice: 'Obtenez des conseils d\'investissement personnalisés de nos spécialistes du marché et découvrez les meilleures opportunités dans le marché immobilier en croissance du Cap-Vert.'
+    personalizedAdvice: 'Obtenez des conseils d\'investissement personnalisés de nos spécialistes du marché et découvrez les meilleures opportunités dans le marché immobilier en croissance du Cap-Vert.',
+
+    villa: 'Villa',
+    duplex: 'Duplex',
+    studio: 'Studio',
+    penthouse: 'Penthouse',
+    catVehicles: 'Véhicules et Automobile',
+    catElectronics: 'Électronique et Informatique',
+    catHomeFurniture: 'Maison, Meubles et Appareils',
+    catBuildingMaterials: 'Matériaux de Construction et Outils',
+    catRestaurants: 'Restaurants et Menus (À emporter)',
+    catFashion: 'Mode, Vêtements et Commerce',
+    catBabiesKids: 'Bébés et Enfants',
+    catPets: 'Animaux et Accessoires',
+    catMaintenance: 'Maintenance et Réparation',
+    catProfessionalServices: 'Services Professionnels et Événements',
+    photos: 'Photos',
+    category: 'Catégorie',
+    title: 'Titre',
+    description: 'Description',
+    priceCVE: 'Prix (CVE)',
+    island: 'Île',
+    municipality: 'Municipalité',
+    dealType: 'Type de Transaction',
+    forSale: 'À Vendre',
+    forRent: 'À Louer',
+    bathrooms: 'Salles de Bain',
+    areaM2: 'Surface (m²)',
+    pinLocation: 'Emplacement sur la Carte (Optionnel)',
+    postAdButton: 'Publier Annonce',
+    promoteAd: 'Promouvoir Annonce',
+    sellButton: '+ VENDRE',
+    createNewListing: 'Créer une Nouvelle Annonce',
+    editListing: 'Modifier Annonce',
+    updateDetails: 'Mettez à jour les détails de votre annonce.',
+    postDescription: 'Publiez une propriété, un article ou un service.',
+    back: 'Retour',
+    loadingData: 'Chargement des données...',
+    availableProperties: 'Propriétés Disponibles',
+    properties: 'Propriétés',
+    list: 'Liste',
+    loadingMap: 'Chargement de la carte...',
   },
   cv: {
     // UI Navigation
@@ -629,7 +820,48 @@ const translations: Record<LanguageCode, Translations> = {
     readyToInvest: 'Prontu pa Investi?',
     investmentProperties: 'Kasa di Investimentu',
     marketReports: 'Relatóriu di Merkadu',
-    personalizedAdvice: 'Siña konseilhu personalizadu di investimentu di nos spesialista di merkadu i deskobre di mihór oportunidadi na merkadu di kasa ki ta krexi na Kabu Verdi.'
+    personalizedAdvice: 'Siña konseilhu personalizadu di investimentu di nos spesialista di merkadu i deskobre di mihór oportunidadi na merkadu di kasa ki ta krexi na Kabu Verdi.',
+
+    villa: 'Vivenda',
+    duplex: 'Duplex',
+    studio: 'Estúdiu',
+    penthouse: 'Kobertura',
+    catVehicles: 'Veíkulu i Otomóvel',
+    catElectronics: 'Eletróniku i Komputador',
+    catHomeFurniture: 'Kasa, Móvel i Apareilhu',
+    catBuildingMaterials: 'Material di Konstrusão i Feramenta',
+    catRestaurants: 'Restauranti i Menu (Takeaway)',
+    catFashion: 'Moda, Ropa i Komersu',
+    catBabiesKids: 'Bebé i Kriansa',
+    catPets: 'Animal i Asesóriu',
+    catMaintenance: 'Manutensão i Reparasão',
+    catProfessionalServices: 'Servisu Profisional i Eventu',
+    photos: 'Foto',
+    category: 'Kategoria',
+    title: 'Títulu',
+    description: 'Deskrisão',
+    priceCVE: 'Presu (CVE)',
+    island: 'Ilha',
+    municipality: 'Munisípiu',
+    dealType: 'Tipu di Negósiu',
+    forSale: 'Pa Bende',
+    forRent: 'Pa Aluga',
+    bathrooms: 'Kasa di Banhu',
+    areaM2: 'Área (m²)',
+    pinLocation: 'Lokalizasão na Mapa (Opsional)',
+    postAdButton: 'Publika Anúnsiu',
+    promoteAd: 'Promove Anúnsiu',
+    sellButton: '+ BENDE',
+    createNewListing: 'Kria Novu Anúnsiu',
+    editListing: 'Edita Anúnsiu',
+    updateDetails: 'Atualiza detalhi di bu anúnsiu.',
+    postDescription: 'Publika propriedadi, artigu o servisu na merkadu.',
+    back: 'Volta',
+    loadingData: 'Ta karega dadus...',
+    availableProperties: 'Kasa Disponível',
+    properties: 'Propriedadi',
+    list: 'Lista',
+    loadingMap: 'Ta karega mapa...',
   }
 };
 
