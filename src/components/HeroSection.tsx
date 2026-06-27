@@ -42,7 +42,7 @@ const MARKETPLACE_CATEGORIES = [
 export default function HeroSection() {
   const { t } = useLanguage();
   const [backgroundImage, setBackgroundImage] = useState(CAPE_VERDE_HERO_IMAGES[0]);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageReady, setImageReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [marketplaceTab, setMarketplaceTab] = useState<"goods" | "services">("goods");
@@ -77,11 +77,11 @@ export default function HeroSection() {
     img.src = CAPE_VERDE_HERO_IMAGES[currentIndex];
     img.onload = () => {
       setBackgroundImage(CAPE_VERDE_HERO_IMAGES[currentIndex]);
-      setImageLoaded(true);
+      setImageReady(true);
     };
     img.onerror = () => {
       setBackgroundImage(CAPE_VERDE_HERO_IMAGES[currentIndex]);
-      setImageLoaded(true);
+      setImageReady(true);
     };
   }, []);
 
@@ -145,12 +145,12 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden">
+    <section className="relative w-full h-[72vh] min-h-[500px] flex flex-col overflow-hidden bg-slate-900">
       <div
-        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 z-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${imageReady ? 'opacity-100' : 'opacity-0'}`}
         style={{ backgroundImage: `url(${backgroundImage})` }}
       />
-      <div className="absolute inset-0 bg-slate-950/40 z-0 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 z-[1] bg-slate-950/40 backdrop-blur-[1px]" />
 
 
       {/* Centered content area */}
