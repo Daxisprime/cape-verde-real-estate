@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import PromoteListingDrawer from "@/components/PromoteListingDrawer";
+import AdminPanel from "@/components/AdminPanel";
 import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
@@ -55,6 +56,7 @@ export default function MyStorePage() {
   const vendorAvatar = profile?.avatar || fallbackVendor.avatar_url;
   const vendorPhone = profile?.phone || fallbackVendor.phone;
   const vendorEmail = user?.email || '';
+  const isAdmin = profile?.role === 'admin';
 
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -418,6 +420,9 @@ export default function MyStorePage() {
             </div>
           </div>
         </section>
+
+        {/* Admin Panel - only visible for admin role */}
+        {isAdmin && <AdminPanel />}
 
         {/* Listings Section */}
         <section>
