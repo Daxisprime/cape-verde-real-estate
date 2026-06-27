@@ -167,21 +167,29 @@ export default function MyStorePage() {
     }
   };
 
-  const handleMarkSold = (id: string) => {
+  const handleMarkSold = async (id: string) => {
     setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: "closed" as ListingStatus } : l)));
+    const supabase = createSupabaseBrowserClient();
+    if (supabase && user) {
+      await supabase.from('properties').update({ status: 'sold' } as never).eq('id', id).eq('agent_id', user.id);
+    }
   };
 
-  const handleRelist = (id: string) => {
+  const handleRelist = async (id: string) => {
     setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: "active" as ListingStatus } : l)));
+    const supabase = createSupabaseBrowserClient();
+    if (supabase && user) {
+      await supabase.from('properties').update({ status: 'active' } as never).eq('id', id).eq('agent_id', user.id);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    const supabase = createSupabaseBrowserClient();
-    if (supabase) {
-      await supabase.from('properties').delete().eq('id', id);
-    }
     setListings((prev) => prev.filter((l) => l.id !== id));
     setDeleteTarget(null);
+    const supabase = createSupabaseBrowserClient();
+    if (supabase && user) {
+      await supabase.from('properties').delete().eq('id', id).eq('agent_id', user.id);
+    }
   };
 
   const handleEdit = (id: string) => {

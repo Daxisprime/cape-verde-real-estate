@@ -100,6 +100,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const [facebookHandle, setFacebookHandle] = useState("");
   const [twitterHandle, setTwitterHandle] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -155,11 +156,29 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     if (!title || !price || !island || !category) return;
 
     setStatus("submitting");
+    setErrorMessage("");
+
+    const sellerId = user?.id;
+
+    // Optimistic UI: fire callback immediately so the local list updates
+    if (isEditing) {
+      onAdCreated?.({
+        id: editData?.id || `local-${Date.now()}`,
+        mode: isPropertyCategory ? "real_estate" : "item_service",
+        title,
+        price: parseFloat(price),
+        island,
+        zone: municipality || null,
+        images: previews,
+        bedrooms: isPropertyCategory && bedrooms ? parseInt(bedrooms) : null,
+        bathrooms: isPropertyCategory && bathrooms ? parseInt(bathrooms) : null,
+        square_meters: isPropertyCategory && squareMeters ? parseFloat(squareMeters) : null,
+      });
+    }
+
     try {
       const supabase = createSupabaseBrowserClient();
-      if (!supabase) throw new Error("Not configured");
-
-      const sellerId = user?.id;
+      if (!supabase) throw new Error("Supabase not configured");
       if (!sellerId) throw new Error("You must be signed in to post an ad");
 
       // Upload new images (skip for existing URL previews from edit mode)
@@ -200,14 +219,19 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           latitude: coordinates?.[0] ?? null,
           longitude: coordinates?.[1] ?? null,
           images: imageUrls,
-          ...(isEditing ? {} : { agent_id: sellerId, status: "active" }),
         };
 
         if (isEditing && editData) {
-          const { error } = await supabase.from("properties").update(propertyPayload as never).eq("id", editData.id);
+          const { error } = await supabase
+            .from("properties")
+            .update(propertyPayload as never)
+            .eq("id", editData.id)
+            .eq("agent_id", sellerId);
           if (error) throw error;
         } else {
-          const { error } = await supabase.from("properties").insert({ ...propertyPayload, agent_id: sellerId, status: "active" } as never);
+          const { error } = await supabase
+            .from("properties")
+            .insert({ ...propertyPayload, agent_id: sellerId, status: "active" } as never);
           if (error) throw error;
         }
       } else {
@@ -219,14 +243,19 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           island,
           municipality: municipality || null,
           images: imageUrls,
-          ...(isEditing ? {} : { user_id: sellerId, status: "active", condition: "used" }),
         };
 
         if (isEditing && editData) {
-          const { error } = await supabase.from("marketplace_items").update(marketPayload as never).eq("id", editData.id);
+          const { error } = await supabase
+            .from("marketplace_items")
+            .update(marketPayload as never)
+            .eq("id", editData.id)
+            .eq("user_id", sellerId);
           if (error) throw error;
         } else {
-          const { error } = await supabase.from("marketplace_items").insert({ ...marketPayload, user_id: sellerId, status: "active", condition: "used" } as never);
+          const { error } = await supabase
+            .from("marketplace_items")
+            .insert({ ...marketPayload, user_id: sellerId, status: "active", condition: "used" } as never);
           if (error) throw error;
         }
       }
@@ -239,34 +268,41 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         }, { onConflict: 'id' });
       }
 
-      onAdCreated?.({
-        id: `local-${Date.now()}`,
-        mode: isPropertyCategory ? "real_estate" : "item_service",
-        title,
-        price: parseFloat(price),
-        island,
-        zone: municipality || null,
-        images: imageUrls.length > 0 ? imageUrls : previews,
-        bedrooms: isPropertyCategory && bedrooms ? parseInt(bedrooms) : null,
-        bathrooms: isPropertyCategory && bathrooms ? parseInt(bathrooms) : null,
-        square_meters: isPropertyCategory && squareMeters ? parseFloat(squareMeters) : null,
-      });
+      if (!isEditing) {
+        onAdCreated?.({
+          id: `local-${Date.now()}`,
+          mode: isPropertyCategory ? "real_estate" : "item_service",
+          title,
+          price: parseFloat(price),
+          island,
+          zone: municipality || null,
+          images: imageUrls.length > 0 ? imageUrls : previews,
+          bedrooms: isPropertyCategory && bedrooms ? parseInt(bedrooms) : null,
+          bathrooms: isPropertyCategory && bathrooms ? parseInt(bathrooms) : null,
+          square_meters: isPropertyCategory && squareMeters ? parseFloat(squareMeters) : null,
+        });
+      }
 
       setStatus("success");
-      setCategory("");
-      setTitle("");
-      setDescription("");
-      setPrice("");
-      setIsland("");
-      setMunicipality("");
-      setDealType("sale");
-      setBedrooms("");
-      setBathrooms("");
-      setSquareMeters("");
-      setCoordinates(null);
-      setImages([]);
-      setPreviews([]);
-    } catch {
+      if (!isEditing) {
+        setCategory("");
+        setTitle("");
+        setDescription("");
+        setPrice("");
+        setIsland("");
+        setMunicipality("");
+        setDealType("sale");
+        setBedrooms("");
+        setBathrooms("");
+        setSquareMeters("");
+        setCoordinates(null);
+        setImages([]);
+        setPreviews([]);
+      }
+    } catch (err: unknown) {
+      const supaError = err as { message?: string; details?: string; hint?: string; code?: string };
+      const msg = supaError?.message || supaError?.details || "An unexpected error occurred.";
+      setErrorMessage(msg);
       setStatus("error");
     }
   };
@@ -548,7 +584,18 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       </button>
 
       {status === "error" && (
-        <p className="text-xs text-red-500 text-center">Failed to post. Please sign in and try again.</p>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+          <p className="text-sm font-medium text-red-700">
+            {errorMessage || "Failed to save. Please sign in and try again."}
+          </p>
+          <button
+            type="button"
+            onClick={() => { setStatus("idle"); setErrorMessage(""); }}
+            className="mt-2 text-xs text-red-600 underline"
+          >
+            Dismiss
+          </button>
+        </div>
       )}
     </form>
   );
