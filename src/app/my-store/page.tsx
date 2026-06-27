@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import PromoteListingDrawer from "@/components/PromoteListingDrawer";
@@ -26,6 +26,8 @@ import {
   Facebook,
   Star,
   Crown,
+  Camera,
+  Loader2,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -54,6 +56,9 @@ export default function MyStorePage() {
   const vendorEmail = user?.email || '';
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     bio: fallbackVendor.bio,
     phone: vendorPhone,
@@ -102,8 +107,64 @@ export default function MyStorePage() {
     closed: listings.filter((l) => l.status === "closed").length,
   };
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1048576) {
+      alert("Image must be under 1MB");
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+  };
+
+  const handleSaveProfile = async () => {
+    setIsUploadingAvatar(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase || !user) {
+        setIsEditing(false);
+        return;
+      }
+
+      const updates: Record<string, string> = {
+        phone: editForm.phone || '',
+        bio: editForm.bio || '',
+        facebook_url: editForm.facebook_url || '',
+        instagram_url: editForm.instagram_url || '',
+        facebook_shop_url: editForm.facebook_shop_url || '',
+      };
+
+      // Upload avatar if a new file was selected
+      const fileInput = avatarInputRef.current;
+      const file = fileInput?.files?.[0];
+      if (file) {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filePath = `${user.id}/avatar.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, file, { upsert: true, contentType: file.type });
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+          updates.avatar = `${urlData.publicUrl}?t=${Date.now()}`;
+        }
+      }
+
+      await supabase.from('profiles').update(updates).eq('id', user.id);
+
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+        setAvatarPreview(null);
+      }
+    } catch (err) {
+      // silent fail - local preview remains
+    } finally {
+      setIsUploadingAvatar(false);
+      setIsEditing(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
   };
 
   const handleMarkSold = (id: string) => {
@@ -140,11 +201,42 @@ export default function MyStorePage() {
         {/* Profile Section */}
         <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-            <img
-              src={vendorAvatar}
-              alt={vendorName}
-              className="h-20 w-20 rounded-full object-cover shrink-0 ring-2 ring-gray-100"
-            />
+            <div className="relative group shrink-0">
+              <img
+                src={avatarPreview || vendorAvatar}
+                alt={vendorName}
+                className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-100"
+              />
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center transition-all cursor-pointer hover:bg-black/50"
+                >
+                  {isUploadingAvatar ? (
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </button>
+              )}
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleAvatarSelect}
+                className="hidden"
+              />
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="mt-2 w-full text-center text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Alterar Foto
+                </button>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
                 <div>
