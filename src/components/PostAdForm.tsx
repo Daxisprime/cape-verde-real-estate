@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { ImagePlus, X, Loader2, MapPin, Facebook } from "lucide-react";
 import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -57,7 +57,34 @@ export interface CreatedAd {
   square_meters: number | null;
 }
 
-export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCreated?: (ad: CreatedAd) => void }) {
+export interface ListingEditData {
+  id: string;
+  title: string;
+  description?: string | null;
+  price: number;
+  island: string;
+  location?: string | null;
+  municipality?: string | null;
+  property_type?: string | null;
+  category?: string | null;
+  listing_type?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  total_area?: number | null;
+  square_meters?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  images?: string[] | null;
+  mode?: "real_estate" | "item_service";
+}
+
+interface PostAdFormProps {
+  vendorId?: string;
+  onAdCreated?: (ad: CreatedAd) => void;
+  editData?: ListingEditData | null;
+}
+
+export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const { user } = useSupabaseAuth();
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
@@ -76,6 +103,28 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
   const [facebookHandle, setFacebookHandle] = useState("");
   const [twitterHandle, setTwitterHandle] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isEditing = !!editData;
+
+  useEffect(() => {
+    if (!editData) return;
+    setTitle(editData.title || "");
+    setDescription(editData.description || "");
+    setPrice(editData.price ? String(editData.price) : "");
+    setIsland(editData.island || "");
+    setMunicipality(editData.municipality || editData.location || "");
+    setCategory(editData.property_type || editData.category || "");
+    setDealType((editData.listing_type as "sale" | "rent") || "sale");
+    setBedrooms(editData.bedrooms ? String(editData.bedrooms) : "");
+    setBathrooms(editData.bathrooms ? String(editData.bathrooms) : "");
+    setSquareMeters(editData.total_area ? String(editData.total_area) : editData.square_meters ? String(editData.square_meters) : "");
+    if (editData.latitude && editData.longitude) {
+      setCoordinates([editData.latitude, editData.longitude]);
+    }
+    if (editData.images && editData.images.length > 0) {
+      setPreviews(editData.images);
+    }
+  }, [editData]);
 
   const isPropertyCategory = PROPERTY_TYPES.includes(category);
 
@@ -113,7 +162,13 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
       const sellerId = user?.id;
       if (!sellerId) throw new Error("You must be signed in to post an ad");
 
+      // Upload new images (skip for existing URL previews from edit mode)
       const imageUrls: string[] = [];
+      // Keep existing images that came from the database
+      if (isEditing && editData?.images) {
+        const existingUrls = previews.filter(p => p.startsWith('http'));
+        imageUrls.push(...existingUrls);
+      }
       for (const file of images) {
         try {
           const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -145,11 +200,16 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
           latitude: coordinates?.[0] ?? null,
           longitude: coordinates?.[1] ?? null,
           images: imageUrls,
-          agent_id: sellerId,
-          status: "active",
+          ...(isEditing ? {} : { agent_id: sellerId, status: "active" }),
         };
-        const { error } = await supabase.from("properties").insert(propertyPayload as never);
-        if (error) throw error;
+
+        if (isEditing && editData) {
+          const { error } = await supabase.from("properties").update(propertyPayload as never).eq("id", editData.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("properties").insert({ ...propertyPayload, agent_id: sellerId, status: "active" } as never);
+          if (error) throw error;
+        }
       } else {
         const marketPayload = {
           title,
@@ -159,12 +219,16 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
           island,
           municipality: municipality || null,
           images: imageUrls,
-          user_id: sellerId,
-          status: "active",
-          condition: "used",
+          ...(isEditing ? {} : { user_id: sellerId, status: "active", condition: "used" }),
         };
-        const { error } = await supabase.from("marketplace_items").insert(marketPayload as never);
-        if (error) throw error;
+
+        if (isEditing && editData) {
+          const { error } = await supabase.from("marketplace_items").update(marketPayload as never).eq("id", editData.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("marketplace_items").insert({ ...marketPayload, user_id: sellerId, status: "active", condition: "used" } as never);
+          if (error) throw error;
+        }
       }
 
       if (facebookHandle || twitterHandle) {
@@ -212,10 +276,10 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
   if (status === "success") {
     return (
       <div className="rounded-xl border border-green-100 bg-green-50 p-6 text-center">
-        <p className="text-base font-semibold text-green-800">Ad Posted!</p>
-        <p className="text-sm text-green-600 mt-1">Your listing is now live.</p>
+        <p className="text-base font-semibold text-green-800">{isEditing ? "Listing Updated!" : "Ad Posted!"}</p>
+        <p className="text-sm text-green-600 mt-1">{isEditing ? "Your changes have been saved." : "Your listing is now live."}</p>
         <button onClick={() => setStatus("idle")} className="mt-4 text-sm text-blue-600 underline">
-          Post another
+          {isEditing ? "Continue editing" : "Post another"}
         </button>
       </div>
     );
@@ -480,7 +544,7 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
         className="w-full py-3 rounded-lg bg-[#2563EB] text-white text-sm font-semibold hover:bg-[#1D4ED8] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
-        {status === "submitting" ? "Posting..." : isPropertyCategory ? "List Property" : "Post Ad"}
+        {status === "submitting" ? (isEditing ? "Saving..." : "Posting...") : isEditing ? "Guardar Alteracoes" : isPropertyCategory ? "List Property" : "Post Ad"}
       </button>
 
       {status === "error" && (
