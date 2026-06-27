@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, SlidersHorizontal, X, Home, Tag } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CV_9_ISLAND_IMAGES = [
   "https://images.unsplash.com/photo-1591017609590-2cd7c6a0e4ac?w=1920&q=75",
@@ -36,6 +37,7 @@ const MARKETPLACE_CATEGORIES = [
 ];
 
 export default function HeroSection() {
+  const { t } = useLanguage();
   const [backgroundImage, setBackgroundImage] = useState(CV_9_ISLAND_IMAGES[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -113,12 +115,12 @@ export default function HeroSection() {
 
   const getSlogan = () => {
     if (searchMode === "markets") {
-      return "Discover markets and services across Cabo Verde";
+      return t.marketSlogan;
     }
     if (listingType === "rent") {
-      return "Discover properties for rent across Cabo Verde";
+      return t.rentSlogan;
     }
-    return "Discover properties for sale across Cabo Verde";
+    return t.buySlogan;
   };
 
   return (
@@ -149,7 +151,7 @@ export default function HeroSection() {
                       listingType === "buy" ? "text-white" : "text-white/50 hover:text-white/75"
                     }`}
                   >
-                    For Sale
+                    {t.forSaleTab}
                     {listingType === "buy" && (
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                     )}
@@ -160,7 +162,7 @@ export default function HeroSection() {
                       listingType === "rent" ? "text-white" : "text-white/50 hover:text-white/75"
                     }`}
                   >
-                    To Rent
+                    {t.toRent}
                     {listingType === "rent" && (
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                     )}
@@ -174,7 +176,7 @@ export default function HeroSection() {
                       marketplaceTab === "goods" ? "text-white" : "text-white/50 hover:text-white/75"
                     }`}
                   >
-                    Goods
+                    {t.goods}
                     {marketplaceTab === "goods" && (
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                     )}
@@ -185,7 +187,7 @@ export default function HeroSection() {
                       marketplaceTab === "services" ? "text-white" : "text-white/50 hover:text-white/75"
                     }`}
                   >
-                    Local Services
+                    {t.localServices}
                     {marketplaceTab === "services" && (
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] h-[3px] bg-[#EF4444] rounded-full" />
                     )}
@@ -205,8 +207,8 @@ export default function HeroSection() {
                     inputMode="search"
                     enterKeyHint="search"
                     placeholder={searchMode === "realestate"
-                      ? "Island or neighborhood..."
-                      : "Search items or services..."
+                      ? t.islandOrNeighborhood
+                      : t.searchItemsOrServices
                     }
                     className="w-full pl-9 md:pl-12 pr-8 py-2.5 md:py-3 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
                     value={searchQuery}
@@ -236,7 +238,7 @@ export default function HeroSection() {
                     }`}
                   >
                     {isFilterOpen ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
-                    <span className="hidden md:inline">Filters</span>
+                    <span className="hidden md:inline">{t.filters}</span>
                   </button>
 
                   <button
@@ -244,7 +246,7 @@ export default function HeroSection() {
                     className="bg-[#0044FF] hover:bg-[#0033CC] text-white font-bold p-2.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap text-sm"
                   >
                     <Search className="h-4 w-4" />
-                  <span className="hidden md:inline">Search</span>
+                  <span className="hidden md:inline">{t.search}</span>
                 </button>
               </div>
             </form>
@@ -258,7 +260,7 @@ export default function HeroSection() {
                     className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-blue-50 transition-colors"
                   >
                     <Home className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                    <span><span className="font-medium text-gray-900">{searchQuery}</span> <span className="text-gray-500">in Real Estate</span></span>
+                    <span><span className="font-medium text-gray-900">{searchQuery}</span> <span className="text-gray-500">{t.inRealEstate}</span></span>
                   </button>
                   <button
                     type="button"
@@ -267,7 +269,7 @@ export default function HeroSection() {
                     className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-orange-50 transition-colors border-t border-gray-100"
                   >
                     <Tag className="h-4 w-4 text-orange-600 flex-shrink-0" />
-                    <span><span className="font-medium text-gray-900">{searchQuery}</span> <span className="text-gray-500">in General Markets</span></span>
+                    <span><span className="font-medium text-gray-900">{searchQuery}</span> <span className="text-gray-500">{t.inGeneralMarkets}</span></span>
                   </button>
                 </div>
               )}
@@ -279,7 +281,7 @@ export default function HeroSection() {
                 {searchMode === "realestate" ? (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.type}</label>
                       <select
                         value={propertyType}
                         onChange={(e) => setPropertyType(e.target.value)}
@@ -292,7 +294,7 @@ export default function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bedrooms</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.bedrooms}</label>
                       <select
                         value={bedrooms}
                         onChange={(e) => setBedrooms(e.target.value)}
@@ -305,7 +307,7 @@ export default function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.minPrice}</label>
                       <input
                         type="number"
                         placeholder="CVE"
@@ -316,7 +318,7 @@ export default function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.maxPrice}</label>
                       <input
                         type="number"
                         placeholder="CVE"
@@ -329,7 +331,7 @@ export default function HeroSection() {
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Category</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.category}</label>
                       <select
                         value={marketplaceCategory}
                         onChange={(e) => setMarketplaceCategory(e.target.value)}
@@ -342,7 +344,7 @@ export default function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Min Price</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.minPrice}</label>
                       <input
                         type="number"
                         placeholder="CVE"
@@ -353,7 +355,7 @@ export default function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Price</label>
+                      <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.maxPrice}</label>
                       <input
                         type="number"
                         placeholder="CVE"

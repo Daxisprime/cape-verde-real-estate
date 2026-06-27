@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useSearchMode } from '@/contexts/SearchModeContext';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage, type Translations } from '@/contexts/LanguageContext';
 import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus } from 'lucide-react';
 import { useMarketplace, type MarketplaceItem } from '@/hooks/useMarketplace';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
@@ -18,6 +18,19 @@ const SafeLeafletMap = dynamic(
     loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400 text-sm"></div>
   }
 );
+
+const CATEGORY_TRANSLATION_KEYS: Record<string, keyof Translations> = {
+  "Vehicles & Automotive": "catVehicles",
+  "Electronics & Computers": "catElectronics",
+  "Home, Furniture & Appliances": "catHomeFurniture",
+  "Building Materials & Tools": "catBuildingMaterials",
+  "Restaurants & Menus (Takeaway)": "catRestaurants",
+  "Fashion, Clothing & Retail": "catFashion",
+  "Babies & Kids Items": "catBabiesKids",
+  "Pets & Animal Supplies": "catPets",
+  "Maintenance & Repair Services": "catMaintenance",
+  "Professional & Event Services": "catProfessionalServices",
+};
 
 const MARKET_TAXONOMY = [
   {
@@ -328,7 +341,7 @@ export default function MarketsView() {
         {selectedCategory && (
           <>
             <ChevronRight className="w-3 h-3 text-slate-300" />
-            <span className="text-slate-800 font-semibold">{selectedCategory}</span>
+            <span className="text-slate-800 font-semibold">{t[CATEGORY_TRANSLATION_KEYS[selectedCategory]] || selectedCategory}</span>
           </>
         )}
         {selectedSubcategory && (
@@ -392,7 +405,7 @@ export default function MarketsView() {
               >
                 <span className="flex items-center gap-2 min-w-0">
                   <span className="text-sm flex-shrink-0">{cat.icon}</span>
-                  <span className="truncate">{cat.name}</span>
+                  <span className="truncate">{t[CATEGORY_TRANSLATION_KEYS[cat.name]] || cat.name}</span>
                 </span>
                 <ChevronRight className="h-3 w-3 opacity-40 flex-shrink-0" />
               </div>
@@ -407,7 +420,7 @@ export default function MarketsView() {
               className="absolute left-full top-0 w-64 bg-white border border-slate-200 shadow-2xl rounded-r-xl p-4 z-50 h-full overflow-y-auto pointer-events-auto block"
               style={{ marginLeft: '-1px' }}
             >
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{hoveredCategory}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{hoveredCategory ? (t[CATEGORY_TRANSLATION_KEYS[hoveredCategory]] || hoveredCategory) : ''}</p>
               <button
                 onClick={() => { setSelectedCategory(hoveredCategory); setSelectedSubcategory(null); setHoveredCategory(null); }}
                 className="w-full text-left py-2 px-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-[#0044FF] block transition-colors"
@@ -451,7 +464,7 @@ export default function MarketsView() {
 
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 sm:mb-3 px-1">
                 {filteredItems.length} {t.itemsFound}
-                {selectedCategory && <span className="text-[#0044FF]"> in {selectedCategory}</span>}
+                {selectedCategory && <span className="text-[#0044FF]"> in {t[CATEGORY_TRANSLATION_KEYS[selectedCategory]] || selectedCategory}</span>}
                 {selectedSubcategory && <span className="text-slate-500"> / {selectedSubcategory}</span>}
               </p>
               <div className="columns-2 lg:columns-3 gap-2 sm:gap-3 w-full">
@@ -542,7 +555,7 @@ export default function MarketsView() {
                     <Package className="w-10 h-10 text-slate-300" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-800 mb-2">
-                    {t.noItemsFound}{selectedCategory ? ` in ${selectedCategory}` : ''}
+                    {t.noItemsFound}{selectedCategory ? ` in ${t[CATEGORY_TRANSLATION_KEYS[selectedCategory]] || selectedCategory}` : ''}
                   </h3>
                   <p className="text-sm text-slate-500 max-w-md mb-6">
                     {t.beFirstToPost}

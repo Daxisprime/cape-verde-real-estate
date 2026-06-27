@@ -206,6 +206,22 @@ export interface Translations {
   callAgent: string;
   location: string;
   price: string;
+
+  // Hero section - tabs & filters
+  forSaleTab: string;
+  toRent: string;
+  goods: string;
+  localServices: string;
+  filters: string;
+  islandOrNeighborhood: string;
+  searchItemsOrServices: string;
+  inRealEstate: string;
+  inGeneralMarkets: string;
+  type: string;
+  any: string;
+  condition: string;
+  newItem: string;
+  usedItem: string;
 }
 
 // Translations data
@@ -403,6 +419,22 @@ const translations: Record<LanguageCode, Translations> = {
     callAgent: 'Call Agent',
     location: 'Location',
     price: 'Price',
+
+    // Hero section - tabs & filters
+    forSaleTab: 'For Sale',
+    toRent: 'To Rent',
+    goods: 'Goods',
+    localServices: 'Local Services',
+    filters: 'Filters',
+    islandOrNeighborhood: 'Island or neighborhood...',
+    searchItemsOrServices: 'Search items or services...',
+    inRealEstate: 'in Real Estate',
+    inGeneralMarkets: 'in General Markets',
+    type: 'Type',
+    any: 'Any',
+    condition: 'Condition',
+    newItem: 'New',
+    usedItem: 'Used',
   },
   pt: {
     // UI Navigation
@@ -597,6 +629,22 @@ const translations: Record<LanguageCode, Translations> = {
     callAgent: 'Ligar Agente',
     location: 'Localização',
     price: 'Preço',
+
+    // Hero section - tabs & filters
+    forSaleTab: 'Venda',
+    toRent: 'Arrendamento',
+    goods: 'Produtos',
+    localServices: 'Serviços Locais',
+    filters: 'Filtros',
+    islandOrNeighborhood: 'Ilha ou bairro...',
+    searchItemsOrServices: 'Pesquisar artigos ou serviços...',
+    inRealEstate: 'em Imobiliária',
+    inGeneralMarkets: 'em Mercados',
+    type: 'Tipo',
+    any: 'Qualquer',
+    condition: 'Condição',
+    newItem: 'Novo',
+    usedItem: 'Usado',
   },
   fr: {
     // UI Navigation
@@ -781,6 +829,22 @@ const translations: Record<LanguageCode, Translations> = {
     callAgent: 'Appeler Agent',
     location: 'Emplacement',
     price: 'Prix',
+
+    // Hero section - tabs & filters
+    forSaleTab: 'À Vendre',
+    toRent: 'À Louer',
+    goods: 'Produits',
+    localServices: 'Services Locaux',
+    filters: 'Filtres',
+    islandOrNeighborhood: 'Île ou quartier...',
+    searchItemsOrServices: 'Rechercher articles ou services...',
+    inRealEstate: 'en Immobilier',
+    inGeneralMarkets: 'en Marchés',
+    type: 'Type',
+    any: 'Tous',
+    condition: 'État',
+    newItem: 'Neuf',
+    usedItem: 'Occasion',
   },
   cv: {
     // UI Navigation
@@ -965,6 +1029,22 @@ const translations: Record<LanguageCode, Translations> = {
     callAgent: 'Liga pa Agenti',
     location: 'Lokalizasão',
     price: 'Presu',
+
+    // Hero section - tabs & filters
+    forSaleTab: 'Pa Bende',
+    toRent: 'Pa Aluga',
+    goods: 'Produtu',
+    localServices: 'Servisu Lokal',
+    filters: 'Filtru',
+    islandOrNeighborhood: 'Ilha o bairu...',
+    searchItemsOrServices: 'Buska artigu o servisu...',
+    inRealEstate: 'na Imobiliária',
+    inGeneralMarkets: 'na Merkadu',
+    type: 'Tipu',
+    any: 'Kalker',
+    condition: 'Kondisão',
+    newItem: 'Novu',
+    usedItem: 'Uzadu',
   }
 };
 

@@ -12,6 +12,7 @@ import PropertyComparison from '@/components/PropertyComparison';
 import { capeVerdeProperties, type Property } from '@/data/cape-verde-properties';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearchMode } from '@/contexts/SearchModeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PropertyListingsProps {
   searchFilters?: {
@@ -159,6 +160,7 @@ export default function PropertyListings({
 
   const { user } = useAuth();
   const { searchMode, listingType } = useSearchMode();
+  const { t } = useLanguage();
   const [selectedDrawerProperty, setSelectedDrawerProperty] = useState<PropertyDrawerItem | null>(null);
 
   function handlePropertySelect(property: Property) {
@@ -183,9 +185,9 @@ export default function PropertyListings({
   }
 
   const getDynamicTitle = () => {
-    if (searchMode === "markets") return "Marketplace Items & Local Services";
-    if (listingType === "rent") return "Properties for Rent";
-    return "Properties for Sale";
+    if (searchMode === "markets") return t.markets;
+    if (listingType === "rent") return t.forRent;
+    return t.forSaleTab;
   };
 
   const filteredProperties = useMemo(() => {
@@ -317,7 +319,7 @@ export default function PropertyListings({
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">
-                    {filteredProperties.length} {searchMode === "markets" ? "items" : "properties"} found
+                    {filteredProperties.length} {searchMode === "markets" ? t.itemsFound : t.properties}
                   </span>
 
                   {getFilterSummary().length > 0 && (

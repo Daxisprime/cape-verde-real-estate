@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ResultsFilterStrip() {
   const { searchMode, listingType, setListingType } = useSearchMode();
+  const { t } = useLanguage();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [propertyType, setPropertyType] = useState('all');
   const [minBeds, setMinBeds] = useState('0');
@@ -39,7 +41,7 @@ export default function ResultsFilterStrip() {
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
-                  For Sale
+                  {t.forSaleTab}
                 </button>
                 <button
                   onClick={() => setListingType("rent")}
@@ -49,7 +51,7 @@ export default function ResultsFilterStrip() {
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
-                  To Rent
+                  {t.toRent}
                 </button>
               </div>
 
@@ -62,7 +64,7 @@ export default function ResultsFilterStrip() {
                 }`}
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filters
+                {t.filters}
               </button>
             </>
           ) : (
@@ -75,7 +77,7 @@ export default function ResultsFilterStrip() {
               }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filters
+              {t.filters}
             </button>
           )}
         </div>
@@ -86,29 +88,29 @@ export default function ResultsFilterStrip() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Property Type</label>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.propertyType}</label>
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
                   className="w-full px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
                 >
-                  <option value="all">All</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="house">House</option>
-                  <option value="villa">Villa</option>
-                  <option value="land">Land</option>
+                  <option value="all">{t.any}</option>
+                  <option value="apartment">{t.apartment}</option>
+                  <option value="house">{t.house}</option>
+                  <option value="villa">{t.villa}</option>
+                  <option value="land">{t.land}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bedrooms</label>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.bedrooms}</label>
                 <select
                   value={minBeds}
                   onChange={(e) => setMinBeds(e.target.value)}
                   className="w-full px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
                 >
-                  <option value="0">Any</option>
-                  <option value="studio">Studio</option>
+                  <option value="0">{t.any}</option>
+                  <option value="studio">{t.studio}</option>
                   <option value="1">1+</option>
                   <option value="2">2+</option>
                   <option value="3">3+</option>
@@ -117,11 +119,11 @@ export default function ResultsFilterStrip() {
               </div>
 
               <div className="col-span-2 sm:col-span-2">
-                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Price Range (CVE)</label>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{t.priceRange}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    placeholder="Min CVE"
+                    placeholder={t.minPrice}
                     value={priceMin}
                     onChange={(e) => setPriceMin(e.target.value)}
                     className="w-full px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
@@ -129,7 +131,7 @@ export default function ResultsFilterStrip() {
                   <span className="text-gray-300 text-xs flex-shrink-0">-</span>
                   <input
                     type="number"
-                    placeholder="Max CVE"
+                    placeholder={t.maxPrice}
                     value={priceMax}
                     onChange={(e) => setPriceMax(e.target.value)}
                     className="w-full px-3 py-2 text-xs text-gray-800 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-blue-400"
