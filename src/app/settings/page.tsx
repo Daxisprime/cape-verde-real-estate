@@ -225,6 +225,10 @@ export default function SettingsPage() {
       return;
     }
 
+    // Instant local preview via object URL
+    const previewUrl = URL.createObjectURL(file);
+    setProfileData(prev => ({ ...prev, avatar: previewUrl }));
+
     setIsUploadingAvatar(true);
     try {
       const supabase = createSupabaseBrowserClient();
@@ -247,18 +251,12 @@ export default function SettingsPage() {
 
       await supabase.from('profiles').update({ avatar: avatarUrl }).eq('id', authUser.id);
       setProfileData(prev => ({ ...prev, avatar: avatarUrl }));
+      URL.revokeObjectURL(previewUrl);
       await refreshProfile();
 
-      toast({ title: "Photo Updated", description: "Your profile photo has been updated." });
+      toast({ title: "Foto Atualizada", description: "A sua foto de perfil foi atualizada com sucesso." });
     } catch (err: unknown) {
-      // Fallback: use FileReader for local preview
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        setProfileData(prev => ({ ...prev, avatar: dataUrl }));
-      };
-      reader.readAsDataURL(file);
-      toast({ title: "Upload Issue", description: "Photo saved locally. It may not persist across sessions.", variant: "destructive" });
+      toast({ title: "Erro no Upload", description: "Foto guardada localmente. Pode nao persistir entre sessoes.", variant: "destructive" });
     } finally {
       setIsUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = '';
@@ -331,49 +329,45 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Avatar Section */}
                 <div className="flex items-center space-x-6">
-                  <div className="relative group">
+                  <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
                     <Avatar className="h-24 w-24 ring-2 ring-gray-100">
                       <AvatarImage src={profileData.avatar} alt={profileData.name} />
                       <AvatarFallback className="text-lg bg-blue-50 text-blue-700">
                         {profileData.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
-                    <button
-                      type="button"
-                      onClick={() => avatarInputRef.current?.click()}
-                      disabled={isUploadingAvatar}
-                      className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all cursor-pointer"
-                    >
+                    <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all pointer-events-none">
                       {isUploadingAvatar ? (
                         <Loader2 className="h-6 w-6 text-white animate-spin" />
                       ) : (
                         <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       )}
-                    </button>
+                    </div>
                     <input
                       ref={avatarInputRef}
                       type="file"
                       accept="image/jpeg,image/png,image/gif,image/webp"
                       onChange={handleAvatarChange}
                       className="hidden"
+                      id="avatar-file-input"
                     />
                   </div>
                   <div>
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => avatarInputRef.current?.click()}
                       disabled={isUploadingAvatar}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-md transition-all disabled:opacity-50"
                     >
                       {isUploadingAvatar ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Camera className="h-4 w-4 mr-2" />
+                        <Camera className="h-4 w-4" />
                       )}
-                      {isUploadingAvatar ? 'Uploading...' : 'Change Photo'}
-                    </Button>
-                    <p className="text-sm text-gray-500 mt-2">
-                      JPG, GIF or PNG. 1MB max.
+                      {isUploadingAvatar ? 'A carregar...' : 'Alterar Foto'}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      JPG, GIF ou PNG. Maximo 1MB.
                     </p>
                   </div>
                 </div>
