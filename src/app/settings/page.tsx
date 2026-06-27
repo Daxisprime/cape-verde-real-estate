@@ -47,6 +47,7 @@ export default function SettingsPage() {
     avatar: user?.avatar || "",
     facebookHandle: "",
     twitterHandle: "",
+    websiteUrl: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -122,6 +123,7 @@ export default function SettingsPage() {
             phone: profileData.phone,
             facebook_handle: profileData.facebookHandle || null,
             twitter_handle: profileData.twitterHandle || null,
+            website_url: profileData.websiteUrl || null,
           }, { onConflict: 'id' });
         }
       }
@@ -460,6 +462,19 @@ export default function SettingsPage() {
                         placeholder="yourhandle"
                       />
                       <p className="text-xs text-gray-400 mt-1">Just the handle, no @ needed</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="websiteUrl">Website da Empresa (Optional)</Label>
+                      <Input
+                        id="websiteUrl"
+                        value={profileData.websiteUrl}
+                        onChange={(e) => setProfileData(prev => ({
+                          ...prev,
+                          websiteUrl: e.target.value
+                        }))}
+                        placeholder="https://yourwebsite.com"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Your business or personal website URL</p>
                     </div>
                   </div>
                 </div>

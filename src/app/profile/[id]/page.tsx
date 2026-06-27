@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Phone, MessageCircle, MapPin, Bed, Bath, Square, ExternalLink } from "lucide-react";
+import { ArrowLeft, Phone, MessageCircle, MapPin, Bed, Bath, Square, ExternalLink, Globe } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { mockProfiles } from "@/lib/mockProfiles";
 
@@ -21,6 +21,7 @@ interface VendorProfile {
   facebook_shop_url?: string;
   facebook_handle?: string;
   instagram_handle?: string;
+  website_url?: string;
 }
 
 interface VendorAd {
@@ -53,7 +54,7 @@ export default function VendorProfilePage() {
       if (supabase && vendorId) {
         const { data: profileData, error } = await supabase
           .from("profiles")
-          .select("id, name, avatar, phone")
+          .select("id, name, avatar, phone, website_url")
           .eq("id", vendorId)
           .maybeSingle();
 
@@ -63,6 +64,7 @@ export default function VendorProfilePage() {
             full_name: profileData.name,
             avatar_url: profileData.avatar,
             phone: profileData.phone,
+            website_url: profileData.website_url,
           });
 
           const { data: adsData } = await supabase
@@ -198,7 +200,7 @@ export default function VendorProfilePage() {
           </div>
 
           {/* Social Deep-Link Buttons */}
-          {(profile.facebook_url || profile.instagram_url || profile.facebook_shop_url || profile.facebook_handle || profile.instagram_handle) && (
+          {(profile.facebook_url || profile.instagram_url || profile.facebook_shop_url || profile.facebook_handle || profile.instagram_handle || profile.website_url) && (
             <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-2">
               {(profile.facebook_handle || profile.facebook_url) && (() => {
                 const handle = profile.facebook_handle || (profile.facebook_url || '').replace(/^https?:\/\/(www\.)?facebook\.com\/?/i, '').replace(/\/$/, '');
@@ -243,6 +245,17 @@ export default function VendorProfilePage() {
                   </a>
                 );
               })()}
+              {profile.website_url && (
+                <a
+                  href={profile.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium text-sm border border-blue-200 bg-blue-50/50 px-3 py-1.5 rounded-lg transition-all"
+                >
+                  <Globe className="h-4 w-4" />
+                  Website
+                </a>
+              )}
             </div>
           )}
         </div>

@@ -28,6 +28,7 @@ import {
   Crown,
   Camera,
   Loader2,
+  Globe,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -66,6 +67,7 @@ export default function MyStorePage() {
     facebook_url: fallbackVendor.facebook_url,
     instagram_url: fallbackVendor.instagram_url,
     facebook_shop_url: fallbackVendor.facebook_shop_url || "",
+    website_url: "",
   });
 
   // Merge live listings with mock fallback
@@ -133,6 +135,7 @@ export default function MyStorePage() {
         facebook_url: editForm.facebook_url || '',
         instagram_url: editForm.instagram_url || '',
         facebook_shop_url: editForm.facebook_shop_url || '',
+        website_url: editForm.website_url || '',
       };
 
       // Upload avatar if a new file was selected
@@ -333,7 +336,7 @@ export default function MyStorePage() {
 
               <div className="mt-4 pt-4 border-t border-gray-100">
                 {isEditing ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Facebook Group</label>
                       <input
@@ -361,6 +364,15 @@ export default function MyStorePage() {
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                       />
                     </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Website da Empresa (Optional)</label>
+                      <input
+                        value={editForm.website_url}
+                        onChange={(e) => setEditForm((p) => ({ ...p, website_url: e.target.value }))}
+                        placeholder="https://yourwebsite.com"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-4">
@@ -380,6 +392,12 @@ export default function MyStorePage() {
                       <a href={editForm.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-pink-600 hover:underline">
                         <ExternalLink className="h-3.5 w-3.5" />
                         Instagram
+                      </a>
+                    )}
+                    {editForm.website_url && (
+                      <a href={editForm.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium text-sm border border-blue-200 bg-blue-50/50 px-3 py-1.5 rounded-lg transition-all">
+                        <Globe className="h-3.5 w-3.5" />
+                        Website
                       </a>
                     )}
                   </div>

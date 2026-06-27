@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle } from 'lucide-react';
+import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle, Globe } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 
 interface PropertyDrawerItem {
@@ -32,6 +32,7 @@ interface SellerProfile {
   whatsapp_number: string | null;
   facebook_handle: string | null;
   twitter_handle: string | null;
+  website_url: string | null;
   email: string | null;
 }
 
@@ -83,7 +84,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle, email')
+        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle, website_url, email')
         .eq('id', agentId)
         .maybeSingle();
       setSeller(data || null);
@@ -465,6 +466,7 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
   const avatar = seller?.avatar || null;
   const facebookHandle = seller?.facebook_handle || null;
   const twitterHandle = seller?.twitter_handle || null;
+  const websiteUrl = seller?.website_url || null;
   const whatsapp = seller?.whatsapp_number || seller?.phone || null;
 
   const initials = (name || 'P')
@@ -496,8 +498,8 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
         </div>
       </div>
 
-      {(facebookHandle || twitterHandle || whatsapp) && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+      {(facebookHandle || twitterHandle || websiteUrl || whatsapp) && (
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 flex-wrap">
           {facebookHandle && (
             <a
               href={`https://facebook.com/${facebookHandle}`}
@@ -520,7 +522,18 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
               @{twitterHandle}
             </a>
           )}
-          {!facebookHandle && !twitterHandle && whatsapp && (
+          {websiteUrl && (
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium text-xs border border-blue-200 bg-blue-50/50 px-3 py-1.5 rounded-lg transition-all"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              Website
+            </a>
+          )}
+          {!facebookHandle && !twitterHandle && !websiteUrl && whatsapp && (
             <a
               href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
               target="_blank"
@@ -534,7 +547,7 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
         </div>
       )}
 
-      {!facebookHandle && !twitterHandle && !whatsapp && !hasProfile && (
+      {!facebookHandle && !twitterHandle && !websiteUrl && !whatsapp && !hasProfile && (
         <div className="mt-3 pt-3 border-t border-slate-100">
           <a
             href={`https://wa.me/2389000000?text=${encodeURIComponent(`Hi, I'm interested in: ${propertyTitle}`)}`}
