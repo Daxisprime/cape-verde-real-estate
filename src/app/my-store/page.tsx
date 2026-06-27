@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
+import PromoteListingDrawer from "@/components/PromoteListingDrawer";
 import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
@@ -23,6 +24,8 @@ import {
   RotateCcw,
   Archive,
   Facebook,
+  Star,
+  Crown,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -89,6 +92,7 @@ export default function MyStorePage() {
 
   const [activeTab, setActiveTab] = useState<ListingStatus>("active");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [promoteTarget, setPromoteTarget] = useState<{ id: string; title: string } | null>(null);
 
   const filteredListings = listings.filter((l) => l.status === activeTab);
 
@@ -144,7 +148,13 @@ export default function MyStorePage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">{vendorName}</h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl font-bold text-gray-900">{vendorName}</h1>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full shadow-sm">
+                      <Crown className="h-3 w-3" />
+                      Plano Patrão (Grátis)
+                    </span>
+                  </div>
                   {vendorEmail && (
                     <p className="text-sm text-gray-500 mt-0.5">{vendorEmail}</p>
                   )}
@@ -346,6 +356,13 @@ export default function MyStorePage() {
                   {listing.status === "active" && (
                     <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
+                        onClick={() => setPromoteTarget({ id: listing.id, title: listing.title || "Untitled" })}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-400/95 backdrop-blur border border-amber-300 rounded-md text-white hover:bg-amber-500 shadow-sm"
+                      >
+                        <Star className="h-3 w-3 fill-white" />
+                        Promover
+                      </button>
+                      <button
                         onClick={() => handleEdit(listing.id)}
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm"
                       >
@@ -468,6 +485,16 @@ export default function MyStorePage() {
           </div>
         </div>
       )}
+
+      {/* Promote Listing Drawer */}
+      <PromoteListingDrawer
+        isOpen={!!promoteTarget}
+        onClose={() => setPromoteTarget(null)}
+        listingId={promoteTarget?.id || ""}
+        listingTitle={promoteTarget?.title || ""}
+        listingType="property"
+        onSuccess={() => setPromoteTarget(null)}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import HeroSection from '@/components/HeroSection';
 import PropertyListings from '@/components/PropertyListings';
 import ResultsFilterStrip from '@/components/ResultsFilterStrip';
 import MarketsView from '@/components/MarketsView';
+import FeaturedCarousel from '@/components/FeaturedCarousel';
 import PropertyDetailDrawer, { type PropertyDrawerItem } from '@/components/PropertyDetailDrawer';
 import Footer from '@/components/Footer';
 import { useSearchMode } from '@/contexts/SearchModeContext';
@@ -257,6 +258,29 @@ export default function HomeContent() {
         </button>
 
         <div className="relative w-full max-w-7xl mx-auto px-3 pt-4 pb-24">
+          {/* Featured Carousel */}
+          <FeaturedCarousel
+            mode="realestate"
+            onItemClick={(item) => handlePropertyClick({
+              id: item.id,
+              title: item.title,
+              price: item.price,
+              location: item.location,
+              island: item.island,
+              type: item.type,
+              bedrooms: item.bedrooms || 0,
+              bathrooms: item.bathrooms || 0,
+              area: 0,
+              image: item.image,
+              images: [item.image],
+              coordinates: [0, 0],
+              featured: true,
+              description: '',
+              features: [],
+              agentId: undefined,
+            })}
+          />
+
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             {filteredProperties.length} Available Properties
           </p>

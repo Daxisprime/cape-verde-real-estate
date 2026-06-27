@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus } from 'lucide-react';
 import { useMarketplace, type MarketplaceItem } from '@/hooks/useMarketplace';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
+import FeaturedCarousel from '@/components/FeaturedCarousel';
 import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
 
 const SafeLeafletMap = dynamic(
@@ -445,6 +446,9 @@ export default function MarketsView() {
           {!isMapViewActive ? (
             /* Masonry Grid Feed - tighter mobile spacing */
             <div className="flex-1 overflow-y-auto px-2 sm:px-4 pt-3 sm:pt-4 pb-24">
+              {/* Featured Markets Carousel */}
+              <FeaturedCarousel mode="markets" />
+
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 sm:mb-3 px-1">
                 {filteredItems.length} items found
                 {selectedCategory && <span className="text-[#0044FF]"> in {selectedCategory}</span>}
