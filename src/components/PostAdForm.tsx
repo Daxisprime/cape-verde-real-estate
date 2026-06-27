@@ -226,9 +226,9 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
       {/* Photo Upload */}
       <div>
         <p className="text-xs font-medium text-gray-600 mb-2">Photos ({images.length}/6)</p>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {previews.map((src, i) => (
-            <div key={i} className="relative w-[72px] h-[72px] rounded-lg overflow-hidden border border-gray-200">
+            <div key={i} className="relative w-[72px] h-[72px] rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
               <img src={src} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"
@@ -243,7 +243,7 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="w-[72px] h-[72px] rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+              className="w-[72px] h-[72px] rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex-shrink-0"
             >
               <ImagePlus className="h-5 w-5" />
               <span className="text-[9px] mt-0.5">Add</span>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 
 interface PropertyDrawerItem {
@@ -32,6 +32,7 @@ interface SellerProfile {
   whatsapp_number: string | null;
   facebook_handle: string | null;
   twitter_handle: string | null;
+  email: string | null;
 }
 
 interface PropertyDetailDrawerProps {
@@ -47,12 +48,26 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [sellerLoading, setSellerLoading] = useState(false);
 
+  // Touch swipe refs
+  const touchStartX = useRef(0);
+  const touchDeltaX = useRef(0);
+
+  // Inquiry form state
+  const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [inquiryStatus, setInquiryStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
   useEffect(() => {
     if (!property) {
       setSeller(null);
       setCurrentImageIndex(0);
+      setInquiryStatus('idle');
       return;
     }
+    setInquiryForm(f => ({
+      ...f,
+      message: `Olá, gostaria de saber mais informações sobre este imóvel...`
+    }));
+    setInquiryStatus('idle');
     fetchSellerProfile(property.agentId);
   }, [property?.id, property?.agentId]);
 
@@ -68,7 +83,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle')
+        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle, email')
         .eq('id', agentId)
         .maybeSingle();
       setSeller(data || null);
@@ -86,6 +101,20 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
   const nextImage = () => setCurrentImageIndex((i) => (i + 1) % allImages.length);
   const prevImage = () => setCurrentImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
 
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchMove(e: React.TouchEvent) {
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  }
+  function handleTouchEnd() {
+    if (Math.abs(touchDeltaX.current) > 50) {
+      if (touchDeltaX.current < -50) nextImage();
+      if (touchDeltaX.current > 50) prevImage();
+    }
+    touchDeltaX.current = 0;
+  }
+
   const handleShare = () => {
     const text = `${property.title} - ${formatPrice(property.price)} in ${property.location}`;
     if (navigator.share) {
@@ -101,11 +130,49 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
     return `${price.toLocaleString()} CVE`;
   }
 
-  const sellerName = seller?.name || null;
-  const sellerRole = seller?.role || null;
+  async function handleInquirySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inquiryForm.name || !inquiryForm.email || !property) return;
+
+    setInquiryStatus('sending');
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) throw new Error('No client');
+
+      const { error } = await supabase.from('property_inquiries').insert({
+        property_id: property.id,
+        seller_id: property.agentId || null,
+        full_name: inquiryForm.name,
+        email: inquiryForm.email,
+        phone: inquiryForm.phone || null,
+        message: inquiryForm.message || null,
+        status: 'new',
+      } as never);
+
+      if (error) throw error;
+
+      // Fire email dispatch (non-blocking)
+      fetch('/api/inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          property_id: property.id,
+          property_title: property.title,
+          seller_id: property.agentId || null,
+          buyer_name: inquiryForm.name,
+          buyer_email: inquiryForm.email,
+          buyer_phone: inquiryForm.phone || null,
+          message: inquiryForm.message || null,
+        }),
+      }).catch(() => {});
+
+      setInquiryStatus('sent');
+    } catch {
+      setInquiryStatus('error');
+    }
+  }
+
   const sellerWhatsApp = seller?.whatsapp_number || seller?.phone || null;
-  const sellerFacebook = seller?.facebook_handle || null;
-  const sellerTwitter = seller?.twitter_handle || null;
 
   return (
     <>
@@ -142,12 +209,18 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Image Gallery */}
-          <div className="relative w-full h-56 sm:h-72 bg-slate-100">
+          {/* Image Gallery with touch swipe */}
+          <div
+            className="relative w-full h-56 sm:h-72 bg-slate-100 select-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <img
               src={allImages[currentImageIndex]}
               alt={property.title || 'Property'}
               className="w-full h-full object-cover"
+              draggable={false}
             />
             {allImages.length > 1 && (
               <>
@@ -171,10 +244,13 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
                     />
                   ))}
                 </div>
+                <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                  {currentImageIndex + 1}/{allImages.length}
+                </div>
               </>
             )}
             {property.featured && (
-              <span className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-wider">
+              <span className="absolute bottom-3 left-3 bg-amber-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-wider">
                 Featured
               </span>
             )}
@@ -249,6 +325,14 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
               propertyTitle={property.title}
             />
 
+            {/* Inquiry Form */}
+            <InquiryForm
+              status={inquiryStatus}
+              form={inquiryForm}
+              onChange={setInquiryForm}
+              onSubmit={handleInquirySubmit}
+            />
+
             {/* Primary Contact CTA */}
             <div className="pt-2 pb-4 flex gap-2">
               <a
@@ -275,6 +359,91 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
   );
 }
 
+// --- Inquiry Form Component ---
+function InquiryForm({
+  status,
+  form,
+  onChange,
+  onSubmit,
+}: {
+  status: 'idle' | 'sending' | 'sent' | 'error';
+  form: { name: string; email: string; phone: string; message: string };
+  onChange: (f: { name: string; email: string; phone: string; message: string }) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  if (status === 'sent') {
+    return (
+      <div className="p-4 rounded-xl bg-green-50 border border-green-200">
+        <div className="flex items-center gap-2 mb-1">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <p className="text-sm font-bold text-green-800">Inquiry Sent Successfully!</p>
+        </div>
+        <p className="text-xs text-green-600 ml-7">The agent will review your request shortly.</p>
+      </div>
+    );
+  }
+
+  const inputCls = "w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white text-slate-800 placeholder-slate-400";
+
+  return (
+    <form onSubmit={onSubmit} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contactar Agente</h3>
+
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          type="text"
+          placeholder="Nome"
+          required
+          value={form.name}
+          onChange={(e) => onChange({ ...form, name: e.target.value })}
+          className={inputCls}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          required
+          value={form.email}
+          onChange={(e) => onChange({ ...form, email: e.target.value })}
+          className={inputCls}
+        />
+      </div>
+
+      <input
+        type="tel"
+        placeholder="Telefone (opcional)"
+        value={form.phone}
+        onChange={(e) => onChange({ ...form, phone: e.target.value })}
+        className={inputCls}
+      />
+
+      <textarea
+        rows={3}
+        value={form.message}
+        onChange={(e) => onChange({ ...form, message: e.target.value })}
+        className={`${inputCls} resize-none`}
+      />
+
+      {status === 'error' && (
+        <p className="text-xs text-red-500">Failed to send. Please try again.</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={status === 'sending' || !form.name || !form.email}
+        className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+      >
+        {status === 'sending' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Send className="h-4 w-4" />
+        )}
+        {status === 'sending' ? 'Enviando...' : 'Enviar Mensagem'}
+      </button>
+    </form>
+  );
+}
+
+// --- Seller Card Component ---
 function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile | null; loading: boolean; propertyTitle: string }) {
   if (loading) {
     return (
@@ -308,7 +477,6 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
   return (
     <div className="p-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
       <div className="flex items-center gap-3">
-        {/* Avatar */}
         {avatar ? (
           <img src={avatar} alt={name || ''} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
         ) : (
@@ -316,8 +484,6 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
             <span className="text-sm font-bold text-blue-600">{initials}</span>
           </div>
         )}
-
-        {/* Name + Badge */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-slate-800 truncate">{name}</p>
           <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${
@@ -330,7 +496,6 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
         </div>
       </div>
 
-      {/* Social Links */}
       {(facebookHandle || twitterHandle || whatsapp) && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
           {facebookHandle && (
@@ -369,7 +534,6 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
         </div>
       )}
 
-      {/* Fallback: no social links at all */}
       {!facebookHandle && !twitterHandle && !whatsapp && !hasProfile && (
         <div className="mt-3 pt-3 border-t border-slate-100">
           <a
