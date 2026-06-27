@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useMemo } from "react";
-import { ImagePlus, X, Loader2, MapPin } from "lucide-react";
+import { ImagePlus, X, Loader2, MapPin, Facebook } from "lucide-react";
 import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
@@ -73,6 +73,8 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [facebookHandle, setFacebookHandle] = useState("");
+  const [twitterHandle, setTwitterHandle] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isPropertyCategory = PROPERTY_TYPES.includes(category);
@@ -163,6 +165,14 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
         };
         const { error } = await supabase.from("marketplace_items").insert(marketPayload as never);
         if (error) throw error;
+      }
+
+      if (facebookHandle || twitterHandle) {
+        await supabase.from("profiles").upsert({
+          id: sellerId,
+          facebook_handle: facebookHandle || null,
+          twitter_handle: twitterHandle || null,
+        }, { onConflict: 'id' });
       }
 
       onAdCreated?.({
@@ -428,6 +438,38 @@ export default function PostAdForm({ onAdCreated }: { vendorId?: string; onAdCre
               </button>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Social & Contact Links (Optional) */}
+      <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Social & Contact Links <span className="font-normal normal-case text-slate-400">(Optional)</span></p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1.5">
+              <Facebook className="h-3 w-3 text-[#1877F2]" /> Facebook
+            </label>
+            <input
+              type="text"
+              placeholder="yourpage"
+              value={facebookHandle}
+              onChange={(e) => setFacebookHandle(e.target.value.replace(/^https?:\/\/(www\.)?(facebook\.com|fb\.com)\/?/i, '').replace(/^@/, '').replace(/\/$/, ''))}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1.5">
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              Twitter / X
+            </label>
+            <input
+              type="text"
+              placeholder="yourhandle"
+              value={twitterHandle}
+              onChange={(e) => setTwitterHandle(e.target.value.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\/?/i, '').replace(/^@/, '').replace(/\/$/, ''))}
+              className={inputCls}
+            />
+          </div>
         </div>
       </div>
 

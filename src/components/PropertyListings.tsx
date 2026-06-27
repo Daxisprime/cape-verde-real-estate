@@ -178,6 +178,7 @@ export default function PropertyListings({
       featured: property.isFeatured || false,
       description: property.description || '',
       features: property.features || [],
+      agentId: property.agentId || undefined,
     });
   }
 

@@ -9,6 +9,8 @@ import {
   Lock, Smartphone, Languages, Link2
 } from "lucide-react";
 import UserLinksManager from "@/components/UserLinksManager";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,7 +43,7 @@ export default function SettingsPage() {
     phone: user?.phone || "",
     avatar: user?.avatar || "",
     facebookHandle: "",
-    instagramHandle: "",
+    twitterHandle: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -105,6 +107,21 @@ export default function SettingsPage() {
           searchAlerts: user?.preferences?.searchAlerts || []
         }
       });
+
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          await supabase.from('profiles').upsert({
+            id: authUser.id,
+            name: profileData.name,
+            email: profileData.email,
+            phone: profileData.phone,
+            facebook_handle: profileData.facebookHandle || null,
+            twitter_handle: profileData.twitterHandle || null,
+          }, { onConflict: 'id' });
+        }
+      }
 
       toast({
         title: "Profile Updated",
@@ -339,11 +356,11 @@ export default function SettingsPage() {
 
                 {/* Social Handles */}
                 <div>
-                  <Label className="text-base font-semibold mb-3 block">Social Profiles</Label>
-                  <p className="text-sm text-gray-500 mb-4">Link your social accounts for visibility on your public profile.</p>
+                  <Label className="text-base font-semibold mb-3 block">Social & Contact Links</Label>
+                  <p className="text-sm text-gray-500 mb-4">Link your social accounts for visibility on your public profile and listings.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="facebookHandle">Facebook Page Handle</Label>
+                      <Label htmlFor="facebookHandle">Facebook Page URL</Label>
                       <Input
                         id="facebookHandle"
                         value={profileData.facebookHandle}
@@ -356,17 +373,17 @@ export default function SettingsPage() {
                       <p className="text-xs text-gray-400 mt-1">Just the handle, no URL needed</p>
                     </div>
                     <div>
-                      <Label htmlFor="instagramHandle">Instagram Username</Label>
+                      <Label htmlFor="twitterHandle">Twitter / X Handle</Label>
                       <Input
-                        id="instagramHandle"
-                        value={profileData.instagramHandle}
+                        id="twitterHandle"
+                        value={profileData.twitterHandle}
                         onChange={(e) => setProfileData(prev => ({
                           ...prev,
-                          instagramHandle: e.target.value.replace(/^https?:\/\/(www\.)?instagram\.com\/?/i, '').replace(/^@/, '').replace(/\/$/, '')
+                          twitterHandle: e.target.value.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\/?/i, '').replace(/^@/, '').replace(/\/$/, '')
                         }))}
-                        placeholder="yourusername"
+                        placeholder="yourhandle"
                       />
-                      <p className="text-xs text-gray-400 mt-1">Just the username, no @ needed</p>
+                      <p className="text-xs text-gray-400 mt-1">Just the handle, no @ needed</p>
                     </div>
                   </div>
                 </div>

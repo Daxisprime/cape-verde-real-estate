@@ -78,6 +78,7 @@ export default function HomeContent() {
       featured: item.is_featured || false,
       description: item.description || '',
       features: [] as string[],
+      agentId: item.agent_id || undefined,
     }));
     const base = isLive && liveMapped.length > 0
       ? [...liveMapped, ...capeVerdeProperties.map(p => ({
@@ -96,6 +97,7 @@ export default function HomeContent() {
           featured: p.isFeatured || false,
           description: p.description || '',
           features: p.features || [],
+          agentId: p.agentId || undefined,
         }))]
       : capeVerdeProperties.map(p => ({
           id: p.id,
@@ -113,6 +115,7 @@ export default function HomeContent() {
           featured: p.isFeatured || false,
           description: p.description || '',
           features: p.features || [],
+          agentId: p.agentId || undefined,
         }));
 
     return base.filter(property => {
@@ -157,6 +160,7 @@ export default function HomeContent() {
       featured: property.featured,
       description: property.description,
       features: property.features,
+      agentId: property.agentId,
     });
   }
 

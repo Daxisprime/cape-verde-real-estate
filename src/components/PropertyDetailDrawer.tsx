@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, ExternalLink } from 'lucide-react';
+import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 
 interface PropertyDrawerItem {
   id: string;
@@ -19,6 +20,18 @@ interface PropertyDrawerItem {
   featured: boolean;
   description?: string;
   features?: string[];
+  agentId?: string;
+}
+
+interface SellerProfile {
+  id: string;
+  name: string | null;
+  avatar: string | null;
+  role: string | null;
+  phone: string | null;
+  whatsapp_number: string | null;
+  facebook_handle: string | null;
+  twitter_handle: string | null;
 }
 
 interface PropertyDetailDrawerProps {
@@ -31,6 +44,40 @@ export type { PropertyDrawerItem };
 export default function PropertyDetailDrawer({ property, onClose }: PropertyDetailDrawerProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [sellerLoading, setSellerLoading] = useState(false);
+
+  useEffect(() => {
+    if (!property) {
+      setSeller(null);
+      setCurrentImageIndex(0);
+      return;
+    }
+    fetchSellerProfile(property.agentId);
+  }, [property?.id, property?.agentId]);
+
+  async function fetchSellerProfile(agentId?: string) {
+    if (!agentId || !isSupabaseConfigured()) {
+      setSeller(null);
+      return;
+    }
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setSeller(null); return; }
+
+    setSellerLoading(true);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle')
+        .eq('id', agentId)
+        .maybeSingle();
+      setSeller(data || null);
+    } catch {
+      setSeller(null);
+    } finally {
+      setSellerLoading(false);
+    }
+  }
 
   if (!property) return null;
 
@@ -53,6 +100,12 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
     if (price >= 1000) return `${Math.round(price / 1000).toLocaleString()}K CVE`;
     return `${price.toLocaleString()} CVE`;
   }
+
+  const sellerName = seller?.name || null;
+  const sellerRole = seller?.role || null;
+  const sellerWhatsApp = seller?.whatsapp_number || seller?.phone || null;
+  const sellerFacebook = seller?.facebook_handle || null;
+  const sellerTwitter = seller?.twitter_handle || null;
 
   return (
     <>
@@ -79,10 +132,10 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
               onClick={() => setIsFavorited(!isFavorited)}
               className={`p-2 rounded-full transition-colors ${isFavorited ? 'bg-red-50 text-red-500' : 'hover:bg-slate-100 text-slate-500'}`}
             >
-              <Heart className={`h-4.5 w-4.5 ${isFavorited ? 'fill-current' : ''}`} />
+              <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
             </button>
             <button onClick={handleShare} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
-              <Share2 className="h-4.5 w-4.5" />
+              <Share2 className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -162,7 +215,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
                 <div className="flex flex-col items-center p-3 bg-slate-50 rounded-xl">
                   <Ruler className="h-4 w-4 text-slate-500 mb-1" />
                   <span className="text-sm font-bold text-slate-800">{property.area}</span>
-                  <span className="text-[10px] text-slate-400">m&sup2;</span>
+                  <span className="text-[10px] text-slate-400">m2</span>
                 </div>
               )}
             </div>
@@ -189,17 +242,24 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
               </div>
             )}
 
-            {/* Contact CTA */}
+            {/* Seller / Agent Profile Card */}
+            <SellerCard
+              seller={seller}
+              loading={sellerLoading}
+              propertyTitle={property.title}
+            />
+
+            {/* Primary Contact CTA */}
             <div className="pt-2 pb-4 flex gap-2">
               <a
-                href={`tel:+2389000000`}
+                href={`tel:${sellerWhatsApp || '+2389000000'}`}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
               >
                 <Phone className="h-4 w-4" />
                 Call Agent
               </a>
               <a
-                href={`https://wa.me/2389000000?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
+                href={`https://wa.me/${(sellerWhatsApp || '2389000000').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
@@ -212,5 +272,117 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
         </div>
       </div>
     </>
+  );
+}
+
+function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile | null; loading: boolean; propertyTitle: string }) {
+  if (loading) {
+    return (
+      <div className="p-4 rounded-xl border border-slate-200 animate-pulse">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-slate-200" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 bg-slate-200 rounded w-2/3" />
+            <div className="h-2.5 bg-slate-200 rounded w-1/3" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasProfile = seller && seller.name;
+  const name = hasProfile ? seller.name : 'Pro.CV Verified Partner';
+  const role = seller?.role || (hasProfile ? 'Agent' : 'Independent Seller');
+  const avatar = seller?.avatar || null;
+  const facebookHandle = seller?.facebook_handle || null;
+  const twitterHandle = seller?.twitter_handle || null;
+  const whatsapp = seller?.whatsapp_number || seller?.phone || null;
+
+  const initials = (name || 'P')
+    .split(' ')
+    .map((w: string) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <div className="p-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        {avatar ? (
+          <img src={avatar} alt={name || ''} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center">
+            <span className="text-sm font-bold text-blue-600">{initials}</span>
+          </div>
+        )}
+
+        {/* Name + Badge */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-800 truncate">{name}</p>
+          <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${
+            role === 'Agent' || role === 'agent'
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-emerald-100 text-emerald-700'
+          }`}>
+            {role === 'agent' ? 'Agent' : role === 'vendor' ? 'Vendor' : role || 'Seller'}
+          </span>
+        </div>
+      </div>
+
+      {/* Social Links */}
+      {(facebookHandle || twitterHandle || whatsapp) && (
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+          {facebookHandle && (
+            <a
+              href={`https://facebook.com/${facebookHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1877F2]/10 text-[#1877F2] text-xs font-semibold hover:bg-[#1877F2]/20 transition-colors"
+            >
+              <Facebook className="h-3.5 w-3.5" />
+              Facebook
+            </a>
+          )}
+          {twitterHandle && (
+            <a
+              href={`https://x.com/${twitterHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/10 text-slate-800 text-xs font-semibold hover:bg-slate-900/20 transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              @{twitterHandle}
+            </a>
+          )}
+          {!facebookHandle && !twitterHandle && whatsapp && (
+            <a
+              href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-100 text-green-700 text-xs font-semibold hover:bg-green-200 transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              WhatsApp
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Fallback: no social links at all */}
+      {!facebookHandle && !twitterHandle && !whatsapp && !hasProfile && (
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <a
+            href={`https://wa.me/2389000000?text=${encodeURIComponent(`Hi, I'm interested in: ${propertyTitle}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-100 text-green-700 text-xs font-semibold hover:bg-green-200 transition-colors"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Contact via WhatsApp
+          </a>
+        </div>
+      )}
+    </div>
   );
 }
