@@ -23,13 +23,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "pro\u2022cv - Cape Verde Real Estate",
+  title: "pro.cv - Cape Verde Real Estate",
   description: "Discover real estate, markets, and services across Cabo Verde",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "pro\u2022cv",
+    title: "pro.cv",
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -47,7 +47,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="pro&#x2022;cv" />
+        <meta name="apple-mobile-web-app-title" content="pro.cv" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body
