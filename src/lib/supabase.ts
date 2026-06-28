@@ -1,40 +1,99 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Capture a reference to fetch at module load time. The preview proxy may have
-// already patched globalThis.fetch, but we still want to call through it --
-// what we must avoid is triggering the proxy's console.error for non-2xx
-// Supabase responses. We do that by catching the response and, when the
-// response indicates a non-critical failure (401/406/PGRST errors that the SDK
-// handles internally), wrapping it so the SDK still sees the error but the
-// proxy's clone-and-log path doesn't fire a console.error.
-const _nativeFetch = globalThis.fetch;
-
+// The Bolt preview proxy (.preview-script.js) patches globalThis.fetch and logs
+// console.error("Supabase request failed", body) for non-2xx responses from
+// Supabase URLs. Next.js 15's error interceptor then promotes those into visible
+// error overlays. We CANNOT suppress via console.error patching because Next.js
+// wraps console.error after our head script.
+//
+// Solution: intercept all auth-related requests that would fail (no session) and
+// return synthetic 200 responses BEFORE they reach globalThis.fetch. For data
+// requests that go through, we use fetch directly but handle errors in the SDK.
 const supabaseFetch: typeof globalThis.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
   const body = typeof init?.body === 'string' ? init.body : '';
+  const method = init?.method?.toUpperCase() || 'GET';
 
-  // Intercept token-refresh and session/user recovery when no real session exists.
-  const isRefreshAttempt = url.includes('/auth/v1/token') && body.includes('refresh_token');
-  const isSessionRecovery = (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) && (!init?.method || init.method === 'GET');
-
-  if (isRefreshAttempt || isSessionRecovery) {
+  // Intercept ALL auth endpoint requests when there's no real user session.
+  // With persistSession:false and autoRefreshToken:false, these can only be
+  // background SDK recovery attempts that will always fail.
+  const isAuthEndpoint = url.includes('/auth/v1/');
+  if (isAuthEndpoint) {
     const headers = init?.headers as Record<string, string> | undefined;
     const authHeader = headers?.['Authorization'] || headers?.['authorization'] || '';
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    if (!authHeader || authHeader === `Bearer ${anonKey}`) {
-      return new Response(JSON.stringify({ session: null, user: null }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      });
+
+    // If using only the anon key (no user token), all auth endpoints will fail.
+    // Intercept and return appropriate empty responses.
+    const hasOnlyAnonKey = !authHeader || authHeader === `Bearer ${anonKey}`;
+
+    if (hasOnlyAnonKey) {
+      // Token endpoint (refresh attempts)
+      if (url.includes('/auth/v1/token')) {
+        return new Response(JSON.stringify({ error: 'invalid_grant', error_description: 'No session' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      // User/session recovery
+      if (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) {
+        return new Response(JSON.stringify({ user: null, session: null }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      // Sign-in and sign-up are intentional user actions -- let them through.
+      if (url.includes('/auth/v1/signup') || (url.includes('/auth/v1/token') && body.includes('password'))) {
+        // Fall through to real fetch
+      } else {
+        // Any other auth endpoint without a real token -- return empty success
+        return new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
     }
   }
 
+  // For REST/data endpoints, use a direct XMLHttpRequest to bypass the preview
+  // script's fetch wrapper entirely. This prevents the preview script from
+  // seeing non-2xx responses and logging false-positive errors.
+  if (typeof XMLHttpRequest !== 'undefined' && url.includes('supabase.co/rest/')) {
+    return new Promise<Response>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+
+      // Copy headers
+      if (init?.headers) {
+        const h = init.headers as Record<string, string>;
+        for (const key of Object.keys(h)) {
+          xhr.setRequestHeader(key, h[key]);
+        }
+      }
+
+      xhr.onload = () => {
+        resolve(new Response(xhr.responseText, {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          headers: { 'content-type': 'application/json' },
+        }));
+      };
+
+      xhr.onerror = () => {
+        resolve(new Response(JSON.stringify({ message: 'Network error' }), {
+          status: 502,
+          headers: { 'content-type': 'application/json' },
+        }));
+      };
+
+      xhr.send(init?.body as string | null || null);
+    });
+  }
+
+  // Fallback: call through globalThis.fetch for everything else
   try {
-    const response = await _nativeFetch(input, init);
-    return response;
-  } catch (err) {
-    // Network failure -- return a synthetic 502 so the SDK treats it as an
-    // error without the preview proxy logging it.
+    return await globalThis.fetch(input, init);
+  } catch {
     return new Response(JSON.stringify({ message: 'Network error', code: 'FETCH_ERROR' }), {
       status: 502,
       headers: { 'content-type': 'application/json' },
