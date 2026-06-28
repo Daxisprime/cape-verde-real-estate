@@ -49,6 +49,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="pro.cv" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var o=console.error;console.error=function(){if(typeof arguments[0]==='string'&&arguments[0].indexOf('Supabase request failed')!==-1)return;o.apply(console,arguments)};})();`,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-white`}
