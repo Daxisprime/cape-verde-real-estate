@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, Clock, User, Send, ExternalLink } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, CheckCircle2, Clock, User, Send, ExternalLink } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ShareButton from '@/components/ShareButton';
 
 const CVE_TO_EUR = 0.00907;
 
@@ -230,12 +231,20 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
               <ChevronLeft className="h-4 w-4 mr-1.5" />
               Back
             </button>
-            <button
-              onClick={handleClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <ShareButton
+                title={item.title}
+                text={`${item.title} - ${formatPrice(item.price_cve)} CVE in ${item.island}, Cape Verde`}
+                url={`/marketplace?item=${item.id}`}
+                size="sm"
+              />
+              <button
+                onClick={handleClose}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -373,10 +382,17 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                         <p className="text-sm font-bold text-gray-900 truncate">{sellerName}</p>
                         <p className="text-xs text-gray-500">{sellerIsland} seller</p>
                       </div>
-                      <div className="flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full flex-shrink-0">
-                        <Shield className="w-3 h-3 text-green-600" />
-                        <span className="text-[10px] font-semibold text-green-700">Active</span>
-                      </div>
+                      {sellerPhone ? (
+                        <div className="flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full flex-shrink-0">
+                          <CheckCircle2 className="w-3 h-3 text-green-600" />
+                          <span className="text-[10px] font-semibold text-green-700">Verified</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 rounded-full flex-shrink-0">
+                          <Shield className="w-3 h-3 text-slate-400" />
+                          <span className="text-[10px] font-semibold text-slate-500">Active</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-200 grid grid-cols-2 gap-4">

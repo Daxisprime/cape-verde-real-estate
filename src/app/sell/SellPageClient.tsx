@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import PostAdForm, { ListingEditData } from "@/components/PostAdForm";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import QuickPostForm from "@/components/QuickPostForm";
+import { ArrowLeft, Loader2, Zap, FileText } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -16,6 +17,7 @@ export default function SellPageClient() {
 
   const [editData, setEditData] = useState<ListingEditData | null>(null);
   const [loading, setLoading] = useState(!!editId);
+  const [mode, setMode] = useState<"quick" | "detailed">(editId ? "detailed" : "quick");
 
   useEffect(() => {
     if (!editId) return;
@@ -95,21 +97,61 @@ export default function SellPageClient() {
           {t.back}
         </button>
 
-        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-          <h1 className="text-lg font-bold text-gray-900 mb-1">
-            {editId ? t.editListing : t.createNewListing}
-          </h1>
-          <p className="text-sm text-gray-500 mb-6">
-            {editId ? t.updateDetails : t.postDescription}
-          </p>
+        {/* Mode Toggle - only show when not editing */}
+        {!editId && (
+          <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl mb-4">
+            <button
+              onClick={() => setMode("quick")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                mode === "quick"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Zap className="h-4 w-4" />
+              Quick Post
+            </button>
+            <button
+              onClick={() => setMode("detailed")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                mode === "detailed"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              Detailed
+            </button>
+          </div>
+        )}
 
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-              <span className="ml-2 text-sm text-gray-500">{t.loadingData}</span>
-            </div>
+        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+          {mode === "quick" && !editId ? (
+            <>
+              <h1 className="text-lg font-bold text-gray-900 mb-1">Quick Post</h1>
+              <p className="text-sm text-gray-500 mb-5">
+                Photo, title, price, island, category -- done in 60 seconds.
+              </p>
+              <QuickPostForm />
+            </>
           ) : (
-            <PostAdForm vendorId="vendor-1" editData={editData} />
+            <>
+              <h1 className="text-lg font-bold text-gray-900 mb-1">
+                {editId ? t.editListing : t.createNewListing}
+              </h1>
+              <p className="text-sm text-gray-500 mb-6">
+                {editId ? t.updateDetails : t.postDescription}
+              </p>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                  <span className="ml-2 text-sm text-gray-500">{t.loadingData}</span>
+                </div>
+              ) : (
+                <PostAdForm vendorId="vendor-1" editData={editData} />
+              )}
+            </>
           )}
         </div>
       </div>

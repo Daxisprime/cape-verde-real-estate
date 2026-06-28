@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, ChevronRight, SlidersHorizontal, X, Package, Plus, Home } from 'lucide-react';
+import { Search, MapPin, ChevronRight, SlidersHorizontal, X, Package, Plus, Home, Clock, MessageCircle } from 'lucide-react';
 import { useMarketplace, MARKETPLACE_CATEGORIES, CAPE_VERDE_ISLANDS, type MarketplaceItem } from '@/hooks/useMarketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
+import ShareButton from '@/components/ShareButton';
 
 const CVE_TO_EUR = 0.00907;
 
@@ -15,6 +16,18 @@ function formatPrice(cve: number): string {
 
 function cveToEur(cve: number): string {
   return (cve * CVE_TO_EUR).toFixed(0);
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d`;
+  if (days < 30) return `${Math.floor(days / 7)}w`;
+  return `${Math.floor(days / 30)}mo`;
 }
 
 export default function MarketplacePage() {
@@ -325,6 +338,7 @@ export default function MarketplacePage() {
                       src={item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop'}
                       alt={item.title}
                       className="w-full h-40 object-cover bg-slate-100 group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                     {item.is_featured && (
                       <span className="absolute top-2 left-2 bg-amber-500 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full">
@@ -355,6 +369,34 @@ export default function MarketplacePage() {
                       <p className="text-[10px] text-slate-400">
                         ~{cveToEur(item.price_cve)} EUR
                       </p>
+                    </div>
+
+                    {/* Footer: freshness + actions */}
+                    <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-50">
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-slate-400">
+                        <Clock className="h-2.5 w-2.5" />
+                        {timeAgo(item.created_at)}
+                      </span>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        {(item.contact_whatsapp || item.contact_phone) && (
+                          <a
+                            href={`https://wa.me/${(item.contact_whatsapp || item.contact_phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Olá, vi o item "${item.title}" no Pro.CV. Ainda está disponível?`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
+                            aria-label="WhatsApp"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                          </a>
+                        )}
+                        <ShareButton
+                          title={item.title}
+                          text={`${item.title} - ${formatPrice(item.price_cve)} CVE in ${item.island}`}
+                          url={`/marketplace?item=${item.id}`}
+                          size="sm"
+                          className="!h-6 !w-6 !border-slate-100"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

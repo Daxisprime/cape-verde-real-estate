@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Heart, MapPin, Bed, Bath, Square, Share2, GitCompare
+  Heart, MapPin, Bed, Bath, Square, GitCompare, Clock
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useMountedState } from '@/lib/mounting';
 import { useAuth } from '@/contexts/AuthContext';
+import ShareButton from '@/components/ShareButton';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 import { type Property } from '@/data/cape-verde-properties';
+import { agentDatabase } from '@/data/cape-verde-properties';
 
 interface VerifiedPropertyCardProps {
   property: Property;
@@ -53,8 +54,7 @@ export default function VerifiedPropertyCard({
   const handleFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
-      // Redirect to login or show auth modal
-      router.push('/login');
+      router.push('/auth');
       return;
     }
 
@@ -65,20 +65,25 @@ export default function VerifiedPropertyCard({
     }
   };
 
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: property.title,
-        text: `Check out this property in ${property.location}`,
-        url: window.location.origin + `/property/${property.id}`
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.origin + `/property/${property.id}`);
-      // In a real app, you'd show a toast notification here
-      alert('Property link copied to clipboard!');
-    }
-  };
+  const agentPhone = property.agentId
+    ? (agentDatabase as Record<string, { phone?: string }>)[property.agentId]?.phone || null
+    : null;
+
+  function timeAgo(dateStr?: string): string | null {
+    if (!dateStr) return null;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    if (diff < 0) return null;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    if (days < 30) return `${Math.floor(days / 7)}w ago`;
+    return `${Math.floor(days / 30)}mo ago`;
+  }
+
+  const postedAgo = timeAgo(property.listingDate);
 
   const handleCompareToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,11 +112,12 @@ export default function VerifiedPropertyCard({
         {/* Property Image */}
         <div className="relative h-48 sm:h-56 overflow-hidden">
           <img
-            src={property.images[0] || "/api/placeholder/400/300"}
+            src={property.images[0]?.replace(/w=800/, 'w=400').replace(/h=600/, 'h=300') || "/api/placeholder/400/300"}
             alt={property.title}
             className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
               isImageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
+            loading="lazy"
             onLoad={() => setIsImageLoaded(true)}
           />
 
@@ -173,35 +179,49 @@ export default function VerifiedPropertyCard({
 
           {/* Action buttons moved to content area */}
           {isMounted && (
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={handleFavoriteToggle}
-              >
-                <Heart className={`h-4 w-4 ${
-                  user && isFavorite(property.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'
-                }`} />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={handleShareClick}
-              >
-                <Share2 className="h-4 w-4 text-gray-600" />
-              </Button>
-              {enableComparison && (
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
+              {/* Left: freshness indicator */}
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                {postedAgo && (
+                  <>
+                    <Clock className="h-3 w-3" />
+                    <span>{postedAgo}</span>
+                  </>
+                )}
+              </div>
+
+              {/* Right: action buttons */}
+              <div className="flex items-center gap-1.5">
+                <WhatsAppButton
+                  phone={agentPhone}
+                  message={`Olá, estou interessado na propriedade "${property.title}" em ${property.location}. Ainda está disponível?`}
+                />
                 <Button
-                  variant={isInComparison ? "default" : "outline"}
+                  variant="outline"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  onClick={handleCompareToggle}
+                  onClick={handleFavoriteToggle}
                 >
-                  <GitCompare className="h-4 w-4" />
+                  <Heart className={`h-4 w-4 ${
+                    user && isFavorite(property.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                  }`} />
                 </Button>
-              )}
+                <ShareButton
+                  title={property.title}
+                  text={`Check out this property in ${property.location}, Cape Verde`}
+                  url={`/property/${property.id}`}
+                />
+                {enableComparison && (
+                  <Button
+                    variant={isInComparison ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={handleCompareToggle}
+                  >
+                    <GitCompare className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
