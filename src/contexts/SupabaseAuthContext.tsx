@@ -99,11 +99,30 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  const ensureProfile = useCallback(async (user: User): Promise<Profile | null> => {
+    if (!supabase) return null;
+    let profile = await fetchProfile(user.id);
+    if (!profile) {
+      const email = user.email || '';
+      const name = user.user_metadata?.full_name || email.split('@')[0] || '';
+      const role = email === 'mpcorreia4@gmail.com' ? 'admin' : 'user';
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        email,
+        name,
+        role,
+        verified: false,
+      } as never, { onConflict: 'id' });
+      profile = await fetchProfile(user.id);
+    }
+    return profile;
+  }, [supabase, fetchProfile]);
+
   const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error && data.session?.user) {
-      const profile = await fetchProfile(data.session.user.id);
+      const profile = await ensureProfile(data.session.user);
       setState({
         user: data.session.user,
         session: data.session,

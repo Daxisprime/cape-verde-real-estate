@@ -47,7 +47,7 @@ const STATUS_TABS: { key: ListingStatus; label: string }[] = [
 ];
 
 export default function MyStorePage() {
-  const { isAuthenticated, profile, user } = useSupabaseAuth();
+  const { isAuthenticated, profile, user, refreshProfile } = useSupabaseAuth();
   const { listings: liveListings, loading: listingsLoading } = useMyListings();
   const router = useRouter();
   const fallbackVendor = mockProfiles[0];
@@ -63,6 +63,7 @@ export default function MyStorePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
+    name: vendorName,
     bio: fallbackVendor.bio,
     phone: vendorPhone,
     whatsapp: fallbackVendor.whatsapp,
@@ -71,6 +72,17 @@ export default function MyStorePage() {
     facebook_shop_url: fallbackVendor.facebook_shop_url || "",
     website_url: "",
   });
+
+  // Sync editForm when profile loads
+  useEffect(() => {
+    if (profile) {
+      setEditForm(prev => ({
+        ...prev,
+        name: profile.name || prev.name,
+        phone: profile.phone || prev.phone,
+      }));
+    }
+  }, [profile]);
 
   // Merge live listings with mock fallback
   const [listings, setListings] = useState<ManagedListing[]>(() =>
@@ -132,6 +144,7 @@ export default function MyStorePage() {
       }
 
       const updates: Record<string, string> = {
+        name: editForm.name || '',
         phone: editForm.phone || '',
         bio: editForm.bio || '',
         facebook_url: editForm.facebook_url || '',
@@ -158,6 +171,7 @@ export default function MyStorePage() {
       }
 
       await supabase.from('profiles').update(updates).eq('id', user.id);
+      await refreshProfile();
 
       if (avatarPreview) {
         URL.revokeObjectURL(avatarPreview);
@@ -254,7 +268,16 @@ export default function MyStorePage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl font-bold text-gray-900">{vendorName}</h1>
+                    {isEditing ? (
+                      <input
+                        value={editForm.name}
+                        onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                        placeholder="Your name"
+                        className="text-xl font-bold text-gray-900 px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                      />
+                    ) : (
+                      <h1 className="text-xl font-bold text-gray-900">{vendorName}</h1>
+                    )}
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full shadow-sm">
                       <Crown className="h-3 w-3" />
                       Plano Patrão (Grátis)
