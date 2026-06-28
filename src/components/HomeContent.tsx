@@ -194,7 +194,7 @@ export default function HomeContent() {
           <span aria-hidden>&#x1F4CB;</span> {t.list}
         </button>
 
-        <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        <div className="w-full flex-1 flex flex-col-reverse md:flex-row overflow-hidden relative">
           {/* Left listing feed */}
           <div className="w-full md:w-[450px] lg:w-[500px] h-full overflow-y-auto z-10 px-3 pt-4 pb-24 border-r border-gray-100 bg-white">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -235,7 +235,10 @@ export default function HomeContent() {
           </div>
           {/* Right map panel */}
           <div className="w-full md:flex-1 h-full relative z-20">
-            <SafeLeafletMap items={mapMarkers} activeItem={hoveredMapItem} onPinClick={() => {}} />
+            <SafeLeafletMap items={mapMarkers} activeItem={hoveredMapItem} onPinClick={(item: { id: string }) => {
+              const property = filteredProperties.find(p => p.id === item.id);
+              if (property) handlePropertyClick(property);
+            }} />
           </div>
         </div>
 

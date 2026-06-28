@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { capeVerdeProperties, type Property } from '@/data/cape-verde-properties';
 import { MapPin, Bed, Bath, Ruler } from 'lucide-react';
+import PropertyDetailDrawer, { type PropertyDrawerItem } from '@/components/PropertyDetailDrawer';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
@@ -23,6 +24,7 @@ function formatPrice(price: number): string {
 export default function ResultsSplitView() {
   const { searchMode, listingType, headerSearchQuery } = useSearchMode();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyDrawerItem | null>(null);
 
   const listings = useMemo(() => {
     return capeVerdeProperties.filter(property => {
@@ -45,8 +47,53 @@ export default function ResultsSplitView() {
     }));
   }, [listings, listingType]);
 
+  function handlePinClick(item: { id: string }) {
+    const property = listings.find(p => p.id === item.id);
+    if (!property) return;
+    setSelectedProperty({
+      id: property.id,
+      title: property.title,
+      price: property.price,
+      location: property.location,
+      island: property.island,
+      type: property.type,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      area: property.totalArea,
+      image: property.images?.[0] || '',
+      images: property.images,
+      coordinates: [property.coordinates[0], property.coordinates[1]],
+      featured: !!property.isFeatured,
+      description: property.description,
+      features: property.features,
+      agentId: property.agentId,
+    });
+  }
+
+  function handleCardClick(item: Property) {
+    setSelectedProperty({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      location: item.location,
+      island: item.island,
+      type: item.type,
+      bedrooms: item.bedrooms,
+      bathrooms: item.bathrooms,
+      area: item.totalArea,
+      image: item.images?.[0] || '',
+      images: item.images,
+      coordinates: [item.coordinates[0], item.coordinates[1]],
+      featured: !!item.isFeatured,
+      description: item.description,
+      features: item.features,
+      agentId: item.agentId,
+    });
+  }
+
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-64px-44px)] w-full overflow-hidden">
+    <>
+    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-64px-44px)] w-full overflow-hidden">
       {/* Left Pane - Listings Masonry */}
       <aside className="w-full md:w-[420px] lg:w-[480px] h-[50vh] md:h-full overflow-y-auto bg-gray-50 border-r border-gray-200">
         <div className="p-3">
@@ -59,6 +106,7 @@ export default function ResultsSplitView() {
             {listings.map((item: Property, index: number) => (
               <div key={item.id} className="break-inside-avoid inline-block w-full mb-3">
                 <div
+                  onClick={() => handleCardClick(item)}
                   onMouseEnter={() => setHoveredId(item.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   className={`rounded-xl bg-white cursor-pointer transition overflow-hidden border ${
@@ -116,9 +164,16 @@ export default function ResultsSplitView() {
         <SafeLeafletMap
           items={mapMarkers}
           activeItem={mapMarkers.find(m => m.id === hoveredId) || null}
-          onPinClick={() => {}}
+          onPinClick={handlePinClick}
         />
       </div>
     </div>
+    {selectedProperty && (
+      <PropertyDetailDrawer
+        property={selectedProperty}
+        onClose={() => setSelectedProperty(null)}
+      />
+    )}
+    </>
   );
 }
