@@ -110,7 +110,11 @@ export default function AdminPanel() {
       .limit(100);
 
     if (data) {
-      setProfiles(data as AdminProfile[]);
+      const cleaned = (data as AdminProfile[]).map(p => ({
+        ...p,
+        role: typeof p.role === 'string' ? p.role.replace(/^"|"$/g, '') : p.role,
+      }));
+      setProfiles(cleaned);
     }
     setLoadingProfiles(false);
   }, []);

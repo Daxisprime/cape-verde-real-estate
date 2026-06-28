@@ -59,9 +59,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
     const raw = data as Record<string, unknown>;
+    const rawRole = typeof raw.role === 'string'
+      ? raw.role.replace(/^"|"$/g, '')
+      : raw.role != null ? String(raw.role).replace(/^"|"$/g, '') : null;
     return {
       ...raw,
-      roles: raw.roles ? (raw.roles as UserRole[]) : (raw.role ? [raw.role as UserRole] : ['buyer']),
+      role: rawRole,
+      roles: raw.roles ? (raw.roles as UserRole[]) : (rawRole ? [rawRole as UserRole] : ['buyer']),
     } as Profile;
   }, [supabase]);
 
@@ -150,7 +154,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (updates: Partial<Profile>): Promise<{ error: Error | null }> => {
     if (!supabase || !state.user) return { error: new Error('Not authenticated') };
-    const { error } = await supabase.from('profiles').update(updates).eq('id', state.user.id);
+    const { role, roles, ...safeUpdates } = updates as Partial<Profile> & { roles?: unknown };
+    const { error } = await supabase.from('profiles').update(safeUpdates).eq('id', state.user.id);
     if (error) return { error };
     const profile = await fetchProfile(state.user.id);
     setState(prev => ({ ...prev, profile }));
