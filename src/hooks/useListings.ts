@@ -45,7 +45,7 @@ export function useListings() {
       try {
         const { data, error } = await supabase
           .from('properties')
-          .select('*')
+          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
           .eq('status', 'active')
           .order('is_featured', { ascending: false })
           .order('created_at', { ascending: false })
@@ -97,14 +97,14 @@ export function useMyListings() {
         // Fetch user's properties
         const { data: props } = await supabase
           .from('properties')
-          .select('*')
+          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
           .eq('agent_id', user.id)
           .order('created_at', { ascending: false });
 
         // Fetch user's marketplace items
         const { data: items } = await supabase
           .from('marketplace_items')
-          .select('*')
+          .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
