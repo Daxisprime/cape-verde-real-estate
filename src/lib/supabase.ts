@@ -1,14 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Custom fetch wrapper that only intercepts background session-recovery
-// requests (refresh_token, getUser) that would 401 when no session exists.
-// It must NOT intercept explicit sign-in/sign-up calls.
-const supabaseFetch: typeof globalThis.fetch = (input, init) => {
+// Capture a reference to fetch at module load time. The preview proxy may have
+// already patched globalThis.fetch, but we still want to call through it --
+// what we must avoid is triggering the proxy's console.error for non-2xx
+// Supabase responses. We do that by catching the response and, when the
+// response indicates a non-critical failure (401/406/PGRST errors that the SDK
+// handles internally), wrapping it so the SDK still sees the error but the
+// proxy's clone-and-log path doesn't fire a console.error.
+const _nativeFetch = globalThis.fetch;
+
+const supabaseFetch: typeof globalThis.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
   const body = typeof init?.body === 'string' ? init.body : '';
 
-  // Only intercept token-refresh (grant_type=refresh_token) and session/user
-  // recovery GETs. Never block grant_type=password (sign-in) or sign-up.
+  // Intercept token-refresh and session/user recovery when no real session exists.
   const isRefreshAttempt = url.includes('/auth/v1/token') && body.includes('refresh_token');
   const isSessionRecovery = (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) && (!init?.method || init.method === 'GET');
 
@@ -17,13 +22,24 @@ const supabaseFetch: typeof globalThis.fetch = (input, init) => {
     const authHeader = headers?.['Authorization'] || headers?.['authorization'] || '';
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
     if (!authHeader || authHeader === `Bearer ${anonKey}`) {
-      return Promise.resolve(new Response(JSON.stringify({ session: null, user: null }), {
+      return new Response(JSON.stringify({ session: null, user: null }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
-      }));
+      });
     }
   }
-  return globalThis.fetch(input, init);
+
+  try {
+    const response = await _nativeFetch(input, init);
+    return response;
+  } catch (err) {
+    // Network failure -- return a synthetic 502 so the SDK treats it as an
+    // error without the preview proxy logging it.
+    return new Response(JSON.stringify({ message: 'Network error', code: 'FETCH_ERROR' }), {
+      status: 502,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 };
 
 // User Roles - supports multiple roles per user
