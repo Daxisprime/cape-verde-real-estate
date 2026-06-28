@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle, Globe } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface PropertyDrawerItem {
   id: string;
@@ -45,7 +46,8 @@ interface PropertyDetailDrawerProps {
 export type { PropertyDrawerItem };
 
 export default function PropertyDetailDrawer({ property, onClose }: PropertyDetailDrawerProps) {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
+  const { toast } = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [seller, setSeller] = useState<SellerProfile | null>(null);
@@ -118,12 +120,35 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
     touchDeltaX.current = 0;
   }
 
-  const handleShare = () => {
-    const text = `${property.title} - ${formatPrice(property.price)} in ${property.location}`;
-    if (navigator.share) {
-      navigator.share({ title: property.title, text });
-    } else {
-      navigator.clipboard.writeText(text);
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/property/${property.id}`
+      : '';
+    const shareData = {
+      title: property.title,
+      text: `${property.title} - ${formatPrice(property.price)} in ${property.location || property.island}`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      // navigator.share can throw in sandboxed iframes or if user cancels
+    }
+
+    // Clipboard fallback
+    try {
+      await navigator.clipboard.writeText(shareData.url || window.location.href);
+      toast({
+        description: currentLanguage === 'pt'
+          ? 'Link copiado para a area de transferencia!'
+          : 'Link copied to clipboard!',
+      });
+    } catch {
+      // Last resort: no clipboard access either
     }
   };
 

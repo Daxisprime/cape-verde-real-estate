@@ -33,21 +33,26 @@ export default function ShareButton({ title, text, url, className = "", size = "
 
     const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
 
-    if (navigator.share) {
-      try {
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title, text, url: fullUrl });
-      } catch {
-        // User cancelled or error - silently ignore
+        return;
       }
-    } else {
-      setShowFallback(true);
+    } catch {
+      // navigator.share can throw in sandboxed iframes or on user cancel
     }
+
+    setShowFallback(true);
   }
 
   async function copyLink(e: React.MouseEvent) {
     e.stopPropagation();
     const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
-    await navigator.clipboard.writeText(fullUrl);
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+    } catch {
+      // Clipboard API can fail in some contexts - still show success UI
+    }
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
