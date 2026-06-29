@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster';
 
 function formatPriceShort(price: number): string {
   if (price >= 1000000) {
@@ -185,19 +186,8 @@ function ClusterLayer({
   const map = useMap();
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersMapRef = useRef<Map<string, L.Marker>>(new Map());
-  const [clusterReady, setClusterReady] = useState(false);
-
-  // Dynamically load leaflet.markercluster at runtime
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !clusterReady) {
-      require('leaflet.markercluster');
-      setClusterReady(true);
-    }
-  }, [clusterReady]);
 
   useEffect(() => {
-    if (!clusterReady) return;
-
     if (!clusterGroupRef.current) {
       clusterGroupRef.current = L.markerClusterGroup({
         maxClusterRadius: 60,
@@ -270,7 +260,7 @@ function ClusterLayer({
     });
 
     return () => {};
-  }, [items, activeItem, map, onPinClick, onDetailRequest, clusterReady]);
+  }, [items, activeItem, map, onPinClick, onDetailRequest]);
 
   // Update active marker icon when activeItem changes
   useEffect(() => {

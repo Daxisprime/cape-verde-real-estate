@@ -85,6 +85,25 @@ const MARKET_TAXONOMY = [
   },
 ];
 
+const ISLAND_COORDINATES: Record<string, [number, number]> = {
+  'Santiago': [14.9177, -23.5133],
+  'Sal': [16.7350, -22.9318],
+  'Boa Vista': [16.0868, -22.8078],
+  'Santo Antao': [17.0735, -25.1705],
+  'São Vicente': [16.8842, -24.9956],
+  'Fogo': [14.9260, -24.3830],
+  'Maio': [15.2200, -23.1500],
+  'São Nicolau': [16.5897, -24.2700],
+  'Brava': [14.8579, -24.7086],
+  'Santo Antão': [17.0735, -25.1705],
+};
+
+function getIslandCoordinates(island: string, index: number): [number, number] {
+  const base = ISLAND_COORDINATES[island] || ISLAND_COORDINATES['Santiago'];
+  const offset = (index * 0.003) % 0.02;
+  return [base[0] + offset, base[1] + offset];
+}
+
 const MARKETPLACE_ITEMS = [
   {
     id: "mkt-001",
@@ -205,7 +224,7 @@ export default function MarketsView() {
   const { items: marketplaceDbItems } = useMarketplace({ category: selectedCategory || undefined });
 
   const itemsPool = useMemo(() => {
-    const dbFormatted = marketplaceDbItems.map(item => ({
+    const dbFormatted = marketplaceDbItems.map((item, index) => ({
       id: item.id,
       title: item.title,
       price: item.price_cve,
@@ -214,7 +233,7 @@ export default function MarketsView() {
       subcategory: item.subcategory,
       image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
       posted: new Date(item.created_at).toLocaleDateString(),
-      coordinates: [0, 0] as [number, number],
+      coordinates: getIslandCoordinates(item.island, index),
       is_featured: item.is_featured,
       is_premium: item.is_featured,
       vendor_avatar: null as string | null,
@@ -255,10 +274,10 @@ export default function MarketsView() {
   const mapMarkers: MapMarkerLight[] = useMemo(() => {
     return filteredItems
       .filter(item => {
-        if (!item.coordinates[0] || !item.coordinates[1]) return false;
-        if (!viewportBounds) return true;
         const lat = item.coordinates[0];
         const lng = item.coordinates[1];
+        if (lat === 0 && lng === 0) return false;
+        if (!viewportBounds) return true;
         return (
           lat >= viewportBounds.south &&
           lat <= viewportBounds.north &&
