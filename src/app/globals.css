@@ -1,3 +1,5 @@
+@import "leaflet/dist/leaflet.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -150,4 +152,42 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Leaflet MarkerCluster animations */
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+}
+.leaflet-cluster-spider-leg {
+  transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in;
+}
+
+/* Custom map marker styles - must be global so they apply inside Leaflet's DOM */
+.custom-price-marker,
+.custom-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18) !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: 200px !important;
+  min-width: 200px !important;
+}
+.leaflet-popup-tip {
+  background: white !important;
+}
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background: transparent !important;
 }

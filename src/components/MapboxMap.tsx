@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster';
 
 function formatPriceShort(price: number): string {
@@ -289,63 +288,6 @@ function ClusterLayer({
   return null;
 }
 
-const mapStyles = `
-  .leaflet-popup-content-wrapper {
-    padding: 0 !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.18) !important;
-  }
-  .leaflet-popup-content {
-    margin: 0 !important;
-    width: 200px !important;
-    min-width: 200px !important;
-  }
-  .leaflet-popup-tip { background: white !important; }
-  .custom-price-marker {
-    background: transparent !important;
-    border: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  .custom-cluster-icon {
-    background: transparent !important;
-    border: none !important;
-  }
-  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
-    background: transparent !important;
-  }
-  .marker-cluster {
-    background-clip: padding-box;
-    border-radius: 20px;
-  }
-  .marker-cluster div {
-    width: 30px;
-    height: 30px;
-    margin-left: 5px;
-    margin-top: 5px;
-    text-align: center;
-    border-radius: 15px;
-    font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
-  }
-  .marker-cluster span {
-    line-height: 30px;
-  }
-  .leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
-    -webkit-transition: -webkit-transform 0.3s ease-out, opacity 0.3s ease-in;
-    -moz-transition: -moz-transform 0.3s ease-out, opacity 0.3s ease-in;
-    -o-transition: -o-transform 0.3s ease-out, opacity 0.3s ease-in;
-    transition: transform 0.3s ease-out, opacity 0.3s ease-in;
-  }
-  .leaflet-cluster-spider-leg {
-    -webkit-transition: -webkit-stroke-dashoffset 0.3s ease-out, -webkit-stroke-opacity 0.3s ease-in;
-    -moz-transition: -moz-stroke-dashoffset 0.3s ease-out, -moz-stroke-opacity 0.3s ease-in;
-    -o-transition: -o-stroke-dashoffset 0.3s ease-out, -o-stroke-opacity 0.3s ease-in;
-    transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in;
-  }
-`;
-
 interface MapProps {
   items: MapMarkerLight[];
   activeItem: MapMarkerLight | null;
@@ -360,17 +302,6 @@ export default function MapboxMap({ items = [], activeItem, onPinClick, onBounds
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    const styleId = 'map-cluster-styles';
-    if (!document.getElementById(styleId)) {
-      const styleEl = document.createElement('style');
-      styleEl.id = styleId;
-      styleEl.textContent = mapStyles;
-      document.head.appendChild(styleEl);
-    }
-  }, [isMounted]);
 
   const handleBoundsChange = useCallback((bounds: BoundingBox) => {
     if (onBoundsChange) onBoundsChange(bounds);
