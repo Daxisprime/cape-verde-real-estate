@@ -9,7 +9,7 @@ import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook,
 import { useMarketplace, type MarketplaceItem } from '@/hooks/useMarketplace';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
-import type { MapMarkerLight, BoundingBox } from '@/components/MapboxMap';
+import type { MapMarkerLight } from '@/components/MapboxMap';
 
 const SafeLeafletMap = dynamic(
   () => import('@/components/MapboxMap'),
@@ -218,7 +218,6 @@ export default function MarketsView() {
   const [isMapViewActive, setIsMapViewActive] = useState(false);
   const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [viewportBounds, setViewportBounds] = useState<BoundingBox | null>(null);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
 
   const { items: marketplaceDbItems } = useMarketplace({ category: selectedCategory || undefined });
@@ -270,20 +269,13 @@ export default function MarketsView() {
   }, [hoveredCategory]);
 
   // Lightweight map markers: only ID, lat, lng, category + display flags
-  // Bounding box filter: only include markers within visible viewport
   const mapMarkers: MapMarkerLight[] = useMemo(() => {
     return filteredItems
       .filter(item => {
         const lat = item.coordinates[0];
         const lng = item.coordinates[1];
         if (lat === 0 && lng === 0) return false;
-        if (!viewportBounds) return true;
-        return (
-          lat >= viewportBounds.south &&
-          lat <= viewportBounds.north &&
-          lng >= viewportBounds.west &&
-          lng <= viewportBounds.east
-        );
+        return true;
       })
       .map(item => ({
         id: item.id,
@@ -295,11 +287,7 @@ export default function MarketsView() {
         is_premium: item.is_premium || false,
         vendor_avatar: item.vendor_avatar || null,
       }));
-  }, [filteredItems, viewportBounds]);
-
-  const handleBoundsChange = useCallback((bounds: BoundingBox) => {
-    setViewportBounds(bounds);
-  }, []);
+  }, [filteredItems]);
 
   const handleDetailRequest = useCallback((item: MapMarkerLight) => {
     // Lazy detail fetch: only load full profile on pin click
@@ -586,7 +574,6 @@ export default function MarketsView() {
                   items={mapMarkers}
                   activeItem={mapMarkers.find(m => m.id === activeHoverId) || null}
                   onPinClick={handleMapPinClick}
-                  onBoundsChange={handleBoundsChange}
                   onDetailRequest={handleDetailRequest}
                 />
               </div>
