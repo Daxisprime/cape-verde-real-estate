@@ -679,10 +679,10 @@ export default function MarketsView() {
       {/* Item Detail Drawer */}
       <MarketplaceItemDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />
 
-      {/* Floating View Toggle Pill - always visible on mobile/tablet, hidden on lg+ */}
+      {/* Floating View Toggle Pill */}
       <div
         onClick={() => setIsMapViewActive(!isMapViewActive)}
-        className="block lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[99] bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[99] bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
       >
         {isMapViewActive ? (
           <><LayoutGrid className="w-3.5 h-3.5" /> {t.listView}</>
