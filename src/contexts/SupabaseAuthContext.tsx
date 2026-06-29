@@ -17,7 +17,7 @@ interface AuthState {
 
 // Auth context interface
 interface SupabaseAuthContextType extends AuthState {
-  signUp: (email: string, password: string, metadata?: { full_name?: string }) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, metadata?: { full_name?: string }) => Promise<{ error: AuthError | null; confirmationRequired: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithProvider: (provider: 'google' | 'facebook' | 'github') => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
@@ -86,9 +86,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     metadata?: { full_name?: string }
-  ): Promise<{ error: AuthError | null }> => {
-    if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
-    const { error } = await supabase.auth.signUp({
+  ): Promise<{ error: AuthError | null; confirmationRequired: boolean }> => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError, confirmationRequired: false };
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -96,7 +96,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    return { error };
+    const confirmationRequired = !error && !data.session;
+    return { error, confirmationRequired };
   };
 
   const ensureProfile = useCallback(async (user: User): Promise<Profile | null> => {

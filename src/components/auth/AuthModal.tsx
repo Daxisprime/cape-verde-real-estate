@@ -82,12 +82,14 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
           return;
         }
 
-        const { error } = await signUp(formData.email, formData.password, {
+        const { error, confirmationRequired } = await signUp(formData.email, formData.password, {
           full_name: formData.fullName,
         });
 
         if (error) {
           setError(error.message);
+        } else if (confirmationRequired) {
+          setSuccess('Account created! Please check your email to verify your address before signing in.');
         } else {
           toast({
             title: 'Account created!',
