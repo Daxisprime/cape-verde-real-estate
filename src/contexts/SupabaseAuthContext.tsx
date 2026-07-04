@@ -18,7 +18,7 @@ interface AuthState {
 // Auth context interface
 interface SupabaseAuthContextType extends AuthState {
   signUp: (email: string, password: string, metadata?: { full_name?: string }, captchaToken?: string) => Promise<{ error: AuthError | null; confirmationRequired: boolean }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
   signInWithProvider: (provider: 'google' | 'facebook' | 'github') => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
@@ -121,9 +121,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     return profile;
   }, [supabase, fetchProfile]);
 
-  const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
+  const signIn = async (email: string, password: string, captchaToken?: string): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: captchaToken ? { captchaToken } : undefined,
+    });
     if (authError) return { error: authError };
     if (!authData || !authData.user || !authData.session) {
       return { error: { message: 'Authentication executed but user context is missing.' } as AuthError };

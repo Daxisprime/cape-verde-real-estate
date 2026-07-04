@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,8 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     confirmPassword: '',
     fullName: '',
   });
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,9 +61,16 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
 
     try {
       if (mode === 'login') {
-        const { error: signInError } = await signIn(formData.email, formData.password);
+        if (!captchaToken) {
+          setError('Please complete the CAPTCHA verification.');
+          setIsLoading(false);
+          return;
+        }
+        const { error: signInError } = await signIn(formData.email, formData.password, captchaToken);
         if (signInError) {
           setError(signInError.message);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
         } else {
           toast({
             title: 'Welcome back!',
@@ -70,6 +80,11 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
           router.push('/dashboard');
         }
       } else if (mode === 'signup') {
+        if (!captchaToken) {
+          setError('Please complete the CAPTCHA verification.');
+          setIsLoading(false);
+          return;
+        }
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           setIsLoading(false);
@@ -84,10 +99,12 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
 
         const { error, confirmationRequired } = await signUp(formData.email, formData.password, {
           full_name: formData.fullName,
-        });
+        }, captchaToken);
 
         if (error) {
           setError(error.message);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
         } else if (confirmationRequired) {
           setSuccess('Account created! Please check your email to verify your address before signing in.');
         } else {
@@ -138,6 +155,8 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     });
     setError(null);
     setSuccess(null);
+    setCaptchaToken(null);
+    captchaRef.current?.resetCaptcha();
   };
 
   const switchMode = (newMode: AuthMode) => {
@@ -274,6 +293,18 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
               >
                 Forgot password?
               </button>
+            </div>
+          )}
+
+          {/* CAPTCHA (login and signup) */}
+          {mode !== 'reset' && (
+            <div className="flex justify-center">
+              <HCaptcha
+                sitekey={process.env.NEXT_PUBLIC_CAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                ref={captchaRef}
+              />
             </div>
           )}
 

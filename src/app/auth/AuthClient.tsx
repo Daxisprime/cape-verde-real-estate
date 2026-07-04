@@ -31,9 +31,16 @@ export default function AuthClient() {
 
     try {
       if (mode === 'signin') {
-        const { error: signInError } = await signIn(email, password);
+        if (!captchaToken) {
+          setError('Please complete the CAPTCHA verification.');
+          setLoading(false);
+          return;
+        }
+        const { error: signInError } = await signIn(email, password, captchaToken);
         if (signInError) {
           setError(signInError.message);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
         } else {
           router.push('/my-store');
         }
@@ -218,7 +225,7 @@ export default function AuthClient() {
               </div>
             )}
 
-            {mode === 'signup' && (
+            {mode !== 'forgot' && (
               <div className="flex justify-center">
                 <HCaptcha
                   sitekey={process.env.NEXT_PUBLIC_CAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
