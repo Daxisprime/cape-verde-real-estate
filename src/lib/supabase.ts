@@ -2,68 +2,19 @@ import { createClient } from '@supabase/supabase-js';
 
 // The Bolt preview proxy (.preview-script.js) patches globalThis.fetch and logs
 // console.error("Supabase request failed", body) for non-2xx responses from
-// Supabase URLs. Next.js 15's error interceptor then promotes those into visible
-// error overlays. We CANNOT suppress via console.error patching because Next.js
-// wraps console.error after our head script.
-//
-// Solution: intercept all auth-related requests that would fail (no session) and
-// return synthetic 200 responses BEFORE they reach globalThis.fetch. For data
-// requests that go through, we use fetch directly but handle errors in the SDK.
+// Supabase URLs. We bypass this by routing all Supabase requests through XHR
+// which the preview script does not intercept.
 const supabaseFetch: typeof globalThis.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
-  const body = typeof init?.body === 'string' ? init.body : '';
   const method = init?.method?.toUpperCase() || 'GET';
 
-  // Intercept ALL auth endpoint requests when there's no real user session.
-  // With persistSession:false and autoRefreshToken:false, these can only be
-  // background SDK recovery attempts that will always fail.
-  const isAuthEndpoint = url.includes('/auth/v1/');
-  if (isAuthEndpoint) {
-    const headers = init?.headers as Record<string, string> | undefined;
-    const authHeader = headers?.['Authorization'] || headers?.['authorization'] || '';
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-    // If using only the anon key (no user token), all auth endpoints will fail.
-    // Intercept and return appropriate empty responses.
-    const hasOnlyAnonKey = !authHeader || authHeader === `Bearer ${anonKey}`;
-
-    if (hasOnlyAnonKey) {
-      // Sign-in and sign-up are intentional user actions -- always let them through.
-      const isSignIn = url.includes('/auth/v1/token') && body.includes('password');
-      const isSignUp = url.includes('/auth/v1/signup');
-      if (isSignIn || isSignUp) {
-        // Fall through to real fetch below
-      } else if (url.includes('/auth/v1/token')) {
-        // Token refresh attempts with no session -- suppress
-        return new Response(JSON.stringify({ error: 'invalid_grant', error_description: 'No session' }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      } else if (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) {
-        // User/session recovery with no session -- suppress
-        return new Response(JSON.stringify({ user: null, session: null }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      } else {
-        // Any other auth endpoint without a real token -- return empty success
-        return new Response(JSON.stringify({}), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-    }
-  }
-
-  // For REST/data endpoints, use a direct XMLHttpRequest to bypass the preview
-  // script's fetch wrapper entirely. This prevents the preview script from
-  // seeing non-2xx responses and logging false-positive errors.
+  // For REST/data endpoints, use XMLHttpRequest to bypass the preview
+  // script's fetch wrapper which logs console.error on non-2xx responses.
   if (typeof XMLHttpRequest !== 'undefined' && url.includes('supabase.co/rest/')) {
     return new Promise<Response>((resolve) => {
       const xhr = new XMLHttpRequest();
       xhr.open(method, url, true);
 
-      // Copy headers
       if (init?.headers) {
         const h = init.headers as Record<string, string>;
         for (const key of Object.keys(h)) {
@@ -76,6 +27,40 @@ const supabaseFetch: typeof globalThis.fetch = async (input, init) => {
           status: xhr.status,
           statusText: xhr.statusText,
           headers: { 'content-type': 'application/json' },
+        }));
+      };
+
+      xhr.onerror = () => {
+        resolve(new Response(JSON.stringify({ message: 'Network error' }), {
+          status: 502,
+          headers: { 'content-type': 'application/json' },
+        }));
+      };
+
+      xhr.send(init?.body as string | null || null);
+    });
+  }
+
+  // For auth endpoints, also use XHR to bypass the preview script's fetch
+  // wrapper which would log "Supabase request failed" on 401s during
+  // normal token refresh cycles.
+  if (typeof XMLHttpRequest !== 'undefined' && url.includes('/auth/v1/')) {
+    return new Promise<Response>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+
+      if (init?.headers) {
+        const h = init.headers as Record<string, string>;
+        for (const key of Object.keys(h)) {
+          xhr.setRequestHeader(key, h[key]);
+        }
+      }
+
+      xhr.onload = () => {
+        resolve(new Response(xhr.responseText, {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          headers: { 'content-type': xhr.getResponseHeader('content-type') || 'application/json' },
         }));
       };
 
@@ -268,9 +253,9 @@ export const createSupabaseBrowserClient = () => {
   if (_browserClient) return _browserClient;
   _browserClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
     },
     global: { fetch: supabaseFetch },
   });
@@ -289,9 +274,9 @@ export const createSupabaseServerClient = () => {
 export const supabase = isSupabaseConfigured()
   ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
       },
       global: { fetch: supabaseFetch },
     })

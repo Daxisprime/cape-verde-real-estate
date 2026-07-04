@@ -75,12 +75,60 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // With persistSession: false, there's no stored session to recover.
-    // Set initial state to unauthenticated immediately.
-    // We don't subscribe to onAuthStateChange here to avoid triggering
-    // the SDK's internal _initialize() which makes network requests.
-    setState(prev => ({ ...prev, isLoading: false }));
-  }, [supabase]);
+    let isMounted = true;
+
+    const initSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        if (!isMounted) return;
+        setState({
+          user: session.user,
+          session,
+          profile,
+          isLoading: false,
+          isAuthenticated: true,
+        });
+      } else {
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    initSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+        if (event === 'SIGNED_OUT' || !session?.user) {
+          setState({
+            user: null,
+            session: null,
+            profile: null,
+            isLoading: false,
+            isAuthenticated: false,
+          });
+          return;
+        }
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          const profile = await fetchProfile(session.user.id);
+          if (!isMounted) return;
+          setState({
+            user: session.user,
+            session,
+            profile,
+            isLoading: false,
+            isAuthenticated: true,
+          });
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchProfile]);
 
   const signUp = async (
     email: string,
@@ -108,12 +156,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (!profile) {
       const email = user.email || '';
       const name = user.user_metadata?.full_name || email.split('@')[0] || '';
-      const role = email === 'mpcorreia4@gmail.com' ? 'admin' : 'user';
       await supabase.from('profiles').upsert({
         id: user.id,
         email,
         name,
-        role,
+        role: 'buyer',
         verified: false,
       } as never, { onConflict: 'id' });
       profile = await fetchProfile(user.id);
