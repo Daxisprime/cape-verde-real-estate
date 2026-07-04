@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
@@ -32,14 +32,10 @@ interface SupabaseAuthContextType extends AuthState {
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
-function createSupabaseClient(): SupabaseClient<Database> | null {
-  return createSupabaseBrowserClient();
-}
+// Use the global singleton -- never create a new instance
+const supabase = createSupabaseBrowserClient();
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
-  const supabaseRef = useRef(createSupabaseClient());
-  const supabase = supabaseRef.current;
-
   const [state, setState] = useState<AuthState>({
     user: null,
     session: null,

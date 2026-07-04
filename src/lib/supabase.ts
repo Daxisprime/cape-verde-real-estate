@@ -271,13 +271,5 @@ export const createSupabaseServerClient = () => {
   });
 };
 
-export const supabase = isSupabaseConfigured()
-  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-      },
-      global: { fetch: supabaseFetch },
-    })
-  : null;
+// Single browser-side client reference (same singleton as createSupabaseBrowserClient)
+export const supabase = typeof window !== 'undefined' ? createSupabaseBrowserClient() : null;
