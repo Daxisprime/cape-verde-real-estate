@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 
@@ -16,6 +17,8 @@ export default function AuthClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   const { signIn, signUp, resetPassword, supabase } = useSupabaseAuth();
   const router = useRouter();
@@ -42,9 +45,16 @@ export default function AuthClient() {
           setSuccess('Password reset link sent! Check your email inbox.');
         }
       } else {
-        const { error, confirmationRequired } = await signUp(email, password, { full_name: fullName });
+        if (!captchaToken) {
+          setError('Please complete the CAPTCHA verification.');
+          setLoading(false);
+          return;
+        }
+        const { error, confirmationRequired } = await signUp(email, password, { full_name: fullName }, captchaToken);
         if (error) {
           setError(error.message);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
         } else if (confirmationRequired) {
           setSuccess('Account created! Please check your email to verify your address, then sign in.');
           setMode('signin');
@@ -205,6 +215,17 @@ export default function AuthClient() {
                 >
                   Forgot password?
                 </button>
+              </div>
+            )}
+
+            {mode === 'signup' && (
+              <div className="flex justify-center">
+                <HCaptcha
+                  sitekey={process.env.NEXT_PUBLIC_CAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001'}
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  ref={captchaRef}
+                />
               </div>
             )}
 
