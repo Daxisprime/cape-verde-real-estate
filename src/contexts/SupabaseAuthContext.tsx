@@ -121,18 +121,20 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.session?.user) {
-      const profile = await ensureProfile(data.session.user);
-      setState({
-        user: data.session.user,
-        session: data.session,
-        profile,
-        isLoading: false,
-        isAuthenticated: true,
-      });
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    if (authError) return { error: authError };
+    if (!authData || !authData.user || !authData.session) {
+      return { error: { message: 'Authentication executed but user context is missing.' } as AuthError };
     }
-    return { error };
+    const profile = await ensureProfile(authData.user);
+    setState({
+      user: authData.user,
+      session: authData.session,
+      profile,
+      isLoading: false,
+      isAuthenticated: true,
+    });
+    return { error: null };
   };
 
   const signInWithProvider = async (

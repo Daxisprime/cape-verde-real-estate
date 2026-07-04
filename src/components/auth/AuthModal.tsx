@@ -58,9 +58,9 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
 
     try {
       if (mode === 'login') {
-        const { error } = await signIn(formData.email, formData.password);
-        if (error) {
-          setError(error.message);
+        const { error: signInError } = await signIn(formData.email, formData.password);
+        if (signInError) {
+          setError(signInError.message);
         } else {
           toast({
             title: 'Welcome back!',

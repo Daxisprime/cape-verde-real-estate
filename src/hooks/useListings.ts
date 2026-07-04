@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 export interface LiveListing {
   id: string;
@@ -73,8 +74,14 @@ export function useListings() {
 export function useMyListings() {
   const [listings, setListings] = useState<LiveListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated } = useSupabaseAuth();
 
   useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setLoading(false);
+      return;
+    }
+
     async function fetchMyListings() {
       if (!isSupabaseConfigured()) {
         setLoading(false);
@@ -88,24 +95,16 @@ export function useMyListings() {
       }
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        // Fetch user's properties
         const { data: props } = await supabase
           .from('properties')
           .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
-          .eq('agent_id', user.id)
+          .eq('agent_id', user!.id)
           .order('created_at', { ascending: false });
 
-        // Fetch user's marketplace items
         const { data: items } = await supabase
           .from('marketplace_items')
           .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
-          .eq('user_id', user.id)
+          .eq('user_id', user!.id)
           .order('created_at', { ascending: false });
 
         const combined: LiveListing[] = [
@@ -141,7 +140,7 @@ export function useMyListings() {
     }
 
     fetchMyListings();
-  }, []);
+  }, [isAuthenticated, user]);
 
   return { listings, loading };
 }
