@@ -28,23 +28,23 @@ const supabaseFetch: typeof globalThis.fetch = async (input, init) => {
     const hasOnlyAnonKey = !authHeader || authHeader === `Bearer ${anonKey}`;
 
     if (hasOnlyAnonKey) {
-      // Token endpoint (refresh attempts)
-      if (url.includes('/auth/v1/token')) {
+      // Sign-in and sign-up are intentional user actions -- always let them through.
+      const isSignIn = url.includes('/auth/v1/token') && body.includes('password');
+      const isSignUp = url.includes('/auth/v1/signup');
+      if (isSignIn || isSignUp) {
+        // Fall through to real fetch below
+      } else if (url.includes('/auth/v1/token')) {
+        // Token refresh attempts with no session -- suppress
         return new Response(JSON.stringify({ error: 'invalid_grant', error_description: 'No session' }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         });
-      }
-      // User/session recovery
-      if (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) {
+      } else if (url.includes('/auth/v1/user') || url.includes('/auth/v1/session')) {
+        // User/session recovery with no session -- suppress
         return new Response(JSON.stringify({ user: null, session: null }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         });
-      }
-      // Sign-in and sign-up are intentional user actions -- let them through.
-      if (url.includes('/auth/v1/signup') || (url.includes('/auth/v1/token') && body.includes('password'))) {
-        // Fall through to real fetch
       } else {
         // Any other auth endpoint without a real token -- return empty success
         return new Response(JSON.stringify({}), {
