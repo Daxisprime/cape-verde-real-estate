@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface SearchCriteria {
   location?: string;
@@ -57,7 +58,6 @@ interface ExtendedPreferences {
   }>;
 }
 
-// User roles - a user can have multiple roles simultaneously
 export type UserRole = 'buyer' | 'agent' | 'vendor' | 'admin';
 
 export interface User {
@@ -66,10 +66,10 @@ export interface User {
   name: string;
   avatar?: string;
   phone?: string;
-  roles: UserRole[]; // Array of roles - user can be buyer + vendor, etc.
+  roles: UserRole[];
   agentProfile?: AgentProfile;
   preferences: ExtendedPreferences;
-  favorites: string[]; // Property IDs
+  favorites: string[];
   savedSearches: Array<{
     id: string;
     name: string;
@@ -112,7 +112,6 @@ interface AuthContextType {
   resendVerification: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  // Role management
   hasRole: (role: UserRole) => boolean;
   hasAnyRole: (roles: UserRole[]) => boolean;
   addRole: (role: UserRole) => Promise<void>;
@@ -121,446 +120,189 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user database
-const mockUsers: { [email: string]: User & { password: string } } = {
-  'admin@procv.com': {
-    id: 'admin-001',
-    email: 'admin@procv.com',
-    password: 'admin123',
-    name: 'Administrator',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    phone: '+238 999 0001',
-    roles: ['admin', 'buyer'], // Admin can also browse as buyer
-    preferences: {
-      currency: 'EUR',
-      language: 'en',
-      theme: 'light',
-      measurementUnit: 'metric',
-      notifications: {
-        email: true,
-        sms: true,
-        newListings: true,
-        priceAlerts: true,
-        marketUpdates: true
-      },
-      emailNotifications: true,
-      smsNotifications: true,
-      priceAlerts: true,
-      newListingAlerts: true,
-      priceChangeAlerts: true,
-      viewingReminders: true,
-      marketInsights: true,
-      agentMessages: true,
-      searchAlerts: []
-    },
-    favorites: [],
-    savedSearches: [],
-    viewingHistory: [],
-    inquiries: [],
-    membershipLevel: 'vip',
-    createdAt: '2024-01-01T00:00:00Z',
-    lastLoginAt: '2024-12-20T09:00:00Z',
-    verified: true
+const PREFS_STORAGE_KEY = 'procv_user_prefs';
+
+const defaultPreferences: ExtendedPreferences = {
+  currency: 'EUR',
+  language: 'en',
+  theme: 'light',
+  measurementUnit: 'metric',
+  notifications: {
+    email: true,
+    sms: false,
+    newListings: true,
+    priceAlerts: false,
+    marketUpdates: false,
   },
-  'demo@procv.com': {
-    id: 'user-demo-001',
-    email: 'demo@procv.com',
-    password: 'demo123',
-    name: 'Demo User',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    phone: '+238 999 0000',
-    roles: ['buyer'], // Regular buyer
-    preferences: {
-      currency: 'EUR',
-      language: 'en',
-      theme: 'light',
-      measurementUnit: 'metric',
-      notifications: {
-        email: true,
-        sms: false,
-        newListings: true,
-        priceAlerts: true,
-        marketUpdates: false
-      },
-      emailNotifications: true,
-      smsNotifications: false,
-      priceAlerts: true,
-      newListingAlerts: true,
-      priceChangeAlerts: true,
-      viewingReminders: true,
-      marketInsights: false,
-      agentMessages: true,
-      searchAlerts: [
-        {
-          id: 'alert-001',
-          name: 'Beachfront Villas Sal',
-          criteria: { island: 'Sal', type: 'Villa', beachDistance: 100 },
-          frequency: 'weekly',
-          active: true
-        }
-      ]
-    },
-    favorites: ['cv-001', 'cv-004', 'cv-009'],
-    savedSearches: [
-      {
-        id: 'search-001',
-        name: 'Santiago Properties Under €300k',
-        criteria: { island: 'Santiago', maxPrice: 300000 },
-        createdAt: '2024-12-01T10:00:00Z'
-      }
-    ],
-    viewingHistory: [
-      { propertyId: 'cv-001', viewedAt: '2024-12-20T14:30:00Z' },
-      { propertyId: 'cv-004', viewedAt: '2024-12-19T16:45:00Z' }
-    ],
-    inquiries: [
-      {
-        id: 'inquiry-001',
-        propertyId: 'cv-001',
-        agentId: 'agent-maria-santos',
-        message: 'Interested in viewing this property. What are the available times?',
-        status: 'responded',
-        createdAt: '2024-12-18T09:15:00Z'
-      }
-    ],
-    membershipLevel: 'premium',
-    createdAt: '2024-11-01T00:00:00Z',
-    lastLoginAt: '2024-12-20T08:30:00Z',
-    verified: true
-  }
+  emailNotifications: true,
+  smsNotifications: false,
+  priceAlerts: false,
+  newListingAlerts: true,
+  priceChangeAlerts: false,
+  viewingReminders: true,
+  marketInsights: false,
+  agentMessages: true,
+  searchAlerts: [],
 };
 
-// Storage helpers
-const STORAGE_KEY = 'procv_user';
-const SESSION_KEY = 'procv_session';
-
-const saveUserToStorage = (user: User) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  sessionStorage.setItem(SESSION_KEY, 'authenticated');
-};
-
-const removeUserFromStorage = () => {
-  localStorage.removeItem(STORAGE_KEY);
-  sessionStorage.removeItem(SESSION_KEY);
-};
-
-const getUserFromStorage = (): User | null => {
+function loadLocalPrefs(): { favorites: string[]; savedSearches: User['savedSearches']; viewingHistory: User['viewingHistory']; preferences: ExtendedPreferences } {
   try {
-    const userStr = localStorage.getItem(STORAGE_KEY);
-    const sessionStr = sessionStorage.getItem(SESSION_KEY);
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(PREFS_STORAGE_KEY) : null;
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { favorites: [], savedSearches: [], viewingHistory: [], preferences: defaultPreferences };
+}
 
-    if (userStr && sessionStr === 'authenticated') {
-      return JSON.parse(userStr);
+function saveLocalPrefs(data: { favorites: string[]; savedSearches: User['savedSearches']; viewingHistory: User['viewingHistory']; preferences: ExtendedPreferences }) {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(data));
     }
-  } catch (error) {
-    console.error('Error loading user from storage:', error);
-  }
-  return null;
-};
+  } catch {}
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const supabaseAuth = useSupabaseAuth();
+  const [localData, setLocalData] = useState(loadLocalPrefs);
 
-  // Load user from storage on mount
   useEffect(() => {
-    const savedUser = getUserFromStorage();
-    if (savedUser) {
-      setUser(savedUser);
-    }
-    setIsLoading(false);
-  }, []);
+    saveLocalPrefs(localData);
+  }, [localData]);
 
-  // Update storage when user changes
-  useEffect(() => {
-    if (user) {
-      saveUserToStorage(user);
-    }
-  }, [user]);
+  const mapToUser = useCallback((): User | null => {
+    if (!supabaseAuth.isAuthenticated || !supabaseAuth.user) return null;
+    const profile = supabaseAuth.profile;
+    const roleStr = profile?.role as UserRole | null;
+    const roles: UserRole[] = roleStr ? [roleStr] : ['buyer'];
+
+    return {
+      id: supabaseAuth.user.id,
+      email: supabaseAuth.user.email || '',
+      name: profile?.name || supabaseAuth.user.user_metadata?.full_name || supabaseAuth.user.email?.split('@')[0] || '',
+      avatar: profile?.avatar || undefined,
+      phone: profile?.phone || undefined,
+      roles,
+      preferences: localData.preferences,
+      favorites: localData.favorites,
+      savedSearches: localData.savedSearches,
+      viewingHistory: localData.viewingHistory,
+      inquiries: [],
+      membershipLevel: (profile?.membership_level as User['membershipLevel']) || 'basic',
+      createdAt: profile?.created_at || supabaseAuth.user.created_at || new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      verified: profile?.verified ?? false,
+    };
+  }, [supabaseAuth.isAuthenticated, supabaseAuth.user, supabaseAuth.profile, localData]);
+
+  const user = mapToUser();
+  const isAuthenticated = !!user;
+  const isLoading = supabaseAuth.isLoading;
 
   const login = async (email: string, password: string): Promise<void> => {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockUser = mockUsers[email.toLowerCase()];
-    if (!mockUser || mockUser.password !== password) {
-      setIsLoading(false);
-      throw new Error('Invalid email or password');
-    }
-
-    // Remove password from user object
-    const { password: _, ...userWithoutPassword } = mockUser;
-    const loginUser = {
-      ...userWithoutPassword,
-      lastLoginAt: new Date().toISOString()
-    };
-
-    setUser(loginUser);
-    setIsLoading(false);
+    const { error } = await supabaseAuth.signIn(email, password);
+    if (error) throw new Error(error.message);
   };
 
   const register = async (email: string, password: string, name: string): Promise<void> => {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    if (mockUsers[email.toLowerCase()]) {
-      setIsLoading(false);
-      throw new Error('User already exists');
-    }
-
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email: email.toLowerCase(),
-      name,
-      roles: ['buyer'], // New users start as buyers
-      preferences: {
-        currency: 'EUR',
-        language: 'en',
-        theme: 'light',
-        measurementUnit: 'metric',
-        notifications: {
-          email: true,
-          sms: false,
-          newListings: true,
-          priceAlerts: false,
-          marketUpdates: false
-        },
-        emailNotifications: true,
-        smsNotifications: false,
-        priceAlerts: false,
-        newListingAlerts: true,
-        priceChangeAlerts: false,
-        viewingReminders: true,
-        marketInsights: false,
-        agentMessages: true,
-        searchAlerts: []
-      },
-      favorites: [],
-      savedSearches: [],
-      viewingHistory: [],
-      inquiries: [],
-      membershipLevel: 'basic',
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString(),
-      verified: false
-    };
-
-    // Add to mock database
-    mockUsers[email.toLowerCase()] = { ...newUser, password };
-
-    setUser(newUser);
-    setIsLoading(false);
+    const { error } = await supabaseAuth.signUp(email, password, { full_name: name });
+    if (error) throw new Error(error.message);
   };
 
   const logout = () => {
-    setUser(null);
-    removeUserFromStorage();
+    supabaseAuth.signOut();
   };
 
   const updateProfile = async (updates: Partial<User>): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-
-    // Update mock database
-    if (mockUsers[user.email]) {
-      mockUsers[user.email] = { ...mockUsers[user.email], ...updates };
+    if (updates.preferences) {
+      setLocalData(prev => ({ ...prev, preferences: { ...prev.preferences, ...updates.preferences } }));
     }
-
-    setIsLoading(false);
+    if (updates.favorites !== undefined) {
+      setLocalData(prev => ({ ...prev, favorites: updates.favorites! }));
+    }
+    if (updates.savedSearches !== undefined) {
+      setLocalData(prev => ({ ...prev, savedSearches: updates.savedSearches! }));
+    }
+    if (updates.viewingHistory !== undefined) {
+      setLocalData(prev => ({ ...prev, viewingHistory: updates.viewingHistory! }));
+    }
+    const profileUpdates: Record<string, unknown> = {};
+    if (updates.name !== undefined) profileUpdates.name = updates.name;
+    if (updates.phone !== undefined) profileUpdates.phone = updates.phone;
+    if (updates.avatar !== undefined) profileUpdates.avatar = updates.avatar;
+    if (Object.keys(profileUpdates).length > 0) {
+      await supabaseAuth.updateProfile(profileUpdates as never);
+    }
   };
 
   const addToFavorites = (propertyId: string) => {
-    if (!user) return;
-
-    const updatedFavorites = [...user.favorites];
-    if (!updatedFavorites.includes(propertyId)) {
-      updatedFavorites.push(propertyId);
-      updateProfile({ favorites: updatedFavorites });
-    }
+    setLocalData(prev => {
+      if (prev.favorites.includes(propertyId)) return prev;
+      return { ...prev, favorites: [...prev.favorites, propertyId] };
+    });
   };
 
   const removeFromFavorites = (propertyId: string) => {
-    if (!user) return;
-
-    const updatedFavorites = user.favorites.filter(id => id !== propertyId);
-    updateProfile({ favorites: updatedFavorites });
+    setLocalData(prev => ({
+      ...prev,
+      favorites: prev.favorites.filter(id => id !== propertyId),
+    }));
   };
 
   const isFavorite = (propertyId: string): boolean => {
-    return user?.favorites.includes(propertyId) ?? false;
+    return localData.favorites.includes(propertyId);
   };
 
   const saveSearch = (name: string, criteria: SearchCriteria) => {
-    if (!user) return;
-
-    const newSearch = {
-      id: `search-${Date.now()}`,
-      name,
-      criteria,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedSearches = [...user.savedSearches, newSearch];
-    updateProfile({ savedSearches: updatedSearches });
+    setLocalData(prev => ({
+      ...prev,
+      savedSearches: [...prev.savedSearches, { id: `search-${Date.now()}`, name, criteria, createdAt: new Date().toISOString() }],
+    }));
   };
 
   const deleteSavedSearch = (searchId: string) => {
-    if (!user) return;
-
-    const updatedSearches = user.savedSearches.filter(search => search.id !== searchId);
-    updateProfile({ savedSearches: updatedSearches });
+    setLocalData(prev => ({
+      ...prev,
+      savedSearches: prev.savedSearches.filter(s => s.id !== searchId),
+    }));
   };
 
   const addToViewingHistory = (propertyId: string) => {
-    if (!user) return;
-
-    const newView = {
-      propertyId,
-      viewedAt: new Date().toISOString()
-    };
-
-    // Remove existing view of same property and add new one
-    const updatedHistory = [
-      newView,
-      ...user.viewingHistory.filter(view => view.propertyId !== propertyId)
-    ].slice(0, 50); // Keep only last 50 views
-
-    updateProfile({ viewingHistory: updatedHistory });
+    setLocalData(prev => ({
+      ...prev,
+      viewingHistory: [
+        { propertyId, viewedAt: new Date().toISOString() },
+        ...prev.viewingHistory.filter(v => v.propertyId !== propertyId),
+      ].slice(0, 50),
+    }));
   };
 
-  const createInquiry = async (propertyId: string, agentId: string, message: string): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const newInquiry = {
-      id: `inquiry-${Date.now()}`,
-      propertyId,
-      agentId,
-      message,
-      status: 'pending' as const,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedInquiries = [...user.inquiries, newInquiry];
-    await updateProfile({ inquiries: updatedInquiries });
-
-    setIsLoading(false);
-  };
-
-  const resendVerification = async (): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // In real app, this would send email
-    console.log('Verification email sent to:', user.email);
-
-    setIsLoading(false);
-  };
+  const createInquiry = async (): Promise<void> => {};
+  const resendVerification = async (): Promise<void> => {};
 
   const resetPassword = async (email: string): Promise<void> => {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // In real app, this would send reset email
-    console.log('Password reset email sent to:', email);
-
-    setIsLoading(false);
+    const { error } = await supabaseAuth.resetPassword(email);
+    if (error) throw new Error(error.message);
   };
 
-  const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockUser = mockUsers[user.email];
-    if (!mockUser || mockUser.password !== currentPassword) {
-      setIsLoading(false);
-      throw new Error('Current password is incorrect');
-    }
-
-    // Update password in mock database
-    mockUsers[user.email].password = newPassword;
-
-    setIsLoading(false);
+  const changePassword = async (_currentPassword: string, newPassword: string): Promise<void> => {
+    const { error } = await supabaseAuth.updatePassword(newPassword);
+    if (error) throw new Error(error.message);
   };
 
-  // Role management functions
   const hasRole = (role: UserRole): boolean => {
-    return user?.roles?.includes(role) ?? false;
+    return user?.roles.includes(role) ?? false;
   };
 
   const hasAnyRole = (roles: UserRole[]): boolean => {
-    return roles.some(role => user?.roles?.includes(role));
+    return roles.some(r => user?.roles.includes(r));
   };
 
-  const addRole = async (role: UserRole): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-    if (user.roles.includes(role)) return; // Already has role
-
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const updatedRoles = [...user.roles, role];
-    await updateProfile({ roles: updatedRoles });
-
-    // Update mock database
-    if (mockUsers[user.email]) {
-      mockUsers[user.email].roles = updatedRoles;
-    }
-
-    setIsLoading(false);
-  };
-
-  const removeRole = async (role: UserRole): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-    if (!user.roles.includes(role)) return; // Doesn't have role
-
-    // Prevent removing the last role
-    if (user.roles.length <= 1) {
-      throw new Error('User must have at least one role');
-    }
-
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const updatedRoles = user.roles.filter(r => r !== role);
-    await updateProfile({ roles: updatedRoles });
-
-    // Update mock database
-    if (mockUsers[user.email]) {
-      mockUsers[user.email].roles = updatedRoles;
-    }
-
-    setIsLoading(false);
-  };
+  const addRole = async (): Promise<void> => {};
+  const removeRole = async (): Promise<void> => {};
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isLoading,
     login,
     register,
@@ -576,11 +318,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resendVerification,
     resetPassword,
     changePassword,
-    // Role management
     hasRole,
     hasAnyRole,
     addRole,
-    removeRole
+    removeRole,
   };
 
   return (
