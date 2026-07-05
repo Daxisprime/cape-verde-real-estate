@@ -1,91 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// The Bolt preview proxy (.preview-script.js) patches globalThis.fetch and logs
-// console.error("Supabase request failed", body) for non-2xx responses from
-// Supabase URLs. We bypass this by routing all Supabase requests through XHR
-// which the preview script does not intercept.
-const supabaseFetch: typeof globalThis.fetch = async (input, init) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
-  const method = init?.method?.toUpperCase() || 'GET';
-
-  // For REST/data endpoints, use XMLHttpRequest to bypass the preview
-  // script's fetch wrapper which logs console.error on non-2xx responses.
-  if (typeof XMLHttpRequest !== 'undefined' && url.includes('supabase.co/rest/')) {
-    return new Promise<Response>((resolve) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open(method, url, true);
-
-      if (init?.headers) {
-        const h = init.headers as Record<string, string>;
-        for (const key of Object.keys(h)) {
-          xhr.setRequestHeader(key, h[key]);
-        }
-      }
-
-      xhr.onload = () => {
-        resolve(new Response(xhr.responseText, {
-          status: xhr.status,
-          statusText: xhr.statusText,
-          headers: { 'content-type': 'application/json' },
-        }));
-      };
-
-      xhr.onerror = () => {
-        resolve(new Response(JSON.stringify({ message: 'Network error' }), {
-          status: 502,
-          headers: { 'content-type': 'application/json' },
-        }));
-      };
-
-      xhr.send(init?.body as string | null || null);
-    });
-  }
-
-  // For auth endpoints, also use XHR to bypass the preview script's fetch
-  // wrapper which would log "Supabase request failed" on 401s during
-  // normal token refresh cycles.
-  if (typeof XMLHttpRequest !== 'undefined' && url.includes('/auth/v1/')) {
-    return new Promise<Response>((resolve) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open(method, url, true);
-
-      if (init?.headers) {
-        const h = init.headers as Record<string, string>;
-        for (const key of Object.keys(h)) {
-          xhr.setRequestHeader(key, h[key]);
-        }
-      }
-
-      xhr.onload = () => {
-        resolve(new Response(xhr.responseText, {
-          status: xhr.status,
-          statusText: xhr.statusText,
-          headers: { 'content-type': xhr.getResponseHeader('content-type') || 'application/json' },
-        }));
-      };
-
-      xhr.onerror = () => {
-        resolve(new Response(JSON.stringify({ message: 'Network error' }), {
-          status: 502,
-          headers: { 'content-type': 'application/json' },
-        }));
-      };
-
-      xhr.send(init?.body as string | null || null);
-    });
-  }
-
-  // Fallback: call through globalThis.fetch for everything else
-  try {
-    return await globalThis.fetch(input, init);
-  } catch {
-    return new Response(JSON.stringify({ message: 'Network error', code: 'FETCH_ERROR' }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' },
-    });
-  }
-};
-
 // User Roles - supports multiple roles per user
 export type UserRole = 'buyer' | 'agent' | 'vendor' | 'admin';
 
@@ -257,7 +171,6 @@ export const createSupabaseBrowserClient = () => {
       persistSession: true,
       detectSessionInUrl: true,
     },
-    global: { fetch: supabaseFetch },
   });
   return _browserClient;
 };

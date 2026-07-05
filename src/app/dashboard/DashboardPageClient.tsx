@@ -172,7 +172,7 @@ const sampleRecommendations: Recommendation[] = [
 ];
 
 export default function DashboardPageClient() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([]);
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
@@ -188,6 +188,18 @@ export default function DashboardPageClient() {
       setRecommendations(sampleRecommendations);
     }
   }, [isAuthenticated, user]);
+
+  // Show loading while auth state is being resolved
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-pulse text-gray-500">Loading...</div>
+        </div>
+      </>
+    );
+  }
 
   // Show loading or login prompt if not authenticated
   if (!isAuthenticated || !user) {

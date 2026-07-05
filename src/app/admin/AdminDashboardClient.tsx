@@ -59,7 +59,7 @@ interface AnalyticsData {
 }
 
 export default function AdminDashboardClient() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [timeRange, setTimeRange] = useState('7d');
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -232,6 +232,14 @@ export default function AdminDashboardClient() {
       default: return Globe;
     }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   // Temporarily bypass authentication for demo purposes
   // if (!isAuthenticated || user?.role !== 'admin') {

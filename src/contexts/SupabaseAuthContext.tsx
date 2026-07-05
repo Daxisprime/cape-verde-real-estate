@@ -63,7 +63,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       role: rawRole,
       roles: raw.roles ? (raw.roles as UserRole[]) : (rawRole ? [rawRole as UserRole] : ['buyer']),
     } as Profile;
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -106,7 +107,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           });
           return;
         }
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           const profile = await fetchProfile(session.user.id);
           if (!isMounted) return;
           setState({
@@ -124,7 +125,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile]);
+    // supabase and fetchProfile are stable module-level/useCallback refs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signUp = async (
     email: string,
@@ -162,7 +165,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       profile = await fetchProfile(user.id);
     }
     return profile;
-  }, [supabase, fetchProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signIn = async (email: string, password: string, captchaToken?: string): Promise<{ error: AuthError | null }> => {
     if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
