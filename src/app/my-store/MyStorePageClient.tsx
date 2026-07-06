@@ -189,7 +189,8 @@ export default function MyStorePageClient() {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .upsert({ id: user.id, email: user.email ?? '', ...updates }, { onConflict: 'id' });
+        .update(updates)
+        .eq('id', user.id);
 
       if (updateError) {
         console.error('Profile update failed:', updateError.message);
