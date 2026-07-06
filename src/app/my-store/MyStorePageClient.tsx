@@ -187,7 +187,15 @@ export default function MyStorePageClient() {
         }
       }
 
-      await supabase.from('profiles').update(updates).eq('id', user.id);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Profile update failed:', updateError.message);
+        return;
+      }
 
       // Immediately update local state
       setEditForm(prev => ({
@@ -199,6 +207,7 @@ export default function MyStorePageClient() {
       }));
 
       await refreshProfile();
+      router.refresh();
 
       if (avatarPreview) {
         URL.revokeObjectURL(avatarPreview);
