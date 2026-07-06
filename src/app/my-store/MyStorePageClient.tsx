@@ -9,6 +9,13 @@ import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { compressImage } from "@/lib/image-compression";
+import {
+  normalizeFacebookUrl,
+  normalizeInstagramUrl,
+  normalizeWhatsAppUrl,
+  normalizeWebsiteUrl,
+} from "@/lib/social-normalize";
 import {
   Phone,
   MessageCircle,
@@ -73,14 +80,20 @@ export default function MyStorePageClient() {
     website_url: "",
   });
 
-  // Sync editForm when profile loads
+  // Sync editForm when profile loads or refreshes
   useEffect(() => {
     if (profile) {
-      setEditForm(prev => ({
-        ...prev,
-        name: profile.name || prev.name,
-        phone: profile.phone || prev.phone,
-      }));
+      const raw = profile as Record<string, unknown>;
+      setEditForm({
+        name: (profile.name || '') as string,
+        bio: (raw.bio as string) || '',
+        phone: (profile.phone || '') as string,
+        whatsapp: (profile.whatsapp_number || '') as string,
+        facebook_url: (profile.facebook_handle || '') as string,
+        instagram_url: (profile.instagram_handle || '') as string,
+        facebook_shop_url: (raw.facebook_shop_url as string) || '',
+        website_url: (profile.website_url || '') as string,
+      });
     }
   }, [profile]);
 
@@ -143,26 +156,31 @@ export default function MyStorePageClient() {
         return;
       }
 
+      // Normalize social handles to full URLs before saving
+      const normalizedFacebook = normalizeFacebookUrl(editForm.facebook_url);
+      const normalizedInstagram = normalizeInstagramUrl(editForm.instagram_url);
+      const normalizedWhatsapp = normalizeWhatsAppUrl(editForm.whatsapp);
+      const normalizedWebsite = normalizeWebsiteUrl(editForm.website_url);
+
       const updates: Record<string, string> = {
         name: editForm.name || '',
         phone: editForm.phone || '',
-        bio: editForm.bio || '',
-        facebook_url: editForm.facebook_url || '',
-        instagram_url: editForm.instagram_url || '',
-        facebook_shop_url: editForm.facebook_shop_url || '',
-        website_url: editForm.website_url || '',
+        facebook_handle: normalizedFacebook,
+        instagram_handle: normalizedInstagram,
+        whatsapp_number: normalizedWhatsapp,
+        website_url: normalizedWebsite,
       };
 
       // Upload avatar if a new file was selected
       const fileInput = avatarInputRef.current;
       const file = fileInput?.files?.[0];
       if (file) {
-        const ext = file.name.split('.').pop() || 'jpg';
-        const filePath = `${user.id}/avatar.${ext}`;
+        const compressed = await compressImage(file, { maxSizeMB: 0.15, maxWidthOrHeight: 512 });
+        const filePath = `${user.id}/avatar.webp`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(filePath, file, { upsert: true, contentType: file.type });
+          .upload(filePath, compressed, { upsert: true, contentType: 'image/webp' });
 
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
@@ -171,6 +189,17 @@ export default function MyStorePageClient() {
       }
 
       await supabase.from('profiles').update(updates).eq('id', user.id);
+
+      // Immediately update local state so the UI reflects changes without reload
+      setEditForm(prev => ({
+        ...prev,
+        facebook_url: normalizedFacebook,
+        instagram_url: normalizedInstagram,
+        whatsapp: normalizedWhatsapp,
+        website_url: normalizedWebsite,
+      }));
+
+      // Refresh the global profile context
       await refreshProfile();
 
       if (avatarPreview) {
@@ -363,38 +392,38 @@ export default function MyStorePageClient() {
                 {isEditing ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Facebook Group</label>
+                      <label className="text-xs text-gray-500 mb-1 block">Facebook (Nome do Grupo / Usuário)</label>
                       <input
                         value={editForm.facebook_url}
                         onChange={(e) => setEditForm((p) => ({ ...p, facebook_url: e.target.value }))}
-                        placeholder="https://facebook.com/..."
+                        placeholder="meugrupo.cv"
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Facebook Shop</label>
+                      <label className="text-xs text-gray-500 mb-1 block">WhatsApp (N de Telefone)</label>
                       <input
-                        value={editForm.facebook_shop_url}
-                        onChange={(e) => setEditForm((p) => ({ ...p, facebook_shop_url: e.target.value }))}
-                        placeholder="https://facebook.com/marketplace/..."
+                        value={editForm.whatsapp}
+                        onChange={(e) => setEditForm((p) => ({ ...p, whatsapp: e.target.value }))}
+                        placeholder="9XX XXXX"
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Instagram</label>
+                      <label className="text-xs text-gray-500 mb-1 block">Instagram (Usuário)</label>
                       <input
                         value={editForm.instagram_url}
                         onChange={(e) => setEditForm((p) => ({ ...p, instagram_url: e.target.value }))}
-                        placeholder="https://instagram.com/..."
+                        placeholder="@minha_loja"
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Website da Empresa (Optional)</label>
+                      <label className="text-xs text-gray-500 mb-1 block">Website Oficial (Opcional)</label>
                       <input
                         value={editForm.website_url}
                         onChange={(e) => setEditForm((p) => ({ ...p, website_url: e.target.value }))}
-                        placeholder="https://yourwebsite.com"
+                        placeholder="www.empresa.cv"
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                       />
                     </div>
@@ -403,14 +432,8 @@ export default function MyStorePageClient() {
                   <div className="flex flex-wrap gap-4">
                     {editForm.facebook_url && (
                       <a href={editForm.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-[#2563EB] hover:underline">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Facebook Group
-                      </a>
-                    )}
-                    {editForm.facebook_shop_url && (
-                      <a href={editForm.facebook_shop_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-[#2563EB] hover:underline">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Facebook Shop
+                        <Facebook className="h-3.5 w-3.5" />
+                        Facebook
                       </a>
                     )}
                     {editForm.instagram_url && (
@@ -419,8 +442,14 @@ export default function MyStorePageClient() {
                         Instagram
                       </a>
                     )}
+                    {editForm.whatsapp && (
+                      <a href={editForm.whatsapp.startsWith('http') ? editForm.whatsapp : `https://wa.me/${editForm.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-green-600 hover:underline">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        WhatsApp
+                      </a>
+                    )}
                     {editForm.website_url && (
-                      <a href={editForm.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium text-sm border border-blue-200 bg-blue-50/50 px-3 py-1.5 rounded-lg transition-all">
+                      <a href={editForm.website_url.startsWith('http') ? editForm.website_url : `https://${editForm.website_url}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium text-sm border border-blue-200 bg-blue-50/50 px-3 py-1.5 rounded-lg transition-all">
                         <Globe className="h-3.5 w-3.5" />
                         Website
                       </a>
