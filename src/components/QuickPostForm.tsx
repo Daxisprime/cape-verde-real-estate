@@ -3,6 +3,8 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ImagePlus, X, Loader2, Zap } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
+import { compressImage } from "@/lib/image-compression";
+import { isOffline, enqueueOfflineSubmission } from "@/lib/offline-queue";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AuthModal from "@/components/AuthModal";
@@ -79,17 +81,31 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
     setErrorMessage("");
 
     try {
+      if (!user?.id) throw new Error("Authentication required");
+
+      // If offline, queue for later sync
+      if (isOffline()) {
+        const payload = isProperty
+          ? { title, price: parseFloat(price), property_type: category, listing_type: 'sale', island, location: island, images: [], agent_id: user.id, status: 'active' }
+          : { title, price_cve: parseFloat(price), category, island, images: [], user_id: user.id, status: 'active', condition: 'used', contact_whatsapp: whatsapp || null };
+        const endpoint = isProperty ? 'properties:insert' : 'marketplace_items:insert';
+        await enqueueOfflineSubmission(endpoint, payload);
+        setStatus("success");
+        onSuccess?.();
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
       if (!supabase) throw new Error("Supabase not configured");
-      if (!user?.id) throw new Error("Authentication required");
 
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
-          const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+          const compressed = await compressImage(file);
+          const filename = `${Date.now()}-${compressed.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
           const { data, error: uploadError } = await supabase.storage
             .from("ad-images")
-            .upload(`ads/${filename}`, file, { contentType: file.type });
+            .upload(`ads/${filename}`, compressed, { contentType: compressed.type });
           if (uploadError) throw uploadError;
           if (data?.path) {
             const { data: urlData } = supabase.storage.from("ad-images").getPublicUrl(data.path);

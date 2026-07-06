@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { flushOfflineQueue } from '@/lib/offline-queue';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 // TypeScript interfaces for PWA install prompt event
 interface BeforeInstallPromptEvent extends Event {
@@ -76,18 +78,28 @@ export default function PWAProvider({ children }: PWAProviderProps) {
     }
 
     // Setup online/offline listeners
-    const handleOnline = () => {
+    const handleOnline = async () => {
       setIsOnline(true);
       toast({
-        title: "🌐 Back Online",
+        title: "Back Online",
         description: "Your connection has been restored.",
       });
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        const count = await flushOfflineQueue(supabase);
+        if (count > 0) {
+          toast({
+            title: "Sync Complete",
+            description: `${count} queued submission${count > 1 ? 's' : ''} sent successfully.`,
+          });
+        }
+      }
     };
 
     const handleOffline = () => {
       setIsOnline(false);
       toast({
-        title: "📡 Offline Mode",
+        title: "Offline Mode",
         description: "You're now offline. Some features may be limited.",
         variant: "destructive",
       });

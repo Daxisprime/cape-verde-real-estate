@@ -94,7 +94,23 @@ export default function SettingsPageClient() {
   const handleProfileUpdate = async () => {
     setIsLoading(true);
     try {
-      const result = await updateProfile({
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          await supabase.from('profiles').upsert({
+            id: authUser.id,
+            name: profileData.name,
+            email: profileData.email,
+            phone: profileData.phone,
+            facebook_handle: profileData.facebookHandle || null,
+            twitter_handle: profileData.twitterHandle || null,
+            website_url: profileData.websiteUrl || null,
+          }, { onConflict: 'id' });
+        }
+      }
+
+      await updateProfile({
         name: profileData.name,
         email: profileData.email,
         phone: profileData.phone,
@@ -112,21 +128,7 @@ export default function SettingsPageClient() {
         }
       });
 
-      const supabase = createSupabaseBrowserClient();
-      if (supabase) {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser) {
-          await supabase.from('profiles').upsert({
-            id: authUser.id,
-            name: profileData.name,
-            email: profileData.email,
-            phone: profileData.phone,
-            facebook_handle: profileData.facebookHandle || null,
-            twitter_handle: profileData.twitterHandle || null,
-            website_url: profileData.websiteUrl || null,
-          }, { onConflict: 'id' });
-        }
-      }
+      await refreshProfile();
 
       toast({
         title: "Profile Updated",
