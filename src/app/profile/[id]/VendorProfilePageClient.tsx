@@ -52,7 +52,7 @@ export default function VendorProfilePageClient({ id }: { id: string }) {
       if (supabase && vendorId) {
         const { data: profileData, error } = await supabase
           .from("profiles")
-          .select("id, name, avatar, phone, website_url")
+          .select("id, name, avatar, phone, website_url, facebook_handle, instagram_handle, whatsapp_number")
           .eq("id", vendorId)
           .maybeSingle();
 
@@ -63,6 +63,9 @@ export default function VendorProfilePageClient({ id }: { id: string }) {
             avatar_url: profileData.avatar,
             phone: profileData.phone,
             website_url: profileData.website_url,
+            facebook_handle: profileData.facebook_handle,
+            instagram_handle: profileData.instagram_handle,
+            whatsapp: profileData.whatsapp_number,
           });
 
           const { data: adsData } = await supabase
@@ -72,8 +75,31 @@ export default function VendorProfilePageClient({ id }: { id: string }) {
             .eq("status", "active")
             .order("created_at", { ascending: false });
 
-          if (adsData) {
+          if (adsData && adsData.length > 0) {
             setAds(adsData as unknown as VendorAd[]);
+          } else {
+            // Fallback: fetch from properties table
+            const { data: propsData } = await supabase
+              .from("properties")
+              .select("id, title, price, island, location, bedrooms, bathrooms, total_area, images, created_at")
+              .eq("agent_id", vendorId)
+              .eq("status", "active")
+              .order("created_at", { ascending: false });
+            if (propsData && propsData.length > 0) {
+              setAds(propsData.map((p: any) => ({
+                id: p.id,
+                mode: 'real_estate' as const,
+                title: p.title,
+                price: p.price,
+                island: p.island,
+                zone: p.location,
+                bedrooms: p.bedrooms,
+                bathrooms: p.bathrooms,
+                square_meters: p.total_area,
+                images: p.images || [],
+                created_at: p.created_at,
+              })));
+            }
           }
           setLoading(false);
           return;
