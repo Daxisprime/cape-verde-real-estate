@@ -94,6 +94,24 @@ export default function SettingsPageClient() {
   const handleProfileUpdate = async () => {
     setIsLoading(true);
     try {
+      const result = await updateProfile({
+        name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
+        avatar: profileData.avatar,
+        preferences: {
+          ...preferences,
+          notifications: {
+            email: preferences.emailNotifications || true,
+            sms: preferences.smsNotifications || false,
+            newListings: preferences.newListingAlerts || true,
+            priceAlerts: preferences.priceAlerts || true,
+            marketUpdates: preferences.marketInsights || false
+          },
+          searchAlerts: user?.preferences?.searchAlerts || []
+        }
+      });
+
       const supabase = createSupabaseBrowserClient();
       if (supabase) {
         const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -109,27 +127,6 @@ export default function SettingsPageClient() {
           }, { onConflict: 'id' });
         }
       }
-
-      // Update the bridged context
-      await updateProfile({
-        name: profileData.name,
-        email: profileData.email,
-        phone: profileData.phone,
-        preferences: {
-          ...preferences,
-          notifications: {
-            email: preferences.emailNotifications || true,
-            sms: preferences.smsNotifications || false,
-            newListings: preferences.newListingAlerts || true,
-            priceAlerts: preferences.priceAlerts || true,
-            marketUpdates: preferences.marketInsights || false
-          },
-          searchAlerts: user?.preferences?.searchAlerts || []
-        }
-      });
-
-      // Force context refresh so UI updates immediately
-      await refreshProfile();
 
       toast({
         title: "Profile Updated",

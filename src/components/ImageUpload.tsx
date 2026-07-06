@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { compressImage } from '@/lib/image-compression';
 
 interface ImageUploadProps {
   bucket: 'property-images' | 'avatars';
@@ -132,17 +131,14 @@ export default function ImageUpload({
     // Upload files
     for (const upload of newUploads) {
       try {
-        // Compress image before upload
-        const compressed = await compressImage(upload.file);
-        const path = getStoragePath(compressed.name);
+        const path = getStoragePath(upload.file.name);
 
         // Upload to Supabase Storage
         const { data, error: uploadError } = await supabase.storage
           .from(bucket)
-          .upload(path, compressed, {
+          .upload(path, upload.file, {
             cacheControl: '3600',
             upsert: false,
-            contentType: compressed.type,
           });
 
         if (uploadError) {

@@ -40,11 +40,6 @@ export interface Profile {
   membership_level: string | null;
   currency: string | null;
   language: string | null;
-  whatsapp_number: string | null;
-  facebook_handle: string | null;
-  instagram_handle: string | null;
-  twitter_handle: string | null;
-  website_url: string | null;
   created_at: string;
   updated_at: string;
 }
