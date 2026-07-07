@@ -166,6 +166,7 @@ export default function MyStorePageClient() {
 
       const updates: Record<string, string> = {
         name: editForm.name || '',
+        bio: editForm.bio || '',
         phone: editForm.phone || '',
         facebook_handle: normalizedFacebook,
         instagram_handle: normalizedInstagram,
