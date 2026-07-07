@@ -141,8 +141,8 @@ export default function MyStorePageClient() {
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1048576) {
-      alert("Image must be under 1MB");
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'File too large', description: 'Image must be under 5MB. It will be compressed automatically.', variant: 'destructive' });
       return;
     }
     const previewUrl = URL.createObjectURL(file);

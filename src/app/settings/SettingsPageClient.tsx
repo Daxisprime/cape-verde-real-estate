@@ -224,8 +224,8 @@ export default function SettingsPageClient() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1048576) {
-      toast({ title: "File Too Large", description: "Please choose an image under 1MB.", variant: "destructive" });
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File Too Large", description: "Image must be under 5MB. It will be compressed automatically.", variant: "destructive" });
       return;
     }
 
