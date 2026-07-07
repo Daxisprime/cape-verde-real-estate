@@ -1,8 +1,8 @@
 import imageCompression from 'browser-image-compression';
 
 const DEFAULT_OPTIONS = {
-  maxSizeMB: 0.2,
-  maxWidthOrHeight: 1920,
+  maxSizeMB: 0.15,
+  maxWidthOrHeight: 1200,
   useWebWorker: true,
   fileType: 'image/webp' as const,
 };

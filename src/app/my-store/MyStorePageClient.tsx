@@ -171,22 +171,30 @@ export default function MyStorePageClient() {
         instagram_handle: normalizedInstagram,
         whatsapp_number: normalizedWhatsapp,
         website_url: normalizedWebsite,
+        updated_at: new Date().toISOString(),
       };
 
       // Upload avatar if a new file was selected
       const fileInput = avatarInputRef.current;
       const file = fileInput?.files?.[0];
       if (file) {
-        const compressed = await compressImage(file, { maxSizeMB: 0.15, maxWidthOrHeight: 512 });
+        const compressedFile = await compressImage(file, {
+          maxSizeMB: 0.15,
+          maxWidthOrHeight: 1200,
+          useWebWorker: true,
+          fileType: 'image/webp',
+        });
         const filePath = `${user.id}/avatar.webp`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(filePath, compressed, { upsert: true, contentType: 'image/webp' });
+          .upload(filePath, compressedFile, { upsert: true, contentType: 'image/webp' });
 
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
           updates.avatar = `${urlData.publicUrl}?t=${Date.now()}`;
+        } else {
+          toast({ title: 'Avatar upload failed', description: uploadError.message, variant: 'destructive' });
         }
       }
 
