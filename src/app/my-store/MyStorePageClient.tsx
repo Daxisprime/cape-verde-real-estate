@@ -174,27 +174,31 @@ export default function MyStorePageClient() {
         updated_at: new Date().toISOString(),
       };
 
-      // Upload avatar if a new file was selected
+      // Upload avatar independently -- never block text save
       const fileInput = avatarInputRef.current;
       const file = fileInput?.files?.[0];
       if (file) {
-        const compressedFile = await compressImage(file, {
-          maxSizeMB: 0.15,
-          maxWidthOrHeight: 1200,
-          useWebWorker: true,
-          fileType: 'image/webp',
-        });
-        const filePath = `${user.id}/avatar.webp`;
+        try {
+          const compressedFile = await compressImage(file, {
+            maxSizeMB: 0.15,
+            maxWidthOrHeight: 1200,
+            useWebWorker: true,
+            fileType: 'image/webp',
+          });
+          const filePath = `${user.id}/avatar.webp`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, compressedFile, { upsert: true, contentType: 'image/webp' });
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, compressedFile, { upsert: true, contentType: 'image/webp' });
 
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-          updates.avatar = `${urlData.publicUrl}?t=${Date.now()}`;
-        } else {
-          toast({ title: 'Avatar upload failed', description: uploadError.message, variant: 'destructive' });
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            updates.avatar = `${urlData.publicUrl}?t=${Date.now()}`;
+          } else {
+            toast({ title: 'Avatar upload failed', description: uploadError.message, variant: 'destructive' });
+          }
+        } catch (imgErr) {
+          toast({ title: 'Image processing failed', description: imgErr instanceof Error ? imgErr.message : 'Could not compress image.', variant: 'destructive' });
         }
       }
 

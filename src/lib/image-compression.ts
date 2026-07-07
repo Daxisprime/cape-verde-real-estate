@@ -34,6 +34,6 @@ export async function compressImage(
     });
   }
 
-  const name = file.name.replace(/\.[^.]+$/, '.webp');
-  return new File([compressed], name, { type: 'image/webp' });
+  const buffer = await compressed.arrayBuffer();
+  return new File([buffer], 'avatar.webp', { type: 'image/webp', lastModified: Date.now() });
 }
