@@ -70,6 +70,7 @@ export default function MyStorePageClient() {
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     name: vendorName,
@@ -145,6 +146,7 @@ export default function MyStorePageClient() {
       toast({ title: 'File too large', description: 'Image must be under 5MB. It will be compressed automatically.', variant: 'destructive' });
       return;
     }
+    setPendingAvatarFile(file);
     const previewUrl = URL.createObjectURL(file);
     setAvatarPreview(previewUrl);
   };
@@ -176,8 +178,7 @@ export default function MyStorePageClient() {
       };
 
       // Upload avatar independently -- never block text save
-      const fileInput = avatarInputRef.current;
-      const file = fileInput?.files?.[0];
+      const file = pendingAvatarFile;
       if (file) {
         try {
           const compressedFile = await compressImage(file, {
@@ -246,6 +247,7 @@ export default function MyStorePageClient() {
     } finally {
       setIsUploadingAvatar(false);
       setIsEditing(false);
+      setPendingAvatarFile(null);
       if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
