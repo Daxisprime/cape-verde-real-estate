@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import PromoteListingDrawer from "@/components/PromoteListingDrawer";
 import AdminPanel from "@/components/AdminPanel";
+import { useToast } from "@/hooks/use-toast";
 import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
@@ -57,6 +58,7 @@ export default function MyStorePageClient() {
   const { isAuthenticated, profile, user, refreshProfile } = useSupabaseAuth();
   const { listings: liveListings, loading: listingsLoading } = useMyListings();
   const router = useRouter();
+  const { toast } = useToast();
   const fallbackVendor = mockProfiles[0];
 
   const vendorName = profile?.name || fallbackVendor.full_name;
@@ -152,6 +154,7 @@ export default function MyStorePageClient() {
     try {
       const supabase = createSupabaseBrowserClient();
       if (!supabase || !user) {
+        toast({ title: 'Not signed in', description: 'Please log in to save your profile.', variant: 'destructive' });
         setIsEditing(false);
         return;
       }
@@ -187,13 +190,22 @@ export default function MyStorePageClient() {
         }
       }
 
-      const { error: updateError } = await supabase
+      const { data: upsertData, error: updateError } = await supabase
         .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
+        .upsert(
+          { id: user.id, email: user.email ?? '', ...updates },
+          { onConflict: 'id' }
+        )
+        .select()
+        .single();
 
       if (updateError) {
-        console.error('Profile update failed:', updateError.message);
+        toast({ title: 'Save failed', description: updateError.message, variant: 'destructive' });
+        return;
+      }
+
+      if (!upsertData) {
+        toast({ title: 'Save failed', description: 'No data returned from server.', variant: 'destructive' });
         return;
       }
 
@@ -209,12 +221,15 @@ export default function MyStorePageClient() {
       await refreshProfile();
       router.refresh();
 
+      toast({ title: 'Profile saved', description: 'Your changes have been saved successfully.' });
+
       if (avatarPreview) {
         URL.revokeObjectURL(avatarPreview);
         setAvatarPreview(null);
       }
     } catch (err) {
-      // silent fail - local preview remains
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     } finally {
       setIsUploadingAvatar(false);
       setIsEditing(false);
