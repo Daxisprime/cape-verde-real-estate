@@ -93,13 +93,14 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
   const loadCurrentSubscription = React.useCallback(async () => {
     try {
       const response = await fetch(`/api/payments/subscriptions?userId=${user?.id}`);
+      if (!response.ok) return;
       const data = await response.json();
 
       if (data.currentSubscription) {
         setCurrentSubscription(data.currentSubscription);
       }
-    } catch (error) {
-      console.error('Error loading subscription:', error);
+    } catch {
+      // Subscription endpoint unavailable -- not critical
     }
   }, [user]);
 
