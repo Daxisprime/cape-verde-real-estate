@@ -101,17 +101,24 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
-          const compressed = await compressImage(file);
-          const filename = `${Date.now()}-${compressed.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+          let uploadFile: File | Blob = file;
+          try {
+            const compressed = await compressImage(file);
+            if (compressed && compressed.size > 0) uploadFile = compressed;
+          } catch {
+            // compression failed, use raw file
+          }
+          const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
           const { data, error: uploadError } = await supabase.storage
             .from("ad-images")
-            .upload(`ads/${filename}`, compressed, { contentType: compressed.type });
+            .upload(`ads/${filename}`, uploadFile, { contentType: file.type || 'image/jpeg' });
           if (uploadError) throw uploadError;
           if (data?.path) {
             const { data: urlData } = supabase.storage.from("ad-images").getPublicUrl(data.path);
             imageUrls.push(urlData.publicUrl);
           }
         } catch {
+          // Only use placeholder as last resort if storage upload itself fails
           imageUrls.push("https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=600&h=400&fit=crop");
         }
       }

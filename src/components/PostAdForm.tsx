@@ -235,7 +235,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
           const { data, error: uploadError } = await supabase.storage
             .from("ad-images")
-            .upload(`ads/${filename}`, file, { contentType: file.type });
+            .upload(`ads/${filename}`, file, { contentType: file.type || 'image/jpeg' });
           if (uploadError) throw uploadError;
           if (data?.path) {
             const { data: urlData } = supabase.storage.from("ad-images").getPublicUrl(data.path);
