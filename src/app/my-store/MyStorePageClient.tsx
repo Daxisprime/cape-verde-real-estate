@@ -10,7 +10,6 @@ import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
-import { compressImage } from "@/lib/image-compression";
 import {
   normalizeFacebookUrl,
   normalizeInstagramUrl,
@@ -177,30 +176,28 @@ export default function MyStorePageClient() {
         updated_at: new Date().toISOString(),
       };
 
-      // Upload avatar independently -- never block text save
+      // Upload avatar
       const file = pendingAvatarFile;
       if (file) {
         try {
-          const compressedFile = await compressImage(file, {
-            maxSizeMB: 0.15,
-            maxWidthOrHeight: 1200,
-            useWebWorker: true,
-            fileType: 'image/webp',
-          });
-          const filePath = `${user.id}/avatar.webp`;
+          const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+          const filePath = `${user.id}/avatar.${ext}`;
+          const contentType = file.type || 'image/jpeg';
 
           const { error: uploadError } = await supabase.storage
             .from('avatars')
-            .upload(filePath, compressedFile, { upsert: true, contentType: 'image/webp' });
+            .upload(filePath, file, { upsert: true, contentType });
 
           if (!uploadError) {
             const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-            updates.avatar = `${urlData.publicUrl}?t=${Date.now()}`;
+            if (urlData?.publicUrl) {
+              updates.avatar = `${urlData.publicUrl}?t=${Date.now()}`;
+            }
           } else {
-            toast({ title: 'Avatar upload failed', description: uploadError.message, variant: 'destructive' });
+            toast({ title: 'Avatar upload failed', description: `${uploadError.message} (${uploadError.name || 'unknown'})`, variant: 'destructive' });
           }
-        } catch (imgErr) {
-          toast({ title: 'Image processing failed', description: imgErr instanceof Error ? imgErr.message : 'Could not compress image.', variant: 'destructive' });
+        } catch (uploadErr) {
+          toast({ title: 'Upload error', description: uploadErr instanceof Error ? uploadErr.message : String(uploadErr), variant: 'destructive' });
         }
       }
 
