@@ -12,14 +12,25 @@ async function getProfile(slugParam: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  const { data: profile, error } = await supabase
+  // Try by id first (most common - UUIDs for real users)
+  const { data: byId } = await supabase
     .from("profiles")
     .select("*")
-    .or(`id.eq.${slugParam},slug.eq.${slugParam}`)
+    .eq("id", slugParam)
     .maybeSingle();
 
-  if (error || !profile) return null;
-  return profile;
+  if (byId) return byId;
+
+  // Try by slug column (custom vanity URLs)
+  const { data: bySlug } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("slug", slugParam)
+    .maybeSingle();
+
+  if (bySlug) return bySlug;
+
+  return null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
