@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import StorePageClient from "./StorePageClient";
