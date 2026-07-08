@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { mockProfiles } from "@/lib/mockProfiles";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
+import { MARKETPLACE_ITEMS } from "@/components/PropertyListings";
 import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
 import {
@@ -133,6 +134,42 @@ function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedLis
       total_area: p.totalArea,
       property_type: p.type,
       listing_type: "sale",
+    }));
+    return { profile, listings };
+  }
+
+  // Handle marketplace vendor IDs (vendor-001, vendor-002, etc.)
+  // and any other unrecognized mock-style slugs
+  const vendorMarketItems = MARKETPLACE_ITEMS.filter(
+    (p) => (p as typeof p & { agentId?: string }).agentId === slug
+  );
+  if (vendorMarketItems.length > 0) {
+    const profile: Profile = {
+      id: slug,
+      name: "Vendedor Pro.CV",
+      email: "",
+      avatar: null,
+      phone: null,
+      verified: false,
+      bio: "Vendedor verificado na plataforma Pro.CV",
+      whatsapp_number: null,
+      facebook_handle: null,
+      instagram_handle: null,
+      twitter_handle: null,
+      website_url: null,
+      created_at: "2026-01-01T00:00:00Z",
+    };
+    const listings: UnifiedListing[] = vendorMarketItems.map((p) => ({
+      id: p.id,
+      type: "marketplace" as const,
+      title: p.title,
+      description: p.description || null,
+      price: p.price,
+      images: p.images,
+      island: p.island,
+      location: p.location,
+      created_at: (p as typeof p & { listingDate?: string }).listingDate || "2026-01-01T00:00:00Z",
+      category: p.type,
     }));
     return { profile, listings };
   }

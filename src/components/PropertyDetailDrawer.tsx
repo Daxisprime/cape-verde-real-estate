@@ -352,6 +352,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
               seller={seller}
               loading={sellerLoading}
               propertyTitle={property.title}
+              agentId={property.agentId}
             />
 
             {/* Inquiry Form */}
@@ -474,7 +475,7 @@ function InquiryForm({
 }
 
 // --- Seller Card Component ---
-function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile | null; loading: boolean; propertyTitle: string }) {
+function SellerCard({ seller, loading, propertyTitle, agentId }: { seller: SellerProfile | null; loading: boolean; propertyTitle: string; agentId?: string }) {
   if (loading) {
     return (
       <div className="p-4 rounded-xl border border-slate-200 animate-pulse">
@@ -507,7 +508,7 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
 
   return (
     <div className="p-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-      <Link href={`/store/${seller?.id || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <Link href={`/store/${seller?.id || agentId || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
         {avatar ? (
           <img src={avatar} alt={name || ''} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
         ) : (

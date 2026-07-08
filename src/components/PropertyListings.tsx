@@ -30,7 +30,7 @@ interface PropertyListingsProps {
 type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'size_asc' | 'size_desc' | 'popular';
 type ViewMode = 'grid' | 'list';
 
-const MARKETPLACE_ITEMS: Property[] = [
+export const MARKETPLACE_ITEMS: Property[] = [
   {
     id: "mkt-001",
     propertyId: "MKT-001",
