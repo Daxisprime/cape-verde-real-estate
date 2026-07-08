@@ -277,6 +277,14 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           if (error) throw error;
         }
       } else {
+        const realEstateKeywords = ['casa', 'apartamento', 'vivenda', 'terreno', 't1', 't2', 't3', 'aluga-se', 'quarto'];
+        const textToScan = `${title} ${description || ''}`.toLowerCase();
+        const words = textToScan.split(/\s+/);
+        const matched = realEstateKeywords.some(kw => words.includes(kw));
+        if (matched) {
+          throw new Error("Detetamos que este anuncio pertence a categoria do Imobiliario. Por favor, publique o seu anuncio no separador de Imoveis para garantir a aprovacao.");
+        }
+
         const marketPayload = {
           title,
           description: description || null,
@@ -298,7 +306,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         } else {
           const { error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, user_id: sellerId, status: "active" } as never);
+            .insert({ ...marketPayload, user_id: sellerId, status: "pending" } as never);
           if (error) throw error;
         }
       }

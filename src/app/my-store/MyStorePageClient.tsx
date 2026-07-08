@@ -39,6 +39,9 @@ import {
   Loader2,
   Globe,
   Eye,
+  Sparkles,
+  Lock,
+  Store,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -131,6 +134,7 @@ export default function MyStorePageClient() {
   const [activeTab, setActiveTab] = useState<ListingStatus>("active");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const filteredListings = listings.filter((l) => l.status === activeTab);
 
@@ -525,7 +529,16 @@ export default function MyStorePageClient() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">My Active Listings</h2>
-            <a href="/sell" className="text-sm text-[#2563EB] font-medium hover:underline">+ Post New</a>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100 transition-colors"
+              >
+                <Store className="h-3.5 w-3.5" />
+                + Criar Nova Loja
+              </button>
+              <a href="/sell" className="text-sm text-[#2563EB] font-medium hover:underline">+ Post New</a>
+            </div>
           </div>
 
           {/* Status Tab Bar */}
@@ -715,6 +728,61 @@ export default function MyStorePageClient() {
         listingType="property"
         onSuccess={() => setPromoteTarget(null)}
       />
+
+      {/* Premium Multi-Store Upgrade Modal */}
+      {showUpgradeModal && (
+        <>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setShowUpgradeModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-in fade-in zoom-in-95">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 mb-4">
+                  <Sparkles className="w-8 h-8 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Desbloqueie Lojas Adicionais!
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                  A sua conta atual permite 1 loja. Atualize para o plano <span className="font-semibold text-amber-700">Premium Multi-Store</span> para expandir a sua marca em Cabo Verde com multiplas lojas tematicas.
+                </p>
+
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4 mb-6">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Lock className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-bold text-amber-800">Plano Premium</span>
+                  </div>
+                  <ul className="text-xs text-amber-700 space-y-1.5 text-left">
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />Ate 5 lojas independentes</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />URLs personalizados para cada loja</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />Cores e branding customizaveis</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />Estatisticas avancadas por loja</li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20"
+                >
+                  Atualizar Agora
+                </button>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Talvez mais tarde
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User, Plus } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -16,6 +16,7 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const {
     searchMode, setSearchMode,
     isResultsViewActive, setIsResultsViewActive,
@@ -32,6 +33,14 @@ export default function Header() {
   const mobileAutocompleteRef = useRef<HTMLDivElement>(null);
 
   const isMarkets = searchMode === "markets";
+
+  function handleModeSwitch(mode: "realestate" | "markets") {
+    setSearchMode(mode);
+    const isSubPage = pathname !== "/" && pathname !== "";
+    if (isSubPage) {
+      router.push("/");
+    }
+  }
 
   function classifySearchIntent(input: string): "realestate" | "markets" | null {
     const q = input.toLowerCase();
@@ -133,7 +142,7 @@ export default function Header() {
   const tabsElement = (
     <nav className="hidden sm:flex items-center gap-1">
       <button
-        onClick={() => setSearchMode("realestate")}
+        onClick={() => handleModeSwitch("realestate")}
         className="relative px-3 py-1.5 text-sm font-medium transition-all"
       >
         <span className={
@@ -148,7 +157,7 @@ export default function Header() {
         )}
       </button>
       <button
-        onClick={() => setSearchMode("markets")}
+        onClick={() => handleModeSwitch("markets")}
         className="relative px-3 py-1.5 text-sm font-medium transition-all"
       >
         <span className={
@@ -524,7 +533,7 @@ export default function Header() {
       {/* Mobile mode tabs + language selector */}
       <div className="sm:hidden flex items-center justify-center gap-1 px-4 pb-2">
         <button
-          onClick={() => setSearchMode("realestate")}
+          onClick={() => handleModeSwitch("realestate")}
           className="relative px-3 py-1 text-xs font-medium transition-all"
         >
           <span className={
@@ -539,7 +548,7 @@ export default function Header() {
           )}
         </button>
         <button
-          onClick={() => setSearchMode("markets")}
+          onClick={() => handleModeSwitch("markets")}
           className="relative px-3 py-1 text-xs font-medium transition-all"
         >
           <span className={
