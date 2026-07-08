@@ -10,7 +10,7 @@ async function getProfile(slug: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  // Try matching by slug first, then by user ID
+  // Try matching by slug first
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
@@ -19,14 +19,26 @@ async function getProfile(slug: string) {
 
   if (profile) return profile;
 
-  // Fallback: try matching by ID directly
-  const { data: profileById } = await supabase
+  // Fallback: try matching by ID (UUID format)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(slug)) {
+    const { data: profileById } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", slug)
+      .maybeSingle();
+
+    if (profileById) return profileById;
+  }
+
+  // Fallback: try matching by facebook_handle or name
+  const { data: profileByHandle } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", slug)
+    .or(`facebook_handle.eq.${slug},name.eq.${slug}`)
     .maybeSingle();
 
-  return profileById;
+  return profileByHandle;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
