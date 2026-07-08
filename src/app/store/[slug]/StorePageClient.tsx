@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { mockProfiles } from "@/lib/mockProfiles";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
-import { MARKETPLACE_ITEMS } from "@/components/PropertyListings";
+import { MARKETPLACE_ITEMS } from "@/data/marketplace-items";
 import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
 import {
