@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { mockProfiles } from "@/lib/mockProfiles";
 import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
 import {
@@ -44,34 +45,78 @@ interface UnifiedListing {
   island: string;
   location: string | null;
   created_at: string;
-  // Property-specific
   bedrooms?: number;
   bathrooms?: number;
   total_area?: number | null;
   property_type?: string;
   listing_type?: string;
-  // Marketplace-specific
   category?: string;
   condition?: string;
 }
 
 interface Props {
-  profileId: string;
+  profileId: string | null;
   slug: string;
 }
 
-export default function StorePageClient({ profileId }: Props) {
+export default function StorePageClient({ profileId, slug }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<UnifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [isReviewDrawerOpen, setIsReviewDrawerOpen] = useState(false);
   const [reviewCount, setReviewCount] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
+  const [isMockProfile, setIsMockProfile] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
+      // If no real profile found in DB, check mock profiles
+      if (!profileId) {
+        const mockMatch = mockProfiles.find((p) => p.id === slug);
+        if (mockMatch) {
+          setProfile({
+            id: mockMatch.id,
+            name: mockMatch.full_name,
+            email: "",
+            avatar: mockMatch.avatar_url,
+            phone: mockMatch.phone,
+            verified: true,
+            bio: mockMatch.bio,
+            whatsapp_number: mockMatch.whatsapp,
+            facebook_handle: mockMatch.facebook_url ? "profile" : null,
+            instagram_handle: mockMatch.instagram_url ? "profile" : null,
+            twitter_handle: null,
+            website_url: null,
+            created_at: "2024-01-15T00:00:00Z",
+          });
+          const mockListings: UnifiedListing[] = mockMatch.listings.map((l) => ({
+            id: l.id,
+            type: l.mode === "real_estate" ? "property" : "marketplace",
+            title: l.title,
+            description: null,
+            price: l.price,
+            images: l.images,
+            island: l.island,
+            location: l.zone,
+            created_at: "2024-06-01T00:00:00Z",
+            bedrooms: l.bedrooms || undefined,
+            bathrooms: l.bathrooms || undefined,
+            total_area: l.square_meters,
+            property_type: l.mode === "real_estate" ? "apartment" : undefined,
+            category: l.mode !== "real_estate" ? "Item" : undefined,
+          }));
+          setListings(mockListings);
+          setIsMockProfile(true);
+        }
+        setLoading(false);
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
-      if (!supabase) return;
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
 
       const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
@@ -177,7 +222,20 @@ export default function StorePageClient({ profileId }: Props) {
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-24 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Eye className="w-8 h-8 text-gray-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Loja Nao Encontrada</h1>
+          <p className="text-gray-500">Este perfil de vendedor nao existe na nossa plataforma.</p>
+        </div>
+      </div>
+    );
+  }
 
   const memberDate = new Date(profile.created_at);
   const memberSince = memberDate.toLocaleDateString("pt-CV", {
@@ -374,12 +432,14 @@ export default function StorePageClient({ profileId }: Props) {
       </main>
 
       {/* Review Drawer */}
-      <ReviewDrawer
-        vendorId={profileId}
-        vendorName={profile?.name || ""}
-        isOpen={isReviewDrawerOpen}
-        onClose={() => setIsReviewDrawerOpen(false)}
-      />
+      {!isMockProfile && (
+        <ReviewDrawer
+          vendorId={profileId || ""}
+          vendorName={profile?.name || ""}
+          isOpen={isReviewDrawerOpen}
+          onClose={() => setIsReviewDrawerOpen(false)}
+        />
+      )}
     </div>
   );
 }

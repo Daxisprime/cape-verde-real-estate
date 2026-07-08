@@ -12,7 +12,6 @@ async function getProfile(slugParam: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  // Single flexible query across all identifier columns
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
@@ -30,8 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!profile) {
     return {
-      title: "Loja Nao Encontrada | Pro.CV",
-      description: "Esta loja nao foi encontrada na plataforma Pro.CV",
+      title: "Loja | Pro.CV",
+      description: "Perfil de vendedor na plataforma Pro.CV",
     };
   }
 
@@ -58,16 +57,5 @@ export default async function StorePage({ params }: PageProps) {
   const currentSlug = resolvedParams.slug;
   const profile = await getProfile(currentSlug);
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Loja Nao Encontrada</h1>
-          <p className="text-gray-500">Este perfil de vendedor nao existe na nossa plataforma.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <StorePageClient profileId={profile.id} slug={currentSlug} />;
+  return <StorePageClient profileId={profile?.id || null} slug={currentSlug} />;
 }
