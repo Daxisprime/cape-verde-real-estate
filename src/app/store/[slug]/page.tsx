@@ -15,7 +15,7 @@ async function getProfile(slugParam: string) {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
-    .or(`id.eq.${slugParam},facebook_handle.eq.${slugParam},name.eq.${slugParam}`)
+    .or(`id.eq.${slugParam},slug.eq.${slugParam}`)
     .maybeSingle();
 
   if (error || !profile) return null;
