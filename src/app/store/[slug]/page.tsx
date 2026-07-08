@@ -6,39 +6,19 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getProfile(slug: string) {
+async function getProfile(slugParam: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  // Try matching by slug first
-  const { data: profile } = await supabase
+  // Single flexible query across all identifier columns
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("slug", slug)
+    .or(`slug.eq.${slugParam},id.eq.${slugParam},facebook_handle.eq.${slugParam},name.eq.${slugParam}`)
     .maybeSingle();
 
-  if (profile) return profile;
-
-  // Fallback: try matching by ID (UUID format)
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (uuidRegex.test(slug)) {
-    const { data: profileById } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", slug)
-      .maybeSingle();
-
-    if (profileById) return profileById;
-  }
-
-  // Fallback: try matching by facebook_handle or name
-  const { data: profileByHandle } = await supabase
-    .from("profiles")
-    .select("*")
-    .or(`facebook_handle.eq.${slug},name.eq.${slug}`)
-    .maybeSingle();
-
-  return profileByHandle;
+  if (error || !profile) return null;
+  return profile;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -47,8 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!profile) {
     return {
-      title: "Store Not Found | Pro.CV",
-      description: "This store could not be found on Pro.CV",
+      title: "Loja Nao Encontrada | Pro.CV",
+      description: "Esta loja nao foi encontrada na plataforma Pro.CV",
     };
   }
 
@@ -78,8 +58,8 @@ export default async function StorePage({ params }: PageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Store Not Found</h1>
-          <p className="text-gray-500">This seller profile does not exist.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Loja Nao Encontrada</h1>
+          <p className="text-gray-500">Este perfil de vendedor nao existe na nossa plataforma.</p>
         </div>
       </div>
     );
