@@ -358,7 +358,7 @@ export default function MyStorePageClient() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/store/${user?.id || ''}`}
+                    href={`/store/${user?.id || 'unknown'}`}
                     className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors"
                   >
                     <Eye className="h-3.5 w-3.5" />

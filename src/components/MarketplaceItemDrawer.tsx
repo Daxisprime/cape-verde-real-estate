@@ -372,7 +372,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                   <h2 className="text-sm font-semibold text-gray-800 mb-3">About the Seller</h2>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-5">
                     <div className="flex items-center gap-3">
-                      <Link href={`/store/${item.user_id || ''}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                      <Link href={`/store/${item.user_id || 'unknown'}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
                         {sellerAvatar ? (
                           <img src={sellerAvatar} alt={sellerName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                         ) : (

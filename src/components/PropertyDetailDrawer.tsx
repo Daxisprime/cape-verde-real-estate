@@ -508,7 +508,7 @@ function SellerCard({ seller, loading, propertyTitle, agentId }: { seller: Selle
 
   return (
     <div className="p-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-      <Link href={`/store/${seller?.id || agentId || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <Link href={`/store/${seller?.id || agentId || 'unknown'}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
         {avatar ? (
           <img src={avatar} alt={name || ''} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
         ) : (

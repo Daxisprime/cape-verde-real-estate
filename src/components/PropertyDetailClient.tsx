@@ -343,7 +343,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           {/* MOBILE-ONLY INQUIRY FORM — renders here on mobile, hidden on desktop */}
           <section className="mt-8 lg:hidden">
             <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4">
-              <Link href={`/store/${property.agent.id || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <Link href={`/store/${property.agent.id || 'unknown'}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <img
                   src={property.agent.avatar}
                   alt={property.agent.name}
@@ -480,7 +480,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           <aside className="hidden lg:block lg:col-span-4">
             <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
             {/* Agent mini-header */}
-            <Link href={`/store/${property.agent.id || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Link href={`/store/${property.agent.id || 'unknown'}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <img
                 src={property.agent.avatar}
                 alt={property.agent.name}
@@ -578,7 +578,7 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
       {/* Mobile fixed bottom bar (visible only below lg) */}
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20 lg:hidden">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href={`/store/${property.agent.id || ''}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+          <Link href={`/store/${property.agent.id || 'unknown'}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
             <img
               src={property.agent.avatar}
               alt={property.agent.name}
