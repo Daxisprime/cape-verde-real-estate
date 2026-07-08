@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { mockProfiles } from "@/lib/mockProfiles";
+import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
 import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
 import {
@@ -59,66 +60,84 @@ interface Props {
   slug: string;
 }
 
-function hydrateMockProfile(slug: string): { profile: Profile; listings: UnifiedListing[] } | null {
+function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedListing[] } | null {
   const mockMatch = mockProfiles.find((p) => p.id === slug);
-  if (!mockMatch) return null;
-
-  const profile: Profile = {
-    id: mockMatch.id,
-    name: mockMatch.full_name,
-    email: "",
-    avatar: mockMatch.avatar_url,
-    phone: mockMatch.phone,
-    verified: true,
-    bio: mockMatch.bio,
-    whatsapp_number: mockMatch.whatsapp,
-    facebook_handle: mockMatch.facebook_url || null,
-    instagram_handle: mockMatch.instagram_url || null,
-    twitter_handle: null,
-    website_url: null,
-    created_at: "2026-07-01T00:00:00Z",
-  };
-
-  const listings: UnifiedListing[] = mockMatch.listings.map((l) => ({
-    id: l.id,
-    type: l.mode === "real_estate" ? "property" as const : "marketplace" as const,
-    title: l.title,
-    description: null,
-    price: l.price,
-    images: l.images,
-    island: l.island,
-    location: l.zone,
-    created_at: "2026-06-15T00:00:00Z",
-    bedrooms: l.bedrooms || undefined,
-    bathrooms: l.bathrooms || undefined,
-    total_area: l.square_meters,
-    property_type: l.mode === "real_estate" ? "apartment" : undefined,
-    listing_type: l.mode === "real_estate" ? "sale" : undefined,
-    category: l.mode !== "real_estate" ? "Item" : undefined,
-  }));
-
-  return { profile, listings };
-}
-
-function hydrateUnknownPlaceholder(): { profile: Profile; listings: UnifiedListing[] } {
-  return {
-    profile: {
-      id: "placeholder",
-      name: "Parceiro Pro.CV",
+  if (mockMatch) {
+    const profile: Profile = {
+      id: mockMatch.id,
+      name: mockMatch.full_name,
       email: "",
-      avatar: null,
-      phone: null,
-      verified: false,
-      bio: "Consultor Imobiliario Certificado",
-      whatsapp_number: null,
+      avatar: mockMatch.avatar_url,
+      phone: mockMatch.phone,
+      verified: true,
+      bio: mockMatch.bio,
+      whatsapp_number: mockMatch.whatsapp,
+      facebook_handle: mockMatch.facebook_url || null,
+      instagram_handle: mockMatch.instagram_url || null,
+      twitter_handle: null,
+      website_url: null,
+      created_at: "2026-01-15T00:00:00Z",
+    };
+    const listings: UnifiedListing[] = mockMatch.listings.map((l) => ({
+      id: l.id,
+      type: l.mode === "real_estate" ? "property" as const : "marketplace" as const,
+      title: l.title,
+      description: null,
+      price: l.price,
+      images: l.images,
+      island: l.island,
+      location: l.zone,
+      created_at: "2026-06-15T00:00:00Z",
+      bedrooms: l.bedrooms || undefined,
+      bathrooms: l.bathrooms || undefined,
+      total_area: l.square_meters,
+      property_type: l.mode === "real_estate" ? "apartment" : undefined,
+      listing_type: l.mode === "real_estate" ? "sale" : undefined,
+      category: l.mode !== "real_estate" ? "Item" : undefined,
+    }));
+    return { profile, listings };
+  }
+
+  const agent = agentDatabase[slug as keyof typeof agentDatabase];
+  if (agent) {
+    const agentProperties = capeVerdeProperties.filter(
+      (p) => (p as typeof p & { agentId?: string }).agentId === slug
+    );
+    const profile: Profile = {
+      id: agent.id,
+      name: agent.name,
+      email: agent.email,
+      avatar: agent.image,
+      phone: agent.phone,
+      verified: true,
+      bio: `${agent.title} - ${agent.company}. ${agent.specialties.join(", ")}. ${agent.experience} anos de experiencia.`,
+      whatsapp_number: agent.phone,
       facebook_handle: null,
       instagram_handle: null,
       twitter_handle: null,
       website_url: null,
-      created_at: "2026-07-01T00:00:00Z",
-    },
-    listings: [],
-  };
+      created_at: "2025-01-01T00:00:00Z",
+    };
+    const listings: UnifiedListing[] = agentProperties.map((p) => ({
+      id: p.id,
+      type: "property" as const,
+      title: p.title,
+      description: p.description || null,
+      price: p.price,
+      images: p.images,
+      island: p.island,
+      location: p.location,
+      created_at: (p as typeof p & { listingDate?: string }).listingDate || "2026-01-01T00:00:00Z",
+      bedrooms: p.bedrooms,
+      bathrooms: p.bathrooms,
+      total_area: p.totalArea,
+      property_type: p.type,
+      listing_type: "sale",
+    }));
+    return { profile, listings };
+  }
+
+  return null;
 }
 
 export default function StorePageClient({ profileId, slug }: Props) {
@@ -133,10 +152,12 @@ export default function StorePageClient({ profileId, slug }: Props) {
   useEffect(() => {
     async function fetchData() {
       if (!profileId) {
-        const mockData = hydrateMockProfile(slug) || hydrateUnknownPlaceholder();
-        setProfile(mockData.profile);
-        setListings(mockData.listings);
-        setIsMockProfile(true);
+        const mockData = hydrateFromSlug(slug);
+        if (mockData) {
+          setProfile(mockData.profile);
+          setListings(mockData.listings);
+          setIsMockProfile(true);
+        }
         setLoading(false);
         return;
       }
