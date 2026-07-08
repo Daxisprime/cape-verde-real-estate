@@ -24,8 +24,9 @@ async function getProfile(slugParam: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const profile = await getProfile(slug);
+  const resolvedParams = await params;
+  const currentSlug = resolvedParams.slug;
+  const profile = await getProfile(currentSlug);
 
   if (!profile) {
     return {
@@ -53,8 +54,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function StorePage({ params }: PageProps) {
-  const { slug } = await params;
-  const profile = await getProfile(slug);
+  const resolvedParams = await params;
+  const currentSlug = resolvedParams.slug;
+  const profile = await getProfile(currentSlug);
 
   if (!profile) {
     return (
@@ -67,5 +69,5 @@ export default async function StorePage({ params }: PageProps) {
     );
   }
 
-  return <StorePageClient profileId={profile.id} slug={slug} />;
+  return <StorePageClient profileId={profile.id} slug={currentSlug} />;
 }
