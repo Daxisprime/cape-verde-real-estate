@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import Header from "@/components/Header";
+import ReviewDrawer from "@/components/ReviewDrawer";
 import {
   CheckCircle,
   MapPin,
@@ -13,6 +14,8 @@ import {
   Maximize,
   Calendar,
   Eye,
+  MessageCircle,
+  Star,
 } from "lucide-react";
 
 interface Profile {
@@ -61,13 +64,16 @@ export default function StorePageClient({ profileId }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<UnifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isReviewDrawerOpen, setIsReviewDrawerOpen] = useState(false);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [avgRating, setAvgRating] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createSupabaseBrowserClient();
       if (!supabase) return;
 
-      const [profileRes, propertiesRes, marketplaceRes] = await Promise.all([
+      const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
         supabase
           .from("properties")
@@ -81,9 +87,21 @@ export default function StorePageClient({ profileId }: Props) {
           .eq("user_id", profileId)
           .eq("status", "active")
           .order("created_at", { ascending: false }),
+        supabase
+          .from("vendor_reviews")
+          .select("rating")
+          .eq("vendor_id", profileId),
       ]);
 
       if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+
+      if (reviewsRes.data) {
+        setReviewCount(reviewsRes.data.length);
+        if (reviewsRes.data.length > 0) {
+          const avg = reviewsRes.data.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviewsRes.data.length;
+          setAvgRating(avg);
+        }
+      }
 
       const unified: UnifiedListing[] = [];
 
@@ -218,6 +236,23 @@ export default function StorePageClient({ profileId }: Props) {
                     {listings.length} {listings.length === 1 ? "anuncio" : "anuncios"} activos
                   </p>
                 )}
+
+                {/* Feedback Trigger */}
+                <button
+                  onClick={() => setIsReviewDrawerOpen(true)}
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors group"
+                >
+                  <MessageCircle className="w-4 h-4 text-amber-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-amber-700">
+                    Feedback ({reviewCount})
+                  </span>
+                  {avgRating > 0 && (
+                    <span className="flex items-center gap-0.5 ml-1">
+                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                      <span className="text-xs font-bold text-amber-600">{avgRating.toFixed(1)}</span>
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Bio */}
@@ -337,6 +372,14 @@ export default function StorePageClient({ profileId }: Props) {
           </section>
         </div>
       </main>
+
+      {/* Review Drawer */}
+      <ReviewDrawer
+        vendorId={profileId}
+        vendorName={profile?.name || ""}
+        isOpen={isReviewDrawerOpen}
+        onClose={() => setIsReviewDrawerOpen(false)}
+      />
     </div>
   );
 }
