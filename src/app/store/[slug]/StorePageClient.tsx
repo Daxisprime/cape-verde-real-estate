@@ -59,6 +59,68 @@ interface Props {
   slug: string;
 }
 
+function hydrateMockProfile(slug: string): { profile: Profile; listings: UnifiedListing[] } | null {
+  const mockMatch = mockProfiles.find((p) => p.id === slug);
+  if (!mockMatch) return null;
+
+  const profile: Profile = {
+    id: mockMatch.id,
+    name: mockMatch.full_name,
+    email: "",
+    avatar: mockMatch.avatar_url,
+    phone: mockMatch.phone,
+    verified: true,
+    bio: mockMatch.bio,
+    whatsapp_number: mockMatch.whatsapp,
+    facebook_handle: mockMatch.facebook_url || null,
+    instagram_handle: mockMatch.instagram_url || null,
+    twitter_handle: null,
+    website_url: null,
+    created_at: "2026-07-01T00:00:00Z",
+  };
+
+  const listings: UnifiedListing[] = mockMatch.listings.map((l) => ({
+    id: l.id,
+    type: l.mode === "real_estate" ? "property" as const : "marketplace" as const,
+    title: l.title,
+    description: null,
+    price: l.price,
+    images: l.images,
+    island: l.island,
+    location: l.zone,
+    created_at: "2026-06-15T00:00:00Z",
+    bedrooms: l.bedrooms || undefined,
+    bathrooms: l.bathrooms || undefined,
+    total_area: l.square_meters,
+    property_type: l.mode === "real_estate" ? "apartment" : undefined,
+    listing_type: l.mode === "real_estate" ? "sale" : undefined,
+    category: l.mode !== "real_estate" ? "Item" : undefined,
+  }));
+
+  return { profile, listings };
+}
+
+function hydrateUnknownPlaceholder(): { profile: Profile; listings: UnifiedListing[] } {
+  return {
+    profile: {
+      id: "placeholder",
+      name: "Parceiro Pro.CV",
+      email: "",
+      avatar: null,
+      phone: null,
+      verified: false,
+      bio: "Consultor Imobiliario Certificado",
+      whatsapp_number: null,
+      facebook_handle: null,
+      instagram_handle: null,
+      twitter_handle: null,
+      website_url: null,
+      created_at: "2026-07-01T00:00:00Z",
+    },
+    listings: [],
+  };
+}
+
 export default function StorePageClient({ profileId, slug }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<UnifiedListing[]>([]);
@@ -70,44 +132,11 @@ export default function StorePageClient({ profileId, slug }: Props) {
 
   useEffect(() => {
     async function fetchData() {
-      // If no real profile found in DB, check mock profiles
       if (!profileId) {
-        const mockMatch = mockProfiles.find((p) => p.id === slug);
-        if (mockMatch) {
-          setProfile({
-            id: mockMatch.id,
-            name: mockMatch.full_name,
-            email: "",
-            avatar: mockMatch.avatar_url,
-            phone: mockMatch.phone,
-            verified: true,
-            bio: mockMatch.bio,
-            whatsapp_number: mockMatch.whatsapp,
-            facebook_handle: mockMatch.facebook_url ? "profile" : null,
-            instagram_handle: mockMatch.instagram_url ? "profile" : null,
-            twitter_handle: null,
-            website_url: null,
-            created_at: "2024-01-15T00:00:00Z",
-          });
-          const mockListings: UnifiedListing[] = mockMatch.listings.map((l) => ({
-            id: l.id,
-            type: l.mode === "real_estate" ? "property" : "marketplace",
-            title: l.title,
-            description: null,
-            price: l.price,
-            images: l.images,
-            island: l.island,
-            location: l.zone,
-            created_at: "2024-06-01T00:00:00Z",
-            bedrooms: l.bedrooms || undefined,
-            bathrooms: l.bathrooms || undefined,
-            total_area: l.square_meters,
-            property_type: l.mode === "real_estate" ? "apartment" : undefined,
-            category: l.mode !== "real_estate" ? "Item" : undefined,
-          }));
-          setListings(mockListings);
-          setIsMockProfile(true);
-        }
+        const mockData = hydrateMockProfile(slug) || hydrateUnknownPlaceholder();
+        setProfile(mockData.profile);
+        setListings(mockData.listings);
+        setIsMockProfile(true);
         setLoading(false);
         return;
       }
@@ -160,13 +189,13 @@ export default function StorePageClient({ profileId, slug }: Props) {
             price: Number(p.price),
             images: (p.images as string[]) || [],
             island: p.island || "",
-            location: p.location || null,
+            location: p.city || null,
             created_at: p.created_at,
             bedrooms: p.bedrooms,
             bathrooms: p.bathrooms,
             total_area: p.total_area ? Number(p.total_area) : null,
             property_type: p.property_type,
-            listing_type: p.listing_type,
+            listing_type: p.price_type,
           });
         }
       }
@@ -198,7 +227,7 @@ export default function StorePageClient({ profileId, slug }: Props) {
     }
 
     fetchData();
-  }, [profileId]);
+  }, [profileId, slug]);
 
   if (loading) {
     return (
@@ -253,10 +282,9 @@ export default function StorePageClient({ profileId, slug }: Props) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-          {/* Left Sidebar / Top Card on mobile */}
+          {/* Left Sidebar - Profile Card */}
           <aside className="lg:col-span-1 mb-6 lg:mb-0">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              {/* Avatar & Identity */}
               <div className="p-6 text-center border-b border-gray-100">
                 <div className="relative inline-block">
                   {profile.avatar ? (
@@ -295,32 +323,31 @@ export default function StorePageClient({ profileId, slug }: Props) {
                   </p>
                 )}
 
-                {/* Feedback Trigger */}
-                <button
-                  onClick={() => setIsReviewDrawerOpen(true)}
-                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors group"
-                >
-                  <MessageCircle className="w-4 h-4 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium text-amber-700">
-                    Feedback ({reviewCount})
-                  </span>
-                  {avgRating > 0 && (
-                    <span className="flex items-center gap-0.5 ml-1">
-                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      <span className="text-xs font-bold text-amber-600">{avgRating.toFixed(1)}</span>
+                {!isMockProfile && (
+                  <button
+                    onClick={() => setIsReviewDrawerOpen(true)}
+                    className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors group"
+                  >
+                    <MessageCircle className="w-4 h-4 text-amber-600 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-medium text-amber-700">
+                      Feedback ({reviewCount})
                     </span>
-                  )}
-                </button>
+                    {avgRating > 0 && (
+                      <span className="flex items-center gap-0.5 ml-1">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span className="text-xs font-bold text-amber-600">{avgRating.toFixed(1)}</span>
+                      </span>
+                    )}
+                  </button>
+                )}
               </div>
 
-              {/* Bio */}
               {profile.bio && (
                 <div className="px-6 py-4 border-b border-gray-100">
                   <p className="text-sm text-gray-600 leading-relaxed">{profile.bio}</p>
                 </div>
               )}
 
-              {/* Social Actions */}
               <div className="p-4 space-y-2">
                 {whatsappLink && (
                   <a
@@ -388,37 +415,28 @@ export default function StorePageClient({ profileId, slug }: Props) {
                 )}
               </div>
 
-              {/* Mini Map */}
               <div className="px-4 pb-4">
                 <div className="rounded-xl overflow-hidden border border-gray-100">
                   <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-4 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-teal-600" />
                     <span className="text-sm font-medium text-teal-700">
-                      Cabo Verde
+                      Praia, Santiago
                     </span>
                   </div>
-                  <img
-                    src="https://api.mapbox.com/styles/v1/mapbox/light-v11/static/[-25.0,16.0,-22.5,17.2]/300x150@2x?access_token=pk.placeholder&attribution=false"
-                    alt="Cape Verde location"
-                    className="w-full h-24 object-cover bg-gray-100"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
                 </div>
               </div>
             </div>
           </aside>
 
-          {/* Right: Unified Listing Feed */}
+          {/* Right: Listing Feed */}
           <section className="lg:col-span-2">
             {listings.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Eye className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800">No listings yet</h3>
-                <p className="text-gray-500 mt-1">This seller hasn&apos;t posted any listings.</p>
+                <h3 className="text-lg font-semibold text-gray-800">Sem anuncios</h3>
+                <p className="text-gray-500 mt-1">Este vendedor ainda nao publicou anuncios.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -431,11 +449,10 @@ export default function StorePageClient({ profileId, slug }: Props) {
         </div>
       </main>
 
-      {/* Review Drawer */}
-      {!isMockProfile && (
+      {!isMockProfile && profileId && (
         <ReviewDrawer
-          vendorId={profileId || ""}
-          vendorName={profile?.name || ""}
+          vendorId={profileId}
+          vendorName={profile.name || ""}
           isOpen={isReviewDrawerOpen}
           onClose={() => setIsReviewDrawerOpen(false)}
         />
@@ -465,7 +482,6 @@ function ListingCard({ listing }: { listing: UnifiedListing }) {
       }
       className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
     >
-      {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={imageUrl}
@@ -494,7 +510,6 @@ function ListingCard({ listing }: { listing: UnifiedListing }) {
         )}
       </div>
 
-      {/* Content */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 group-hover:text-teal-600 transition-colors">
           {listing.title}
@@ -505,7 +520,6 @@ function ListingCard({ listing }: { listing: UnifiedListing }) {
           <span className="text-xs font-normal text-gray-500 ml-1">CVE</span>
         </p>
 
-        {/* Property details */}
         {listing.type === "property" && (
           <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
             {listing.bedrooms !== undefined && listing.bedrooms > 0 && (
@@ -529,12 +543,10 @@ function ListingCard({ listing }: { listing: UnifiedListing }) {
           </div>
         )}
 
-        {/* Marketplace condition */}
         {listing.type === "marketplace" && listing.condition && (
           <p className="mt-1 text-xs text-gray-500 capitalize">{listing.condition}</p>
         )}
 
-        {/* Location & time */}
         <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
           <span className="flex items-center gap-1">
             <MapPin className="w-3 h-3" />
