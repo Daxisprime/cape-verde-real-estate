@@ -139,21 +139,29 @@ function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedLis
   }
 
   // Handle marketplace vendor IDs (vendor-001, vendor-002, etc.)
-  // and any other unrecognized mock-style slugs
   const vendorMarketItems = MARKETPLACE_ITEMS.filter(
     (p) => (p as typeof p & { agentId?: string }).agentId === slug
   );
   if (vendorMarketItems.length > 0) {
+    const vendorProfiles: Record<string, { name: string; avatar: string | null; bio: string; facebook: string | null }> = {
+      "vendor-001": { name: "Praia Building Supplies", avatar: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?w=64&h=64&fit=crop", bio: "Materiais de construcao de qualidade em Santiago. Entrega disponivel.", facebook: "praia.building.supplies" },
+      "vendor-002": { name: "TechStore Sal", avatar: null, bio: "Electronica e tecnologia em Santa Maria, Sal.", facebook: null },
+      "vendor-003": { name: "Mindelo Plumbing Pro", avatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=64&h=64&fit=crop", bio: "Servicos profissionais de canalizacao em Sao Vicente. Servico de emergencia disponivel.", facebook: "mindelo.plumbing.pro" },
+      "vendor-004": { name: "Casa & Design Sal", avatar: null, bio: "Mobiliario moderno e design de cozinha em Espargos.", facebook: null },
+      "vendor-005": { name: "Servicos Juridicos Praia", avatar: null, bio: "Servicos juridicos e notariais para transacoes imobiliarias e registos comerciais.", facebook: null },
+      "vendor-006": { name: "Moda Santa Maria", avatar: null, bio: "Colecao de moda e acessorios de design cabo-verdiano.", facebook: null },
+    };
+    const vendorInfo = vendorProfiles[slug] || { name: "Vendedor Pro.CV", avatar: null, bio: "Vendedor verificado na plataforma Pro.CV", facebook: null };
     const profile: Profile = {
       id: slug,
-      name: "Vendedor Pro.CV",
+      name: vendorInfo.name,
       email: "",
-      avatar: null,
+      avatar: vendorInfo.avatar,
       phone: null,
-      verified: false,
-      bio: "Vendedor verificado na plataforma Pro.CV",
+      verified: true,
+      bio: vendorInfo.bio,
       whatsapp_number: null,
-      facebook_handle: null,
+      facebook_handle: vendorInfo.facebook,
       instagram_handle: null,
       twitter_handle: null,
       website_url: null,

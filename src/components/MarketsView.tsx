@@ -312,6 +312,14 @@ export default function MarketsView() {
       setSelectedItem(dbItem);
       return;
     }
+    const vendorSlugMap: Record<string, string> = {
+      "mkt-001": "vendor-001",
+      "mkt-002": "vendor-002",
+      "mkt-003": "vendor-003",
+      "mkt-004": "vendor-004",
+      "mkt-005": "vendor-005",
+      "mkt-006": "vendor-006",
+    };
     setSelectedItem({
       id: item.id,
       title: item.title,
@@ -324,7 +332,7 @@ export default function MarketsView() {
       municipality: item.location.split(', ')[0] || null,
       images: item.image ? [item.image] : [],
       status: 'active',
-      user_id: null,
+      user_id: vendorSlugMap[item.id] || null,
       contact_phone: null,
       contact_whatsapp: null,
       view_count: 0,
