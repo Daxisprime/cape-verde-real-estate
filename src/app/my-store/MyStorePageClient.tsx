@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Header from "@/components/Header";
 import PromoteListingDrawer from "@/components/PromoteListingDrawer";
 import AdminPanel from "@/components/AdminPanel";
@@ -37,6 +38,7 @@ import {
   Camera,
   Loader2,
   Globe,
+  Eye,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -350,13 +352,22 @@ export default function MyStorePageClient() {
                     <p className="text-sm text-gray-500 mt-0.5">{vendorEmail}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  {isEditing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-                  {isEditing ? "Cancel" : "Edit Profile"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/store/${user?.id || ''}`}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    Ver Minha Loja
+                  </Link>
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    {isEditing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+                    {isEditing ? "Cancel" : "Edit Profile"}
+                  </button>
+                </div>
               </div>
 
               {isEditing ? (

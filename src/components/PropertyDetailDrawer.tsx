@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle, Globe } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -506,7 +507,7 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
 
   return (
     <div className="p-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-      <div className="flex items-center gap-3">
+      <Link href={`/store/${seller?.id || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
         {avatar ? (
           <img src={avatar} alt={name || ''} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
         ) : (
@@ -515,7 +516,7 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-800 truncate">{name}</p>
+          <p className="text-sm font-bold text-slate-800 truncate hover:text-teal-600 transition-colors">{name}</p>
           <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${
             role === 'Agent' || role === 'agent'
               ? 'bg-blue-100 text-blue-700'
@@ -524,7 +525,7 @@ function SellerCard({ seller, loading, propertyTitle }: { seller: SellerProfile 
             {role === 'agent' ? 'Agent' : role === 'vendor' ? 'Vendor' : role || 'Seller'}
           </span>
         </div>
-      </div>
+      </Link>
 
       {(facebookHandle || twitterHandle || websiteUrl || whatsapp) && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 flex-wrap">

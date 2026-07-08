@@ -46,6 +46,7 @@ interface PropertyDetailClientProps {
     images: string[];
     virtualTourUrl: string;
     agent: {
+      id?: string;
       name: string;
       company: string;
       phone: string;
@@ -342,17 +343,17 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           {/* MOBILE-ONLY INQUIRY FORM — renders here on mobile, hidden on desktop */}
           <section className="mt-8 lg:hidden">
             <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4">
-              <div className="flex items-center gap-3">
+              <Link href={`/store/${property.agent.id || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <img
                   src={property.agent.avatar}
                   alt={property.agent.name}
                   className="h-9 w-9 rounded-full object-cover shrink-0"
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate hover:text-teal-600 transition-colors">{property.agent.name}</p>
                   <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
                 </div>
-              </div>
+              </Link>
 
               {inquiryStatus === "sent" ? (
                 <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
@@ -479,17 +480,17 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
           <aside className="hidden lg:block lg:col-span-4">
             <div className="lg:sticky lg:top-20 bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4 max-w-[360px] ml-auto w-full">
             {/* Agent mini-header */}
-            <div className="flex items-center gap-3">
+            <Link href={`/store/${property.agent.id || ''}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <img
                 src={property.agent.avatar}
                 alt={property.agent.name}
                 className="h-9 w-9 rounded-full object-cover shrink-0"
               />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate hover:text-teal-600 transition-colors">{property.agent.name}</p>
                 <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
               </div>
-            </div>
+            </Link>
 
             {inquiryStatus === "sent" ? (
               <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
@@ -577,15 +578,17 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
       {/* Mobile fixed bottom bar (visible only below lg) */}
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20 lg:hidden">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <img
-            src={property.agent.avatar}
-            alt={property.agent.name}
-            className="h-10 w-10 rounded-full object-cover shrink-0"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
-            <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
-          </div>
+          <Link href={`/store/${property.agent.id || ''}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+            <img
+              src={property.agent.avatar}
+              alt={property.agent.name}
+              className="h-10 w-10 rounded-full object-cover shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{property.agent.name}</p>
+              <p className="text-xs text-gray-500 truncate">{property.agent.company}</p>
+            </div>
+          </Link>
           <a
             href={`tel:${property.agent.phone}`}
             className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#0044FF] text-white hover:bg-[#0033CC] transition-colors shrink-0"

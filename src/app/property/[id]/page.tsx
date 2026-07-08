@@ -70,6 +70,7 @@ const getPropertyData = (id: string) => {
     images: property.images,
     virtualTourUrl: `https://www.example.com/virtual-tour-${property.id}`,
     agent: {
+      id: property.agentId || undefined,
       name: agent.name,
       company: agent.company,
       phone: agent.phone,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, CheckCircle2, Clock, User, Send, ExternalLink } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
@@ -371,17 +372,19 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                   <h2 className="text-sm font-semibold text-gray-800 mb-3">About the Seller</h2>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-5">
                     <div className="flex items-center gap-3">
-                      {sellerAvatar ? (
-                        <img src={sellerAvatar} alt={sellerName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <User className="w-6 h-6 text-blue-600" />
+                      <Link href={`/store/${item.user_id || ''}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                        {sellerAvatar ? (
+                          <img src={sellerAvatar} alt={sellerName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <User className="w-6 h-6 text-blue-600" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-gray-900 truncate hover:text-teal-600 transition-colors">{sellerName}</p>
+                          <p className="text-xs text-gray-500">{sellerIsland} seller</p>
                         </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-gray-900 truncate">{sellerName}</p>
-                        <p className="text-xs text-gray-500">{sellerIsland} seller</p>
-                      </div>
+                      </Link>
                       {sellerPhone ? (
                         <div className="flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full flex-shrink-0">
                           <CheckCircle2 className="w-3 h-3 text-green-600" />
