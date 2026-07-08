@@ -32,6 +32,7 @@ export interface Profile {
   id: string;
   email: string;
   name: string | null;
+  slug: string | null;
   avatar: string | null;
   phone: string | null;
   role: string | null;
@@ -40,6 +41,7 @@ export interface Profile {
   membership_level: string | null;
   currency: string | null;
   language: string | null;
+  bio: string | null;
   whatsapp_number: string | null;
   facebook_handle: string | null;
   instagram_handle: string | null;
