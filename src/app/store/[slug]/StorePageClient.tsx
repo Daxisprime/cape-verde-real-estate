@@ -381,8 +381,7 @@ export default function StorePageClient({ profileId, slug }: Props) {
                   </p>
                 )}
 
-                {!isMockProfile && (
-                  <button
+                <button
                     onClick={() => setIsReviewDrawerOpen(true)}
                     className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors group"
                   >
@@ -397,7 +396,6 @@ export default function StorePageClient({ profileId, slug }: Props) {
                       </span>
                     )}
                   </button>
-                )}
               </div>
 
               {profile.bio && (
@@ -507,9 +505,9 @@ export default function StorePageClient({ profileId, slug }: Props) {
         </div>
       </main>
 
-      {!isMockProfile && profileId && (
+      {profile && (
         <ReviewDrawer
-          vendorId={profileId}
+          vendorId={profileId || profile.id}
           vendorName={profile.name || ""}
           isOpen={isReviewDrawerOpen}
           onClose={() => setIsReviewDrawerOpen(false)}

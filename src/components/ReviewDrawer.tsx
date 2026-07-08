@@ -276,7 +276,7 @@ export default function ReviewDrawer({ vendorId, vendorName, isOpen, onClose }: 
           ) : (
             <div className="space-y-4">
               {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} />
+                <ReviewCard key={review.id} review={review} currentUserId={user?.id} onDeleted={fetchReviews} />
               ))}
             </div>
           )}
@@ -286,8 +286,19 @@ export default function ReviewDrawer({ vendorId, vendorName, isOpen, onClose }: 
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, currentUserId, onDeleted }: { review: Review; currentUserId?: string; onDeleted: () => void }) {
+  const [deleting, setDeleting] = useState(false);
   const timeAgo = getRelativeTime(review.created_at);
+  const isOwn = currentUserId === review.reviewer_id;
+
+  async function handleDelete() {
+    if (!confirm("Remover a sua avaliacao?")) return;
+    setDeleting(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    await supabase.from("vendor_reviews").delete().eq("id", review.id);
+    onDeleted();
+  }
 
   return (
     <div className="p-4 rounded-xl border border-gray-100 bg-white hover:shadow-sm transition-shadow">
@@ -310,7 +321,18 @@ function ReviewCard({ review }: { review: Review }) {
             <p className="text-sm font-semibold text-gray-900 truncate">
               {review.reviewer_name}
             </p>
-            <span className="text-[10px] text-gray-400 whitespace-nowrap">{timeAgo}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-400 whitespace-nowrap">{timeAgo}</span>
+              {isOwn && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-[10px] text-red-400 hover:text-red-600 font-medium transition-colors disabled:opacity-50"
+                >
+                  {deleting ? "..." : "Remover"}
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-0.5 mt-0.5">
             {[1, 2, 3, 4, 5].map((star) => (
