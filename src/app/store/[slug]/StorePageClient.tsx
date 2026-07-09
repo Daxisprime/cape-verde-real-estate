@@ -7,6 +7,7 @@ import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties
 import { MARKETPLACE_ITEMS } from "@/data/marketplace-items";
 import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
+import { useSearchMode } from "@/contexts/SearchModeContext";
 import {
   CheckCircle,
   MapPin,
@@ -193,6 +194,18 @@ export default function StorePageClient({ profileId, slug }: Props) {
   const [reviewCount, setReviewCount] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
   const [isMockProfile, setIsMockProfile] = useState(false);
+  const { setSearchMode } = useSearchMode();
+
+  useEffect(() => {
+    if (listings.length === 0) return;
+    const marketplaceCount = listings.filter((l) => l.type === "marketplace").length;
+    const propertyCount = listings.filter((l) => l.type === "property").length;
+    if (marketplaceCount > propertyCount) {
+      setSearchMode("markets");
+    } else {
+      setSearchMode("realestate");
+    }
+  }, [listings, setSearchMode]);
 
   useEffect(() => {
     async function fetchData() {

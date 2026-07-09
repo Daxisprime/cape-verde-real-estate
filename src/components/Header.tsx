@@ -33,13 +33,11 @@ export default function Header() {
   const mobileAutocompleteRef = useRef<HTMLDivElement>(null);
 
   const isMarkets = searchMode === "markets";
+  const isHomePage = pathname === "/" || pathname === "";
+  const showSearchBar = isResultsViewActive || !isHomePage;
 
   function handleModeSwitch(mode: "realestate" | "markets") {
     setSearchMode(mode);
-    const isSubPage = pathname !== "/" && pathname !== "";
-    if (isSubPage) {
-      router.push("/");
-    }
   }
 
   function classifySearchIntent(input: string): "realestate" | "markets" | null {
@@ -75,6 +73,9 @@ export default function Header() {
     setSearchMode(mode);
     setShowAutocomplete(false);
     setIsResultsViewActive(true);
+    if (!isHomePage) {
+      router.push("/");
+    }
     requestAnimationFrame(() => {
       inputRef.current?.focus();
       mobileInputRef.current?.focus();
@@ -89,6 +90,9 @@ export default function Header() {
       setSearchMode(intent);
     }
     setIsResultsViewActive(true);
+    if (!isHomePage) {
+      router.push("/");
+    }
     inputRef.current?.focus();
     mobileInputRef.current?.focus();
   }
@@ -290,8 +294,8 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Search bar - only when results view active */}
-          {isResultsViewActive && (
+          {/* Search bar - visible on all pages except hero */}
+          {showSearchBar && (
             <form onSubmit={handleFormSubmit} className="hidden sm:block w-44 md:w-52 lg:w-60 ml-3 flex-shrink min-w-0 relative">
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
@@ -350,15 +354,15 @@ export default function Header() {
         </div>
 
         {/* CENTER: Tabs when home view (absolute center positioning) */}
-        {!isResultsViewActive && (
+        {!showSearchBar && (
           <div className="absolute left-1/2 -translate-x-1/2">
             {tabsElement}
           </div>
         )}
 
-        {/* RIGHT: (Tabs when results active) + Language Selector + Profile */}
+        {/* RIGHT: (Tabs when search active) + Language Selector + Profile */}
         <div className="flex items-center gap-4 ml-auto flex-shrink-0">
-          {isResultsViewActive && tabsElement}
+          {showSearchBar && tabsElement}
 
           {/* Language Selector Button Track */}
           <div className="hidden sm:flex items-center gap-0.5 rounded-full bg-gray-100/80 p-0.5">
@@ -470,8 +474,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile: search bar when results active */}
-      {isResultsViewActive && (
+      {/* Mobile: search bar when active */}
+      {showSearchBar && (
         <form onSubmit={handleFormSubmit} className="sm:hidden px-4 pb-2 relative">
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${

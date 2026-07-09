@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { PropertySearchProvider } from "@/contexts/PropertySearchContext";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { PaymentProvider } from "@/contexts/PaymentContext";
+import { SearchModeProvider } from "@/contexts/SearchModeContext";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -16,11 +17,13 @@ export function Providers({ children }: ProvidersProps) {
     <SupabaseAuthProvider>
       <AuthProvider>
         <LanguageProvider>
-          <PropertySearchProvider>
-            <PaymentProvider>
-              {children}
-            </PaymentProvider>
-          </PropertySearchProvider>
+          <SearchModeProvider>
+            <PropertySearchProvider>
+              <PaymentProvider>
+                {children}
+              </PaymentProvider>
+            </PropertySearchProvider>
+          </SearchModeProvider>
         </LanguageProvider>
       </AuthProvider>
     </SupabaseAuthProvider>
