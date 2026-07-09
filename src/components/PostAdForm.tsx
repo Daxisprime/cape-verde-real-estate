@@ -306,7 +306,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         } else {
           const { error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, user_id: sellerId, status: "pending" } as never);
+            .insert({ ...marketPayload, user_id: sellerId, status: "active" } as never);
           if (error) throw error;
         }
       }
