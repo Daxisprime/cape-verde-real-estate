@@ -234,13 +234,15 @@ export default function StorePageClient({ profileId, slug }: Props) {
           .select("*")
           .eq("agent_id", profileId)
           .eq("status", "active")
-          .order("created_at", { ascending: false }),
+          .order("is_featured", { ascending: false })
+          .order("last_bumped_at", { ascending: false }),
         supabase
           .from("marketplace_items")
           .select("*")
           .eq("user_id", profileId)
           .eq("status", "active")
-          .order("created_at", { ascending: false }),
+          .order("is_featured", { ascending: false })
+          .order("last_bumped_at", { ascending: false }),
         supabase
           .from("vendor_reviews")
           .select("rating")

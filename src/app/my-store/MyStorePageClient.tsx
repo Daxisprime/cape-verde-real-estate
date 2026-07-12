@@ -965,7 +965,7 @@ export default function MyStorePageClient() {
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-400/95 backdrop-blur border border-amber-300 rounded-md text-white hover:bg-amber-500 shadow-sm"
                       >
                         <Star className="h-3 w-3 fill-white" />
-                        Promover
+                        Destacar
                       </button>
                       <button
                         onClick={() => handleBumpListing(listing.id)}

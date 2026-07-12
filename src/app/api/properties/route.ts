@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
     } else if (filters.sortBy === 'bedrooms') {
       query = query.order('bedrooms', { ascending });
     } else {
-      query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+      query = query.order('is_featured', { ascending: false }).order('last_bumped_at', { ascending: false });
     }
 
     // Apply pagination
