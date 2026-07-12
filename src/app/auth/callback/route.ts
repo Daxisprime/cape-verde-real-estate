@@ -2,11 +2,22 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+function getOrigin(request: NextRequest): string {
+  const host = request.headers.get('host');
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  if (host) {
+    return `${proto}://${host}`;
+  }
+  return new URL(request.url).origin;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const type = requestUrl.searchParams.get('type');
   const next = requestUrl.searchParams.get('next') ?? '/dashboard';
+
+  const origin = getOrigin(request);
 
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,16 +31,15 @@ export async function GET(request: NextRequest) {
       if (error) {
         console.error('Auth callback error:', error);
         return NextResponse.redirect(
-          new URL(`/auth?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
+          new URL(`/auth?error=${encodeURIComponent(error.message)}`, origin)
         );
       }
 
-      // If this was a password recovery flow, redirect to the reset password page
       if (type === 'recovery') {
-        return NextResponse.redirect(new URL('/auth/reset-password', requestUrl.origin));
+        return NextResponse.redirect(new URL('/auth/reset-password', origin));
       }
     }
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  return NextResponse.redirect(new URL(next, origin));
 }

@@ -177,6 +177,12 @@ export const createSupabaseBrowserClient = () => {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      storageKey: 'procv-auth-token',
+      flowType: 'pkce',
+    },
+    global: {
+      headers: { 'X-Client-Info': 'procv-web' },
     },
   });
   return _browserClient;
@@ -189,6 +195,14 @@ export const createSupabaseServerClient = () => {
   return createClient<Database>(supabaseUrl, key, {
     auth: { persistSession: false },
   });
+};
+
+export const AUTH_COOKIE_OPTIONS = {
+  name: 'procv-auth-token',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  maxAge: 60 * 60 * 24 * 7,
+  path: '/',
 };
 
 // Single browser-side client reference (same singleton as createSupabaseBrowserClient)
