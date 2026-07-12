@@ -1,9 +1,11 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { incrementLeadsDirect } from "@/lib/vendor-performance";
 
 interface WhatsAppButtonProps {
   phone: string | null | undefined;
+  vendorId?: string | null;
   message?: string;
   className?: string;
   size?: "sm" | "md" | "lg";
@@ -12,6 +14,7 @@ interface WhatsAppButtonProps {
 
 export default function WhatsAppButton({
   phone,
+  vendorId,
   message = "Olá, vi o seu anuncio no Pro.CV. Ainda está disponível?",
   className = "",
   size = "sm",
@@ -21,6 +24,11 @@ export default function WhatsAppButton({
 
   const cleanPhone = phone.replace(/\D/g, "");
   const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (vendorId) incrementLeadsDirect(vendorId);
+  };
 
   const sizeClasses = {
     sm: "h-8 w-8",
@@ -46,7 +54,7 @@ export default function WhatsAppButton({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleClick}
         className={`inline-flex items-center justify-center gap-1.5 font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 active:bg-green-800 transition-colors ${fullSizeClasses[size]} ${className}`}
         aria-label="Contact on WhatsApp"
       >
@@ -61,7 +69,7 @@ export default function WhatsAppButton({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
+      onClick={handleClick}
       className={`inline-flex items-center justify-center rounded-lg bg-green-600 text-white hover:bg-green-700 active:bg-green-800 transition-colors ${sizeClasses[size]} ${className}`}
       aria-label="Contact on WhatsApp"
     >

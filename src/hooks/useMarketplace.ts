@@ -242,7 +242,7 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
         .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
         .eq('status', 'active')
         .order('is_featured', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('last_bumped_at', { ascending: false });
 
       if (options.category) {
         query = query.eq('category', options.category);

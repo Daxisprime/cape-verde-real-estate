@@ -11,6 +11,7 @@ import { mockProfiles, MockVendorListing } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { bumpListing } from "@/lib/vendor-performance";
 import {
   normalizeFacebookUrl,
   normalizeInstagramUrl,
@@ -44,6 +45,7 @@ import {
   Store,
   Building2,
   Upload,
+  Rocket,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -340,6 +342,17 @@ export default function MyStorePageClient() {
       if (data?.publicUrl) {
         setBusinessForm((prev) => ({ ...prev, business_logo: `${data.publicUrl}?t=${Date.now()}` }));
       }
+    }
+  };
+
+  const handleBumpListing = async (id: string) => {
+    const listing = listings.find((l) => l.id === id);
+    const table = listing?.source === "marketplace" ? "marketplace_items" : "properties";
+    const success = await bumpListing(id, table);
+    if (success) {
+      toast({ title: "Anuncio Impulsionado!", description: "O seu anuncio subiu para o topo dos resultados." });
+    } else {
+      toast({ title: "Erro", description: "Nao foi possivel impulsionar o anuncio.", variant: "destructive" });
     }
   };
 
@@ -821,6 +834,13 @@ export default function MyStorePageClient() {
                       >
                         <Star className="h-3 w-3 fill-white" />
                         Promover
+                      </button>
+                      <button
+                        onClick={() => handleBumpListing(listing.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-md hover:from-orange-600 hover:to-amber-600 shadow-sm"
+                      >
+                        <Rocket className="h-3 w-3" />
+                        Impulsionar
                       </button>
                       <button
                         onClick={() => handleEdit(listing.id)}

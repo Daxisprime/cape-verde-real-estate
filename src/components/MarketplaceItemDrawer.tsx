@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabas
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ShareButton from '@/components/ShareButton';
+import { incrementLeadsDirect } from '@/lib/vendor-performance';
 
 const CVE_TO_EUR = 0.00907;
 
@@ -499,6 +500,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                       {sellerPhone ? (
                         <a
                           href={`tel:${sellerPhone}`}
+                          onClick={() => { if (item.user_id) incrementLeadsDirect(item.user_id); }}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <Phone className="h-3.5 w-3.5" />
@@ -514,7 +516,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                         href={whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => { if (!sellerWhatsapp) e.preventDefault(); }}
+                        onClick={(e) => { if (!sellerWhatsapp) { e.preventDefault(); return; } if (item.user_id) incrementLeadsDirect(item.user_id); }}
                         className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-gray-200 text-xs font-medium transition-colors ${
                           sellerWhatsapp ? 'text-green-700 hover:bg-green-50' : 'text-gray-300 cursor-not-allowed'
                         }`}

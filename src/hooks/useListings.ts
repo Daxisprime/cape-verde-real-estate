@@ -23,6 +23,7 @@ export interface LiveListing {
   is_featured: boolean;
   latitude: number | null;
   longitude: number | null;
+  source?: "properties" | "marketplace";
 }
 
 export function useListings() {
@@ -49,7 +50,7 @@ export function useListings() {
           .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
           .eq('status', 'active')
           .order('is_featured', { ascending: false })
-          .order('created_at', { ascending: false })
+          .order('last_bumped_at', { ascending: false })
           .limit(50);
 
         if (error) throw error;
@@ -120,7 +121,7 @@ export function useMyListings() {
       }
 
       const combined: LiveListing[] = [
-        ...(props as unknown as LiveListing[]),
+        ...(props as unknown as LiveListing[]).map((p) => ({ ...p, source: "properties" as const })),
         ...(items as Record<string, unknown>[]).map((item) => ({
           id: item.id as string,
           title: item.title as string,
@@ -140,6 +141,7 @@ export function useMyListings() {
           is_featured: item.is_featured as boolean,
           latitude: null,
           longitude: null,
+          source: "marketplace" as const,
         })),
       ];
 

@@ -6,6 +6,7 @@ import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, Chevr
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { incrementLeadsDirect } from '@/lib/vendor-performance';
 
 interface PropertyDrawerItem {
   id: string;
@@ -367,6 +368,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
             <div className="pt-2 pb-4 flex gap-2">
               <a
                 href={`tel:${sellerWhatsApp || '+2389000000'}`}
+                onClick={() => { if (property.agentId) incrementLeadsDirect(property.agentId); }}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
               >
                 <Phone className="h-4 w-4" />
@@ -376,6 +378,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
                 href={`https://wa.me/${(sellerWhatsApp || '2389000000').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => { if (property.agentId) incrementLeadsDirect(property.agentId); }}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
               >
                 <MessageCircle className="h-4 w-4" />
