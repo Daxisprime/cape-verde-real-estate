@@ -7,7 +7,7 @@ import { compressImage } from "@/lib/image-compression";
 import { isOffline, enqueueOfflineSubmission } from "@/lib/offline-queue";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { checkListingLimit, getCategoryLimit, getCategoryTier } from "@/lib/listing-limits";
+import { checkListingLimit } from "@/lib/listing-limits";
 import AuthModal from "@/components/AuthModal";
 
 const QUICK_CATEGORIES = [
@@ -76,7 +76,19 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       return;
     }
 
-    const result = await checkListingLimit(user.id, category);
+    // Fetch paywall status from user profile
+    let paywallActive = false;
+    const supabase = createSupabaseBrowserClient();
+    if (supabase) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("paywall_active")
+        .eq("id", user.id)
+        .maybeSingle();
+      paywallActive = !!(prof as Record<string, unknown>)?.paywall_active;
+    }
+
+    const result = await checkListingLimit(user.id, category, paywallActive);
     if (!result.allowed) {
       setLimitInfo({ current: result.current, limit: result.limit });
       setShowLimitModal(true);

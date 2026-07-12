@@ -58,8 +58,17 @@ export async function getActiveListingCount(userId: string, category: string): P
   return count;
 }
 
-export async function checkListingLimit(userId: string, category: string): Promise<{ allowed: boolean; current: number; limit: number }> {
+export async function checkListingLimit(
+  userId: string,
+  category: string,
+  paywallActive: boolean
+): Promise<{ allowed: boolean; current: number; limit: number }> {
   const limit = getCategoryLimit(category);
   const current = await getActiveListingCount(userId, category);
+
+  if (!paywallActive) {
+    return { allowed: true, current, limit };
+  }
+
   return { allowed: current < limit, current, limit };
 }

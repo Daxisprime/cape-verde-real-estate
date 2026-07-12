@@ -11,6 +11,9 @@ import {
   Loader2,
   RefreshCw,
   ChevronDown,
+  ToggleLeft,
+  ToggleRight,
+  CreditCard,
 } from "lucide-react";
 
 interface AdminListing {
@@ -34,13 +37,16 @@ interface AdminProfile {
 }
 
 export default function AdminPanel() {
-  const [activeSection, setActiveSection] = useState<"listings" | "users">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "users" | "paywall">("listings");
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [profiles, setProfiles] = useState<AdminProfile[]>([]);
   const [loadingListings, setLoadingListings] = useState(false);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [banningId, setBanningId] = useState<string | null>(null);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+  const [paywallGlobal, setPaywallGlobal] = useState(false);
+  const [paywallLoading, setPaywallLoading] = useState(false);
+  const [paywallToggling, setPaywallToggling] = useState(false);
 
   const fetchListings = useCallback(async () => {
     setLoadingListings(true);
@@ -119,10 +125,48 @@ export default function AdminPanel() {
     setLoadingProfiles(false);
   }, []);
 
+  const fetchPaywallStatus = useCallback(async () => {
+    setPaywallLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setPaywallLoading(false); return; }
+
+    const { count } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("paywall_active", true);
+
+    const { count: total } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
+
+    setPaywallGlobal((count ?? 0) > 0 && count === total);
+    setPaywallLoading(false);
+  }, []);
+
+  const handleTogglePaywall = async () => {
+    setPaywallToggling(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setPaywallToggling(false); return; }
+
+    const newState = !paywallGlobal;
+    const { error } = await supabase.rpc("update_all_paywall_status" as never, { new_status: newState } as never);
+
+    if (error) {
+      await supabase
+        .from("profiles")
+        .update({ paywall_active: newState } as never)
+        .gte("created_at", "1970-01-01");
+    }
+
+    setPaywallGlobal(newState);
+    setPaywallToggling(false);
+  };
+
   useEffect(() => {
     if (activeSection === "listings") fetchListings();
-    else fetchProfiles();
-  }, [activeSection, fetchListings, fetchProfiles]);
+    else if (activeSection === "users") fetchProfiles();
+    else fetchPaywallStatus();
+  }, [activeSection, fetchListings, fetchProfiles, fetchPaywallStatus]);
 
   const handleBanListing = async (listing: AdminListing) => {
     setBanningId(listing.id);
@@ -183,6 +227,17 @@ export default function AdminPanel() {
         >
           <Users className="h-4 w-4" />
           User Management
+        </button>
+        <button
+          onClick={() => setActiveSection("paywall")}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            activeSection === "paywall"
+              ? "text-red-700 border-b-2 border-red-600 bg-red-50/50"
+              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          <CreditCard className="h-4 w-4" />
+          Paywall
         </button>
       </div>
 
@@ -342,6 +397,73 @@ export default function AdminPanel() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+        {activeSection === "paywall" && (
+          <div className="p-5 space-y-5">
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-2xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/20">
+                  {paywallGlobal ? (
+                    <ToggleRight className="h-6 w-6 text-white" />
+                  ) : (
+                    <ToggleLeft className="h-6 w-6 text-white" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-900 mb-1">Ativar Paywall Global</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                    Quando ativo, os limites de categoria serao aplicados a todos os utilizadores.
+                    Casual (Fashion, Home): max 10 | High-Value (Electronics): max 3 | High-Margin (Real Estate, Cars): max 1.
+                  </p>
+
+                  {paywallLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      A verificar estado...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={handleTogglePaywall}
+                        disabled={paywallToggling}
+                        className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-200 disabled:opacity-50 ${
+                          paywallGlobal ? "bg-red-500" : "bg-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
+                            paywallGlobal ? "translate-x-7" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                      <span className={`text-sm font-semibold ${paywallGlobal ? "text-red-700" : "text-gray-500"}`}>
+                        {paywallGlobal ? "ATIVO — Limites aplicados" : "INATIVO — Sem restricoes"}
+                      </span>
+                      {paywallToggling && <Loader2 className="h-4 w-4 animate-spin text-red-500" />}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Quotas por Categoria</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-700">Casual / Geral (Fashion, Home, Books)</span>
+                  <span className="text-sm font-bold text-green-600">10 anuncios</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-700">Alta Valor (Electronics, Smartphones, Laptops)</span>
+                  <span className="text-sm font-bold text-amber-600">3 anuncios</span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-gray-700">Alta Margem (Imoveis, Carros)</span>
+                  <span className="text-sm font-bold text-red-600">1 anuncio</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
