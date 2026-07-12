@@ -21,6 +21,10 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['leaflet.markercluster'],
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
 };
 
 module.exports = nextConfig;
