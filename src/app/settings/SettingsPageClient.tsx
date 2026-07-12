@@ -12,7 +12,7 @@ import UserLinksManager from "@/components/UserLinksManager";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +49,37 @@ export default function SettingsPageClient() {
     twitterHandle: "",
     websiteUrl: "",
   });
+
+  const [verificationStatus, setVerificationStatus] = useState<string>("unverified");
+  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadVerificationStatus() {
+      if (!user?.id) return;
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+      const { data } = await supabase.from("profiles").select("verification_status").eq("id", user.id).maybeSingle();
+      if (data && (data as Record<string, unknown>).verification_status) {
+        setVerificationStatus((data as Record<string, unknown>).verification_status as string);
+      }
+    }
+    loadVerificationStatus();
+  }, [user?.id]);
+
+  const handleVerificationSubmit = async () => {
+    if (!user?.id) return;
+    setVerificationSubmitting(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setVerificationSubmitting(false); return; }
+    const { error } = await supabase.from("profiles").update({ verification_status: "pending_review" } as never).eq("id", user.id);
+    if (!error) {
+      setVerificationStatus("pending_review");
+      toast({ title: "Pedido Enviado", description: "Os seus documentos estao em revisao. Sera notificado quando aprovado." });
+    } else {
+      toast({ title: "Erro", description: "Falha ao submeter pedido.", variant: "destructive" });
+    }
+    setVerificationSubmitting(false);
+  };
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -319,6 +350,10 @@ export default function SettingsPageClient() {
                 Agent
               </TabsTrigger>
             )}
+            <TabsTrigger value="verification" className="flex items-center">
+              <Shield className="h-4 w-4 mr-2" />
+              Verificacao
+            </TabsTrigger>
           </TabsList>
 
           {/* Profile Settings */}
@@ -787,6 +822,84 @@ export default function SettingsPageClient() {
               </Card>
             </TabsContent>
           )}
+
+          {/* Verification Tab */}
+          <TabsContent value="verification" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Verificar Minha Conta
+                </CardTitle>
+                <CardDescription>
+                  A verificacao e gratuita e aumenta a confianca dos compradores no seu perfil.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {verificationStatus === "verified" && (
+                  <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <CheckCircle className="h-6 w-6 text-emerald-600" />
+                    <div>
+                      <p className="text-sm font-bold text-emerald-900">Conta Verificada</p>
+                      <p className="text-xs text-emerald-700">O seu perfil exibe o selo de Negocio Verificado.</p>
+                    </div>
+                  </div>
+                )}
+
+                {verificationStatus === "pending_review" && (
+                  <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <Eye className="h-6 w-6 text-amber-600" />
+                    <div>
+                      <p className="text-sm font-bold text-amber-900">Em Revisao</p>
+                      <p className="text-xs text-amber-700">Os seus documentos estao a ser analisados pela equipa. Sera notificado em breve.</p>
+                    </div>
+                  </div>
+                )}
+
+                {verificationStatus === "unverified" && (
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+                      <p className="text-sm font-medium text-gray-900">Documentos Aceites:</p>
+                      <ul className="text-xs text-gray-600 space-y-1.5 list-disc pl-4">
+                        <li>NIF (Numero de Identificacao Fiscal)</li>
+                        <li>Bilhete de Identidade (BI) de Cabo Verde</li>
+                        <li>Passaporte valido</li>
+                        <li>Alvara comercial (para empresas)</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="verification-doc">Carregar Documento (NIF ou BI)</Label>
+                      <div className="mt-1.5 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-gray-300 transition-colors cursor-pointer">
+                        <Shield className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-xs text-gray-500">Arraste ou clique para carregar</p>
+                        <p className="text-[11px] text-gray-400 mt-1">PDF, JPG ou PNG (max 5MB)</p>
+                        <input
+                          type="file"
+                          id="verification-doc"
+                          className="hidden"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleVerificationSubmit}
+                      disabled={verificationSubmitting}
+                      className="w-full"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      {verificationSubmitting ? "A submeter..." : "Submeter para Verificacao"}
+                    </Button>
+
+                    <p className="text-[11px] text-gray-400 text-center">
+                      Este servico e 100% gratuito. A verificacao demora 1-3 dias uteis.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
 

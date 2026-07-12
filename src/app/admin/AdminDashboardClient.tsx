@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Header from '@/components/Header';
 import AdminAnalytics from '@/components/AdminAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 interface AnalyticsData {
   overview: {
@@ -56,6 +57,81 @@ interface AnalyticsData {
     pageViewsPerMinute: number;
     topActivePages: Array<{ page: string; activeUsers: number }>;
   };
+}
+
+function VerificationManagement() {
+  const [pendingUsers, setPendingUsers] = useState<Array<{ id: string; name: string; email: string; verification_status: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    async function loadPending() {
+      if (!supabase) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, name, email, verification_status")
+        .in("verification_status", ["pending_review", "verified"])
+        .order("verification_status", { ascending: true });
+      setPendingUsers((data as typeof pendingUsers) || []);
+      setLoading(false);
+    }
+    loadPending();
+  }, []);
+
+  const handleToggleVerification = async (userId: string, currentStatus: string) => {
+    if (!supabase) return;
+    const newStatus = currentStatus === "verified" ? "unverified" : "verified";
+    const { error } = await supabase
+      .from("profiles")
+      .update({ verification_status: newStatus } as never)
+      .eq("id", userId);
+    if (!error) {
+      setPendingUsers((prev) =>
+        prev.map((u) => u.id === userId ? { ...u, verification_status: newStatus } : u).filter((u) => u.verification_status !== "unverified")
+      );
+    }
+  };
+
+  if (loading) return <div className="text-center py-8 text-gray-400">A carregar...</div>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Gestao de Verificacao de Identidade</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {pendingUsers.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">Nenhum pedido de verificacao pendente.</p>
+        ) : (
+          <div className="space-y-3">
+            {pendingUsers.map((u) => (
+              <div key={u.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{u.name || "Sem nome"}</p>
+                  <p className="text-xs text-gray-500">{u.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={u.verification_status === "verified" ? "default" : "secondary"}>
+                    {u.verification_status === "verified" ? "Verificado" : "Pendente"}
+                  </Badge>
+                  <button
+                    onClick={() => handleToggleVerification(u.id, u.verification_status)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      u.verification_status === "verified"
+                        ? "bg-red-50 text-red-700 hover:bg-red-100"
+                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    }`}
+                  >
+                    {u.verification_status === "verified" ? "Revogar" : "Aprovar"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function AdminDashboardClient() {
@@ -414,6 +490,7 @@ export default function AdminDashboardClient() {
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
                 <TabsTrigger value="realtime">Real-time</TabsTrigger>
+                <TabsTrigger value="verification">Verificacao</TabsTrigger>
               </TabsList>
 
               {/* Analytics Tab */}
@@ -818,6 +895,11 @@ export default function AdminDashboardClient() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Verification Management Tab */}
+              <TabsContent value="verification" className="space-y-6">
+                <VerificationManagement />
               </TabsContent>
             </Tabs>
           </>
