@@ -12,6 +12,7 @@ import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { bumpListing } from "@/lib/vendor-performance";
+import { getWalletBalance, deductFromWallet, redeemVoucher, FEATURE_PRICES } from "@/lib/wallet";
 import {
   normalizeFacebookUrl,
   normalizeInstagramUrl,
@@ -46,6 +47,8 @@ import {
   Building2,
   Upload,
   Rocket,
+  Wallet,
+  Gift,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -142,9 +145,19 @@ export default function MyStorePageClient() {
     }
   }, [liveListings]);
 
+  useEffect(() => {
+    if (user?.id) {
+      getWalletBalance(user.id).then(setWalletBalance);
+    }
+  }, [user?.id]);
+
   const [activeTab, setActiveTab] = useState<ListingStatus>("active");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [voucherPin, setVoucherPin] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [bumpConfirmTarget, setBumpConfirmTarget] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showBusinessPanel, setShowBusinessPanel] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
@@ -346,6 +359,10 @@ export default function MyStorePageClient() {
   };
 
   const handleBumpListing = async (id: string) => {
+    if (walletBalance >= FEATURE_PRICES.AD_BUMP) {
+      setBumpConfirmTarget(id);
+      return;
+    }
     const listing = listings.find((l) => l.id === id);
     const table = listing?.source === "marketplace" ? "marketplace_items" : "properties";
     const success = await bumpListing(id, table);
@@ -353,6 +370,41 @@ export default function MyStorePageClient() {
       toast({ title: "Anuncio Impulsionado!", description: "O seu anuncio subiu para o topo dos resultados." });
     } else {
       toast({ title: "Erro", description: "Nao foi possivel impulsionar o anuncio.", variant: "destructive" });
+    }
+  };
+
+  const handleBumpWithWallet = async () => {
+    if (!bumpConfirmTarget || !user?.id) return;
+    const { success: deducted, newBalance } = await deductFromWallet(user.id, FEATURE_PRICES.AD_BUMP);
+    if (!deducted) {
+      toast({ title: "Saldo insuficiente", description: "Recarregue a sua carteira com um voucher.", variant: "destructive" });
+      setBumpConfirmTarget(null);
+      return;
+    }
+    setWalletBalance(newBalance);
+    const listing = listings.find((l) => l.id === bumpConfirmTarget);
+    const table = listing?.source === "marketplace" ? "marketplace_items" : "properties";
+    await bumpListing(bumpConfirmTarget, table);
+    toast({ title: "Anuncio Impulsionado!", description: `${FEATURE_PRICES.AD_BUMP} CVE debitados. Novo saldo: ${newBalance} CVE` });
+    setBumpConfirmTarget(null);
+  };
+
+  const handleRedeemVoucher = async () => {
+    if (!voucherPin || !user?.id) return;
+    setVoucherLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    const session = supabase ? await supabase.auth.getSession() : null;
+    const token = session?.data?.session?.access_token || "";
+
+    const result = await redeemVoucher(voucherPin, token);
+    setVoucherLoading(false);
+
+    if (result.success) {
+      setWalletBalance(result.newBalance ?? walletBalance);
+      setVoucherPin("");
+      toast({ title: "Voucher Resgatado!", description: `${result.credited} CVE adicionados a sua carteira.` });
+    } else {
+      toast({ title: "Erro", description: result.error || "Voucher invalido.", variant: "destructive" });
     }
   };
 
@@ -759,6 +811,86 @@ export default function MyStorePageClient() {
                   className="px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Minha Carteira (Wallet) Section */}
+        <section className="mb-6">
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-200 rounded-2xl p-5">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <Wallet className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-gray-900">Minha Carteira</h3>
+                  <span className="text-lg font-bold text-emerald-700">{walletBalance.toFixed(0)} CVE</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Use o saldo para impulsionar anuncios e ativar funcionalidades premium.
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Gift className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Codigo do voucher (ex: XXXX-XXXX-XXXX)"
+                      value={voucherPin}
+                      onChange={(e) => setVoucherPin(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"
+                      maxLength={14}
+                    />
+                  </div>
+                  <button
+                    onClick={handleRedeemVoucher}
+                    disabled={!voucherPin || voucherLoading}
+                    className="px-3 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                  >
+                    {voucherLoading ? "..." : "Resgatar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bump Confirm Modal (Wallet Checkout) */}
+        {bumpConfirmTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative animate-in fade-in zoom-in-95">
+              <h3 className="text-base font-bold text-gray-900 mb-2">Impulsionar Anuncio</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                O seu anuncio sera colocado no topo dos resultados.
+              </p>
+              <div className="bg-gray-50 rounded-xl p-3 mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Custo:</span>
+                  <span className="font-bold text-gray-900">{FEATURE_PRICES.AD_BUMP} CVE</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-gray-600">Saldo atual:</span>
+                  <span className="font-bold text-emerald-700">{walletBalance.toFixed(0)} CVE</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1 pt-1 border-t border-gray-200">
+                  <span className="text-gray-600">Saldo apos:</span>
+                  <span className="font-bold text-gray-900">{(walletBalance - FEATURE_PRICES.AD_BUMP).toFixed(0)} CVE</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setBumpConfirmTarget(null)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleBumpWithWallet}
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  Pagar com Saldo
                 </button>
               </div>
             </div>
