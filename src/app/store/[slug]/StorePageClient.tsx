@@ -7,6 +7,7 @@ import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties
 import { MARKETPLACE_ITEMS } from "@/data/marketplace-items";
 import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
+import SocialShareBar from "@/components/SocialShareBar";
 import { useSearchMode } from "@/contexts/SearchModeContext";
 import {
   CheckCircle,
@@ -417,6 +418,13 @@ export default function StorePageClient({ profileId, slug }: Props) {
                       </span>
                     )}
                   </button>
+
+                  <div className="mt-3">
+                    <SocialShareBar
+                      title={profile.name || "Loja"}
+                      url={`/store/${slug}`}
+                    />
+                  </div>
               </div>
 
               {profile.bio && (

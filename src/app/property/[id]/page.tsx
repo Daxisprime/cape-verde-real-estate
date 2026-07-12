@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import PropertyDetailClient from "@/components/PropertyDetailClient";
@@ -7,6 +8,10 @@ import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties
 interface PropertyWithExtras {
   propertyId?: string;
   agentId?: string;
+}
+
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
 export async function generateStaticParams() {
@@ -22,6 +27,45 @@ export async function generateStaticParams() {
   });
 
   return params;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const property = capeVerdeProperties.find(p =>
+    p.id === id ||
+    (p as typeof p & PropertyWithExtras).propertyId === id ||
+    p.id === `cv-${id.padStart(3, '0')}` ||
+    p.id.includes(id)
+  );
+
+  if (!property) {
+    return {
+      title: "Propriedade | Pro.CV",
+      description: "Encontre a sua propriedade ideal em Cabo Verde no Pro.CV",
+    };
+  }
+
+  const priceFormatted = `${property.price.toLocaleString("pt-CV")} EUR`;
+  const descShort = property.description.length > 160
+    ? property.description.slice(0, 157) + "..."
+    : property.description;
+
+  return {
+    title: `${property.title} | Pro.CV`,
+    description: `${priceFormatted} - ${descShort}`,
+    openGraph: {
+      title: `${property.title} | Pro.CV`,
+      description: `${priceFormatted} - ${descShort}`,
+      type: "website",
+      images: property.images?.[0] ? [{ url: property.images[0], width: 1200, height: 630 }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${property.title} | Pro.CV`,
+      description: `${priceFormatted} - ${descShort}`,
+      images: property.images?.[0] ? [property.images[0]] : [],
+    },
+  };
 }
 
 const getPropertyData = (id: string) => {

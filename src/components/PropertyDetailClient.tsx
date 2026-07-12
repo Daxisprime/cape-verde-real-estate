@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, Bed, Bath, Square, Phone, MessageCircle, X, ChevronL
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { submitInquiry } from "@/app/actions/sendNotification";
+import SocialShareBar from "@/components/SocialShareBar";
 
 export interface SimilarProperty {
   id: string;
@@ -267,6 +268,15 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
               {title}
             </h1>
           </section>
+
+          {/* Social Sharing */}
+          <div className="mt-4">
+            <SocialShareBar
+              title={title}
+              price={`€${property.price.toLocaleString()}`}
+              url={`/property/${property.id}`}
+            />
+          </div>
 
           {/* Specs row */}
           <section className="mt-4 flex items-center gap-5 text-gray-600 text-sm">
