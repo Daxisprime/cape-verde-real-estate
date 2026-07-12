@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { ImagePlus, X, Loader2, Zap } from "lucide-react";
+import { ImagePlus, X, Loader2, Zap, AlertTriangle, Crown } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { compressImage } from "@/lib/image-compression";
 import { isOffline, enqueueOfflineSubmission } from "@/lib/offline-queue";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { checkListingLimit, getCategoryLimit, getCategoryTier } from "@/lib/listing-limits";
 import AuthModal from "@/components/AuthModal";
 
 const QUICK_CATEGORIES = [
@@ -41,6 +42,8 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<{ current: number; limit: number } | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +73,13 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
     if (!user) {
       setPendingSubmit(true);
       setShowAuthModal(true);
+      return;
+    }
+
+    const result = await checkListingLimit(user.id, category);
+    if (!result.allowed) {
+      setLimitInfo({ current: result.current, limit: result.limit });
+      setShowLimitModal(true);
       return;
     }
 
@@ -319,6 +329,56 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
           defaultTab="register"
           onSuccess={() => setShowAuthModal(false)}
         />
+      )}
+
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => setShowLimitModal(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4 text-gray-400" />
+            </button>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 mb-4">
+                <AlertTriangle className="w-7 h-7 text-amber-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Limite de Anuncios Atingido!
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                O seu plano atual atingiu o limite gratuito para esta categoria.
+                Atualize para o plano Premium para publicar mais anuncios.
+              </p>
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-amber-700 font-medium">Anuncios ativos</span>
+                  <span className="font-bold text-amber-900">{limitInfo?.current ?? 0} / {limitInfo?.limit ?? 0}</span>
+                </div>
+                <div className="mt-2 h-2 bg-amber-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              >
+                <Crown className="w-4 h-4" />
+                Atualizar para Premium
+              </button>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </form>
   );

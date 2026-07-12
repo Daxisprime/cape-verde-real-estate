@@ -42,6 +42,8 @@ import {
   Sparkles,
   Lock,
   Store,
+  Building2,
+  Upload,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -101,6 +103,13 @@ export default function MyStorePageClient() {
         facebook_shop_url: (raw.facebook_shop_url as string) || '',
         website_url: ((raw.website_url) as string) || '',
       });
+      setIsBusiness(!!(raw.is_business));
+      setBusinessForm({
+        business_name: (raw.business_name as string) || '',
+        business_logo: (raw.business_logo as string) || '',
+        business_banner: (raw.business_banner as string) || '',
+        business_bio: (raw.bio as string) || '',
+      });
     }
   }, [profile]);
 
@@ -135,6 +144,16 @@ export default function MyStorePageClient() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<{ id: string; title: string } | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showBusinessPanel, setShowBusinessPanel] = useState(false);
+  const [isBusiness, setIsBusiness] = useState(false);
+  const [businessForm, setBusinessForm] = useState({
+    business_name: "",
+    business_logo: "",
+    business_banner: "",
+    business_bio: "",
+  });
+  const [savingBusiness, setSavingBusiness] = useState(false);
+  const businessLogoRef = useRef<HTMLInputElement>(null);
 
   const filteredListings = listings.filter((l) => l.status === activeTab);
 
@@ -252,6 +271,75 @@ export default function MyStorePageClient() {
       setIsEditing(false);
       setPendingAvatarFile(null);
       if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
+  const handleActivateBusiness = async () => {
+    setSavingBusiness(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase || !user) return;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          is_business: true,
+          business_name: businessForm.business_name || null,
+          business_logo: businessForm.business_logo || null,
+          business_banner: businessForm.business_banner || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) {
+        toast({ title: "Erro", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      setIsBusiness(true);
+      setShowBusinessPanel(false);
+      await refreshProfile();
+      toast({ title: "Conta de Empresa Ativada!", description: "A sua loja profissional esta agora ativa." });
+    } catch (err) {
+      toast({ title: "Erro", description: err instanceof Error ? err.message : "Erro desconhecido", variant: "destructive" });
+    } finally {
+      setSavingBusiness(false);
+    }
+  };
+
+  const handleDeactivateBusiness = async () => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase || !user) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_business: false, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+
+    if (!error) {
+      setIsBusiness(false);
+      await refreshProfile();
+      toast({ title: "Modo pessoal ativo", description: "Voltou ao modo vendedor casual." });
+    }
+  };
+
+  const handleBusinessLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const filePath = `${user.id}/business-logo.${ext}`;
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true, contentType: file.type || "image/jpeg" });
+
+    if (!error) {
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      if (data?.publicUrl) {
+        setBusinessForm((prev) => ({ ...prev, business_logo: `${data.publicUrl}?t=${Date.now()}` }));
+      }
     }
   };
 
@@ -524,6 +612,145 @@ export default function MyStorePageClient() {
 
         {/* Admin Panel - only visible for admin role */}
         {isAdmin && <AdminPanel />}
+
+        {/* Business Account Activation Section */}
+        <section className="mb-6">
+          {!isBusiness ? (
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 border border-slate-200 rounded-2xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">Ativar Conta de Empresa</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                    Transforme o seu perfil numa loja profissional com nome de marca, logotipo e banner personalizados. Totalmente gratuito!
+                  </p>
+                  <button
+                    onClick={() => setShowBusinessPanel(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-600/20"
+                  >
+                    <Store className="h-4 w-4" />
+                    Ativar Conta de Empresa
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Check className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900">Conta de Empresa Ativa</h3>
+                  <p className="text-xs text-gray-500">{businessForm.business_name || "Loja configurada"}</p>
+                </div>
+                {businessForm.business_logo && (
+                  <img src={businessForm.business_logo} alt="Logo" className="ml-auto w-10 h-10 rounded-lg object-cover border border-green-200" />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowBusinessPanel(true)}
+                  className="text-xs px-3 py-1.5 bg-white border border-green-200 text-green-700 rounded-lg hover:bg-green-50 transition-colors font-medium"
+                >
+                  Editar Dados
+                </button>
+                <button
+                  onClick={handleDeactivateBusiness}
+                  className="text-xs px-3 py-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  Desativar
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Business Panel Modal */}
+        {showBusinessPanel && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={() => setShowBusinessPanel(false)}
+                className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+
+              <div className="mb-5">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 mb-3">
+                  <Building2 className="w-6 h-6 text-blue-700" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Configurar Loja Profissional</h3>
+                <p className="text-sm text-gray-500 mt-1">Personalize a identidade da sua empresa</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Nome da Empresa *</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Imobiliaria Sol de Cabo Verde"
+                    value={businessForm.business_name}
+                    onChange={(e) => setBusinessForm((p) => ({ ...p, business_name: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Logotipo da Loja</label>
+                  <div className="flex items-center gap-3">
+                    {businessForm.business_logo ? (
+                      <img src={businessForm.business_logo} alt="Logo" className="w-14 h-14 rounded-xl object-cover border-2 border-blue-100" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50">
+                        <Upload className="w-5 h-5 text-gray-300" />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => businessLogoRef.current?.click()}
+                      className="text-xs px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors font-medium text-gray-600"
+                    >
+                      Escolher Ficheiro
+                    </button>
+                    <input ref={businessLogoRef} type="file" accept="image/*" onChange={handleBusinessLogoUpload} className="hidden" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Bio / Descricao</label>
+                  <textarea
+                    placeholder="Descreva a sua empresa em poucas palavras..."
+                    value={businessForm.business_bio}
+                    onChange={(e) => setBusinessForm((p) => ({ ...p, business_bio: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={handleActivateBusiness}
+                  disabled={savingBusiness || !businessForm.business_name.trim()}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {savingBusiness ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {isBusiness ? "Guardar Alteracoes" : "Ativar Conta de Empresa"}
+                </button>
+                <button
+                  onClick={() => setShowBusinessPanel(false)}
+                  className="px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Listings Section */}
         <section>
