@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, CheckCircle2, Clock, User, Send, ExternalLink } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, CheckCircle2, Clock, User, Send, ExternalLink, Star } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -39,6 +39,11 @@ interface SellerProfile {
   phone: string | null;
   whatsapp: string | null;
   created_at: string | null;
+  store_name: string | null;
+  store_logo: string | null;
+  verified_at: string | null;
+  rating_average: number;
+  review_count: number;
 }
 
 interface SellerLink {
@@ -103,7 +108,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, island, municipality, phone, whatsapp, created_at')
+        .select('id, full_name, avatar_url, island, municipality, phone, whatsapp, created_at, store_name, store_logo, verified_at, rating_average, review_count')
         .eq('id', userId)
         .maybeSingle();
 
@@ -197,9 +202,12 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
   const whatsappUrl = sellerWhatsapp
     ? `https://wa.me/${sellerWhatsapp.replace(/\D/g, '')}?text=${whatsappMessage}`
     : '#';
-  const sellerName = seller?.full_name || 'Seller';
-  const sellerAvatar = seller?.avatar_url || null;
+  const sellerName = seller?.store_name || seller?.full_name || 'Seller';
+  const sellerAvatar = seller?.store_logo || seller?.avatar_url || null;
   const sellerIsland = seller?.island || item.island;
+  const sellerIsVerified = !!seller?.verified_at;
+  const sellerRating = seller?.rating_average || 0;
+  const sellerReviewCount = seller?.review_count || 0;
   const memberSince = seller?.created_at
     ? new Date(seller.created_at).toLocaleDateString('pt-CV', { month: 'short', year: 'numeric' })
     : '--';
@@ -382,8 +390,19 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-gray-900 truncate hover:text-teal-600 transition-colors">{sellerName}</p>
-                          <p className="text-xs text-gray-500">{sellerIsland} seller</p>
+                          <p className="text-sm font-bold text-gray-900 truncate hover:text-teal-600 transition-colors flex items-center gap-1">
+                            {sellerName}
+                            {sellerIsVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
+                          </p>
+                          <p className="text-xs text-gray-500">{sellerIsland} {sellerIsVerified ? '· Verificado' : 'seller'}</p>
+                          {sellerReviewCount > 0 && (
+                            <div className="flex items-center gap-0.5 mt-0.5">
+                              {[1,2,3,4,5].map(s => (
+                                <Star key={s} className={`w-3 h-3 ${s <= Math.round(sellerRating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
+                              ))}
+                              <span className="text-[10px] text-gray-500 ml-0.5">{sellerRating.toFixed(1)} ({sellerReviewCount})</span>
+                            </div>
+                          )}
                         </div>
                       </Link>
                       {sellerPhone ? (

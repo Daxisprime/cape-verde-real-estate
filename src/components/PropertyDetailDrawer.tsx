@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle, Globe } from 'lucide-react';
+import { X, MapPin, Bed, Bath, Ruler, Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight, Facebook, Send, Loader2, CheckCircle, Globe, Star } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,11 @@ interface SellerProfile {
   twitter_handle: string | null;
   website_url: string | null;
   email: string | null;
+  store_name: string | null;
+  store_logo: string | null;
+  verified_at: string | null;
+  rating_average: number;
+  review_count: number;
 }
 
 interface PropertyDetailDrawerProps {
@@ -90,7 +95,7 @@ export default function PropertyDetailDrawer({ property, onClose }: PropertyDeta
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle, website_url, email')
+        .select('id, name, avatar, role, phone, whatsapp_number, facebook_handle, twitter_handle, website_url, email, store_name, store_logo, verified_at, rating_average, review_count')
         .eq('id', agentId)
         .maybeSingle();
       setSeller(data || null);
@@ -494,9 +499,12 @@ function SellerCard({ seller, loading, propertyTitle, agentId }: { seller: Selle
   }
 
   const hasProfile = seller && seller.name;
-  const name = hasProfile ? seller.name : 'Pro.CV Verified Partner';
+  const name = seller?.store_name || (hasProfile ? seller.name : 'Pro.CV Verified Partner');
   const role = seller?.role || (hasProfile ? 'Agent' : 'Independent Seller');
-  const avatar = seller?.avatar || null;
+  const avatar = seller?.store_logo || seller?.avatar || null;
+  const isVerified = !!seller?.verified_at;
+  const rating = seller?.rating_average || 0;
+  const reviewCount = seller?.review_count || 0;
   const facebookHandle = seller?.facebook_handle || null;
   const twitterHandle = seller?.twitter_handle || null;
   const websiteUrl = seller?.website_url || null;
@@ -520,14 +528,34 @@ function SellerCard({ seller, loading, propertyTitle, agentId }: { seller: Selle
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-800 truncate hover:text-teal-600 transition-colors">{name}</p>
-          <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${
-            role === 'Agent' || role === 'agent'
-              ? 'bg-blue-100 text-blue-700'
-              : 'bg-emerald-100 text-emerald-700'
-          }`}>
-            {role === 'agent' ? 'Agent' : role === 'vendor' ? 'Vendor' : role || 'Seller'}
-          </span>
+          <p className="text-sm font-bold text-slate-800 truncate hover:text-teal-600 transition-colors flex items-center gap-1">
+            {name}
+            {isVerified && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              role === 'Agent' || role === 'agent'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-emerald-100 text-emerald-700'
+            }`}>
+              {role === 'agent' ? 'Agent' : role === 'vendor' ? 'Vendor' : role || 'Seller'}
+            </span>
+            {isVerified && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                Verificado
+              </span>
+            )}
+          </div>
+          {reviewCount > 0 && (
+            <div className="flex items-center gap-1 mt-1">
+              <div className="flex items-center">
+                {[1,2,3,4,5].map(s => (
+                  <Star key={s} className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
+                ))}
+              </div>
+              <span className="text-[10px] text-gray-500 font-medium">{rating.toFixed(1)} ({reviewCount})</span>
+            </div>
+          )}
         </div>
       </Link>
 

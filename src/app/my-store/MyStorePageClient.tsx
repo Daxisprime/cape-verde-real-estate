@@ -115,6 +115,12 @@ export default function MyStorePageClient() {
         business_banner: (raw.business_banner as string) || '',
         business_bio: (raw.bio as string) || '',
       });
+      setStorefrontForm({
+        store_name: (raw.store_name as string) || '',
+        store_description: (raw.store_description as string) || '',
+        store_logo: (raw.store_logo as string) || '',
+        store_banner: (raw.store_banner as string) || '',
+      });
     }
   }, [profile]);
 
@@ -168,6 +174,9 @@ export default function MyStorePageClient() {
     business_bio: "",
   });
   const [savingBusiness, setSavingBusiness] = useState(false);
+  const [showStorefrontPanel, setShowStorefrontPanel] = useState(false);
+  const [storefrontForm, setStorefrontForm] = useState({ store_name: "", store_description: "", store_logo: "", store_banner: "" });
+  const [savingStorefront, setSavingStorefront] = useState(false);
   const businessLogoRef = useRef<HTMLInputElement>(null);
 
   const filteredListings = listings.filter((l) => l.status === activeTab);
@@ -336,6 +345,32 @@ export default function MyStorePageClient() {
       await refreshProfile();
       toast({ title: "Modo pessoal ativo", description: "Voltou ao modo vendedor casual." });
     }
+  };
+
+  const handleSaveStorefront = async () => {
+    setSavingStorefront(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase || !user) { setSavingStorefront(false); return; }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        store_name: storefrontForm.store_name || null,
+        store_description: storefrontForm.store_description || null,
+        store_logo: storefrontForm.store_logo || null,
+        store_banner: storefrontForm.store_banner || null,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", user.id);
+
+    if (!error) {
+      toast({ title: "Montra atualizada!", description: "A sua pagina de loja publica foi atualizada." });
+      setShowStorefrontPanel(false);
+      await refreshProfile();
+    } else {
+      toast({ title: "Erro", description: "Nao foi possivel guardar." });
+    }
+    setSavingStorefront(false);
   };
 
   const handleBusinessLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -815,6 +850,86 @@ export default function MyStorePageClient() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Manage Storefront Section */}
+        {isBusiness && (
+          <section className="mb-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Store className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-bold text-gray-900">Gerir Montra</h3>
+                    <button
+                      onClick={() => setShowStorefrontPanel(!showStorefrontPanel)}
+                      className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      {showStorefrontPanel ? "Fechar" : "Editar"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Personalize a pagina publica da sua loja com logotipo, banner e descricao.
+                  </p>
+
+                  {showStorefrontPanel && (
+                    <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Nome da Loja</label>
+                        <input
+                          type="text"
+                          value={storefrontForm.store_name}
+                          onChange={(e) => setStorefrontForm(p => ({ ...p, store_name: e.target.value }))}
+                          placeholder="Nome da sua loja..."
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Descricao</label>
+                        <textarea
+                          value={storefrontForm.store_description}
+                          onChange={(e) => setStorefrontForm(p => ({ ...p, store_description: e.target.value }))}
+                          placeholder="Descreva a sua loja em poucas palavras..."
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none h-20"
+                          maxLength={300}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">URL do Logotipo</label>
+                        <input
+                          type="url"
+                          value={storefrontForm.store_logo}
+                          onChange={(e) => setStorefrontForm(p => ({ ...p, store_logo: e.target.value }))}
+                          placeholder="https://..."
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">URL do Banner</label>
+                        <input
+                          type="url"
+                          value={storefrontForm.store_banner}
+                          onChange={(e) => setStorefrontForm(p => ({ ...p, store_banner: e.target.value }))}
+                          placeholder="https://..."
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                        />
+                      </div>
+                      <button
+                        onClick={handleSaveStorefront}
+                        disabled={savingStorefront}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {savingStorefront ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        Guardar Montra
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Minha Carteira (Wallet) Section */}
