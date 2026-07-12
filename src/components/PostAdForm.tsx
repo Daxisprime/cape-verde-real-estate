@@ -8,6 +8,7 @@ import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage, type Translations } from "@/contexts/LanguageContext";
 import AuthModal from "@/components/AuthModal";
+import { checkListingLimit } from "@/lib/listing-limits";
 
 const LeafletPicker = dynamic(() => import("@/components/LeafletCoordinatePicker"), {
   ssr: false,
@@ -112,7 +113,7 @@ interface PostAdFormProps {
 }
 
 export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const { t } = useLanguage();
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
@@ -201,6 +202,19 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     setErrorMessage("");
 
     const sellerId = user?.id;
+
+    // Category limit check (only enforced when paywall_active is true)
+    if (sellerId && !isEditing) {
+      const rawProfile = profile as Record<string, unknown> | null;
+      const paywallActive = !!(rawProfile?.paywall_active);
+      const checkCategory = isPropertyCategory ? category : category;
+      const { allowed, current, limit } = await checkListingLimit(sellerId, checkCategory, paywallActive);
+      if (!allowed) {
+        setStatus("error");
+        setErrorMessage(`Limite atingido: ${current}/${limit} anuncios ativos nesta categoria. Atualize para publicar mais.`);
+        return;
+      }
+    }
 
     // Optimistic UI: fire callback immediately so the local list updates
     if (isEditing) {
