@@ -116,6 +116,31 @@ export default function SettingsPageClient() {
     agentMessages: user?.preferences?.agentMessages || true
   });
 
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({ system: true, chat: true, recommendation: true, sponsored: true });
+  const [savingNotifPrefs, setSavingNotifPrefs] = useState(false);
+
+  // Load notification preferences from Supabase profile
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    (async () => {
+      const { data } = await supabase.from("profiles").select("notification_preferences").eq("id", user.id).maybeSingle();
+      if (data?.notification_preferences && typeof data.notification_preferences === "object") {
+        setNotifPrefs(prev => ({ ...prev, ...(data.notification_preferences as Record<string, boolean>) }));
+      }
+    })();
+  }, [user]);
+
+  const handleSaveNotifPrefs = async () => {
+    if (!user) return;
+    setSavingNotifPrefs(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setSavingNotifPrefs(false); return; }
+    await supabase.from("profiles").update({ notification_preferences: notifPrefs } as never).eq("id", user.id);
+    setSavingNotifPrefs(false);
+  };
+
   // Remove automatic redirect - let users authenticate on this page
 
   if (!isAuthenticated || !user) {
@@ -666,6 +691,44 @@ export default function SettingsPageClient() {
                   <Button onClick={handleProfileUpdate} disabled={isLoading}>
                     <Save className="h-4 w-4 mr-2" />
                     Save Preferences
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pro.CV Push Notification Preferences */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Bell className="h-5 w-5 mr-2" />
+                  Preferencias de Notificacao Pro.CV
+                </CardTitle>
+                <p className="text-sm text-gray-500 mt-1">Controle que tipos de notificacoes push recebe na plataforma.</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  { key: "system", label: "Notificacoes do Sistema", description: "Alertas sobre a sua conta e atualizacoes da plataforma" },
+                  { key: "chat", label: "Mensagens", description: "Novas mensagens de compradores e vendedores" },
+                  { key: "recommendation", label: "Recomendacoes", description: "Sugestoes personalizadas com base nos seus interesses" },
+                  { key: "sponsored", label: "Promocoes Patrocinadas", description: "Anuncios em destaque de vendedores premium" },
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">{item.label}</Label>
+                      <p className="text-sm text-gray-500">{item.description}</p>
+                    </div>
+                    <Switch
+                      checked={notifPrefs[item.key] !== false}
+                      onCheckedChange={(checked) => {
+                        setNotifPrefs(prev => ({ ...prev, [item.key]: checked }));
+                      }}
+                    />
+                  </div>
+                ))}
+                <div className="flex justify-end pt-2">
+                  <Button onClick={handleSaveNotifPrefs} disabled={savingNotifPrefs}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {savingNotifPrefs ? "A guardar..." : "Guardar Preferencias"}
                   </Button>
                 </div>
               </CardContent>

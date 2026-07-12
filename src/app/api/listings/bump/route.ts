@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateSponsoredNotifications } from "@/lib/smart-push";
 
 function getServiceSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     // Verify ownership
     const { data: listing } = await supabase
       .from(table)
-      .select(`id, ${ownerCol}`)
+      .select(`id, title, category, island, images, ${ownerCol}`)
       .eq("id", listingId)
       .maybeSingle();
 
@@ -61,6 +62,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Falha ao impulsionar." }, { status: 500 });
       }
 
+      // Smart-Push on bump too
+      const listingRecord = listing as Record<string, unknown>;
+      const images = listingRecord.images as string[] | null;
+      generateSponsoredNotifications(supabase, {
+        id: listingId,
+        title: (listingRecord.title as string) || "Novo anuncio",
+        category: (listingRecord.category as string) || "",
+        island: (listingRecord.island as string) || undefined,
+        image_url: images?.[0] || undefined,
+        listing_type: listingType as "property" | "marketplace",
+      }, user.id).catch(() => {});
+
       return NextResponse.json({ success: true, message: "Anuncio impulsionado com sucesso!" });
     }
 
@@ -80,6 +93,18 @@ export async function POST(req: NextRequest) {
       if (updateError) {
         return NextResponse.json({ error: "Falha ao destacar." }, { status: 500 });
       }
+
+      // Smart-Push: send sponsored notifications to high-intent users
+      const listingRecord = listing as Record<string, unknown>;
+      const images = listingRecord.images as string[] | null;
+      generateSponsoredNotifications(supabase, {
+        id: listingId,
+        title: (listingRecord.title as string) || "Novo anuncio",
+        category: (listingRecord.category as string) || "",
+        island: (listingRecord.island as string) || undefined,
+        image_url: images?.[0] || undefined,
+        listing_type: listingType as "property" | "marketplace",
+      }, user.id).catch(() => {});
 
       return NextResponse.json({
         success: true,

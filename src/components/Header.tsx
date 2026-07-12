@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User, Plus } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useLanguage, languages as langConfig, LanguageCode } from '@/contexts/LanguageContext';
@@ -384,6 +385,9 @@ export default function Header() {
               </button>
             ))}
           </div>
+
+          {/* Notification Bell */}
+          {isAuthenticated && <NotificationBell />}
 
           {/* Profile Avatar - FAR RIGHT */}
           <div className="relative" ref={dropdownRef}>
