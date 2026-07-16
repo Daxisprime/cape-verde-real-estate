@@ -205,10 +205,10 @@ export default function PropertyDetailClient({ property, similarProperties = [] 
       {/* Back nav */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <button onClick={() => router.back()} className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Back
-          </Link>
+          </button>
         </div>
       </div>
 
