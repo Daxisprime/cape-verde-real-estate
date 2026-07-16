@@ -68,6 +68,7 @@ interface UnifiedListing {
 interface Props {
   profileId: string | null;
   slug: string;
+  storeId?: string | null;
 }
 
 function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedListing[] } | null {
@@ -194,7 +195,7 @@ function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedLis
   return null;
 }
 
-export default function StorePageClient({ profileId, slug }: Props) {
+export default function StorePageClient({ profileId, slug, storeId }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<UnifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -202,6 +203,7 @@ export default function StorePageClient({ profileId, slug }: Props) {
   const [reviewCount, setReviewCount] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
   const [isMockProfile, setIsMockProfile] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { setSearchMode } = useSearchMode();
 
   useEffect(() => {
@@ -234,22 +236,32 @@ export default function StorePageClient({ profileId, slug }: Props) {
         return;
       }
 
-      const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
-        supabase
+      let propertiesQuery = supabase
           .from("properties")
           .select("*")
-          .eq("agent_id", profileId)
           .eq("status", "active")
           .order("is_featured", { ascending: false })
-          .order("last_bumped_at", { ascending: false }),
-        supabase
+          .order("last_bumped_at", { ascending: false });
+
+      let marketplaceQuery = supabase
           .from("marketplace_items")
           .select("*")
-          .eq("user_id", profileId)
           .eq("status", "active")
           .order("is_featured", { ascending: false })
-          .order("last_bumped_at", { ascending: false }),
+          .order("last_bumped_at", { ascending: false });
+
+      if (storeId) {
+        propertiesQuery = propertiesQuery.eq("store_id", storeId);
+        marketplaceQuery = marketplaceQuery.eq("store_id", storeId);
+      } else {
+        propertiesQuery = propertiesQuery.eq("agent_id", profileId);
+        marketplaceQuery = marketplaceQuery.eq("user_id", profileId);
+      }
+
+      const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
+        propertiesQuery,
+        marketplaceQuery,
         supabase
           .from("vendor_reviews")
           .select("rating")
@@ -316,7 +328,15 @@ export default function StorePageClient({ profileId, slug }: Props) {
     }
 
     fetchData();
-  }, [profileId, slug]);
+  }, [profileId, slug, storeId]);
+
+  const filteredListings = listings.filter((item) => {
+    if (categoryFilter === "all") return true;
+    if (categoryFilter === "property") return item.type === "property";
+    if (categoryFilter === "marketplace") return item.type === "marketplace";
+    if (categoryFilter.startsWith("cat:")) return item.category === categoryFilter.slice(4);
+    return true;
+  });
 
   if (loading) {
     return (
@@ -564,7 +584,28 @@ export default function StorePageClient({ profileId, slug }: Props) {
 
           {/* Right: Listing Feed */}
           <section className="lg:col-span-2">
-            {listings.length === 0 ? (
+            {/* Category Filter */}
+            {listings.length > 0 && (
+              <div className="mb-4 flex items-center gap-3">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-4 py-2.5 text-sm font-medium border border-gray-200 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none appearance-none pr-8"
+                >
+                  <option value="all">Todos os Anuncios</option>
+                  <option value="property">Imobiliario</option>
+                  <option value="marketplace">Marketplace</option>
+                  {[...new Set(listings.filter(l => l.category).map(l => l.category!))].map((cat) => (
+                    <option key={cat} value={`cat:${cat}`}>{cat}</option>
+                  ))}
+                </select>
+                <span className="text-xs text-gray-400">
+                  {filteredListings.length} {filteredListings.length === 1 ? "resultado" : "resultados"}
+                </span>
+              </div>
+            )}
+
+            {filteredListings.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Eye className="w-8 h-8 text-gray-400" />
@@ -574,7 +615,7 @@ export default function StorePageClient({ profileId, slug }: Props) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {listings.map((listing) => (
+                {filteredListings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}
               </div>

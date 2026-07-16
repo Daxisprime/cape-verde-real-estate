@@ -8,11 +8,23 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+async function getStoreBySlug(slugParam: string) {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("stores")
+    .select("id, owner_id, slug, title, description, logo_url, banner_url, store_location, category_focus")
+    .eq("slug", slugParam)
+    .maybeSingle();
+
+  return data;
+}
+
 async function getProfile(slugParam: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  // Try by id first (most common - UUIDs for real users)
   const { data: byId } = await supabase
     .from("profiles")
     .select("*")
@@ -21,7 +33,6 @@ async function getProfile(slugParam: string) {
 
   if (byId) return byId;
 
-  // Try by slug column (custom vanity URLs)
   const { data: bySlug } = await supabase
     .from("profiles")
     .select("*")
@@ -36,6 +47,21 @@ async function getProfile(slugParam: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const currentSlug = resolvedParams.slug;
+
+  const store = await getStoreBySlug(currentSlug);
+  if (store) {
+    return {
+      title: `${store.title} | Pro.CV`,
+      description: store.description || `Visite a loja ${store.title} na plataforma Pro.CV`,
+      openGraph: {
+        title: `${store.title} | Pro.CV`,
+        description: store.description || `Visite a loja ${store.title} na plataforma Pro.CV`,
+        type: "profile",
+        ...(store.logo_url && { images: [{ url: store.logo_url }] }),
+      },
+    };
+  }
+
   const profile = await getProfile(currentSlug);
 
   if (!profile) {
@@ -66,7 +92,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function StorePage({ params }: PageProps) {
   const resolvedParams = await params;
   const currentSlug = resolvedParams.slug;
-  const profile = await getProfile(currentSlug);
 
-  return <StorePageClient profileId={profile?.id || null} slug={currentSlug} />;
+  const store = await getStoreBySlug(currentSlug);
+  if (store) {
+    return <StorePageClient profileId={store.owner_id} slug={currentSlug} storeId={store.id} />;
+  }
+
+  const profile = await getProfile(currentSlug);
+  return <StorePageClient profileId={profile?.id || null} slug={currentSlug} storeId={null} />;
 }
