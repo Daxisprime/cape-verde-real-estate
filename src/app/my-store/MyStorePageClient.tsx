@@ -481,6 +481,32 @@ export default function MyStorePageClient() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
+      {/* Paywall Banner - shown when both conditions met */}
+      {profile?.paywall_active && (
+        <div className="max-w-5xl mx-auto px-4 pt-6">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-amber-900">A sua loja gerou mais de 15 leads de clientes!</h3>
+                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                  Parabens pelo sucesso! Para continuar a publicar anuncios e receber contactos de clientes, 
+                  atualize para uma subscricao mensal que lhe da acesso ilimitado.
+                </p>
+                <a
+                  href="/subscription"
+                  className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                >
+                  Ver Planos de Subscricao
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Profile Section */}
         <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">

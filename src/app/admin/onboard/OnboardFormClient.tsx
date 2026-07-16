@@ -12,6 +12,9 @@ import {
   Tag,
   Send,
   ArrowLeft,
+  MapPin,
+  DollarSign,
+  Package,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
@@ -29,7 +32,25 @@ const CATEGORIES = [
   "Food & Restaurants",
   "Building Materials",
   "Vehicles",
-  "Books",
+  "Books & Media",
+  "Health & Beauty",
+];
+
+const REGIONS = [
+  "Praia - Plateau",
+  "Praia - Palmarejo",
+  "Praia - Achada Sto Antonio",
+  "Praia - Fazenda",
+  "Praia - Sucupira",
+  "Mindelo - Centro",
+  "Mindelo - Laginha",
+  "Santa Maria - Sal",
+  "Espargos - Sal",
+  "Assomada - Santiago",
+  "Tarrafal - Santiago",
+  "Sal Rei - Boa Vista",
+  "Porto Novo - Santo Antao",
+  "Sao Filipe - Fogo",
 ];
 
 export default function OnboardFormClient() {
@@ -42,6 +63,9 @@ export default function OnboardFormClient() {
     whatsapp: "",
     store_name: "",
     category: "",
+    region: "",
+    seed_title: "",
+    seed_price: "",
   });
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreview, setPhotoPreview] = useState<string[]>([]);
@@ -57,15 +81,9 @@ export default function OnboardFormClient() {
 
     for (const file of files) {
       try {
-        const blob = await compressImage(file);
-        if (blob) {
-          const compFile = new File([blob], file.name.replace(/\.\w+$/, ".webp"), { type: "image/webp" });
-          compressed.push(compFile);
-          previews.push(URL.createObjectURL(compFile));
-        } else {
-          compressed.push(file);
-          previews.push(URL.createObjectURL(file));
-        }
+        const result = await compressImage(file);
+        compressed.push(result);
+        previews.push(URL.createObjectURL(result));
       } catch {
         compressed.push(file);
         previews.push(URL.createObjectURL(file));
@@ -76,6 +94,11 @@ export default function OnboardFormClient() {
     setPhotoPreview((p) => [...p, ...previews]);
   };
 
+  const removePhoto = (idx: number) => {
+    setPhotos((p) => p.filter((_, i) => i !== idx));
+    setPhotoPreview((p) => p.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !form.owner_name.trim() || !form.store_name.trim()) return;
@@ -83,16 +106,19 @@ export default function OnboardFormClient() {
     setSubmitting(true);
 
     const payload: Record<string, unknown> = {
-      title: form.store_name,
-      description: `Loja de ${form.owner_name} - ${form.category}`,
+      title: form.seed_title.trim() || form.store_name,
+      description: `Loja de ${form.owner_name} - ${form.category || "Geral"}`,
       category: form.category || "Services",
-      island: "Santiago",
+      island: form.region || "Santiago",
       contact_whatsapp: form.whatsapp || null,
       user_id: user.id,
       status: "active",
       condition: "new",
-      price_cve: 0,
+      price_cve: form.seed_price ? parseInt(form.seed_price, 10) : 0,
       onboarded_by_agent: user.id,
+      store_name: form.store_name,
+      owner_name: form.owner_name,
+      region: form.region || null,
       images: [],
     };
 
@@ -136,7 +162,6 @@ export default function OnboardFormClient() {
       payload.images = imageUrls;
 
       const { error } = await supabase.from("marketplace_items").insert(payload as never);
-
       if (error) throw error;
 
       toast({ title: "Vendedor registado!", description: "Dados enviados com sucesso." });
@@ -150,7 +175,7 @@ export default function OnboardFormClient() {
   };
 
   const resetForm = () => {
-    setForm({ owner_name: "", whatsapp: "", store_name: "", category: "" });
+    setForm({ owner_name: "", whatsapp: "", store_name: "", category: "", region: "", seed_title: "", seed_price: "" });
     setPhotos([]);
     setPhotoPreview([]);
     setTimeout(() => setSuccess(false), 3000);
@@ -168,7 +193,7 @@ export default function OnboardFormClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area-inset">
+    <div className="min-h-screen bg-gray-50">
       {/* Compact Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
@@ -176,16 +201,16 @@ export default function OnboardFormClient() {
             <a href="/admin" className="p-1.5 -ml-1.5 text-gray-500 hover:text-gray-700">
               <ArrowLeft className="w-5 h-5" />
             </a>
-            <h1 className="text-base font-bold text-gray-900">Onboarding</h1>
+            <h1 className="text-base font-bold text-gray-900">Registar Vendedor</h1>
           </div>
           <SyncStatusBadge />
         </div>
       </header>
 
       {/* Form */}
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-24">
         {success && (
-          <div className="mb-4 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+          <div className="mb-4 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 animate-in fade-in-0">
             <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
             <p className="text-sm font-medium text-emerald-700">Registo guardado com sucesso!</p>
           </div>
@@ -198,11 +223,11 @@ export default function OnboardFormClient() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Owner Name */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <User className="w-4 h-4" /> Nome do Proprietario
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <User className="w-4 h-4" /> Nome do Proprietario *
             </label>
             <input
               type="text"
@@ -217,14 +242,15 @@ export default function OnboardFormClient() {
 
           {/* WhatsApp */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <Phone className="w-4 h-4" /> WhatsApp
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <Phone className="w-4 h-4" /> WhatsApp *
             </label>
             <input
               type="tel"
               value={form.whatsapp}
               onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))}
               placeholder="+238 9XX XXXX"
+              required
               className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white"
               autoComplete="tel"
             />
@@ -232,8 +258,8 @@ export default function OnboardFormClient() {
 
           {/* Store Name */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <Store className="w-4 h-4" /> Nome da Loja
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <Store className="w-4 h-4" /> Nome da Loja *
             </label>
             <input
               type="text"
@@ -247,32 +273,91 @@ export default function OnboardFormClient() {
 
           {/* Category */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <Tag className="w-4 h-4" /> Categoria
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <Tag className="w-4 h-4" /> Categoria Principal
             </label>
             <select
               value={form.category}
               onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white appearance-none"
             >
-              <option value="">Selecionar categoria...</option>
+              <option value="">Selecionar...</option>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
 
+          {/* Region */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <MapPin className="w-4 h-4" /> Bairro / Regiao
+            </label>
+            <select
+              value={form.region}
+              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+              className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white appearance-none"
+            >
+              <option value="">Selecionar zona...</option>
+              {REGIONS.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 pt-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Produto Inicial</p>
+          </div>
+
+          {/* Seed Product Title */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <Package className="w-4 h-4" /> Titulo do Produto
+            </label>
+            <input
+              type="text"
+              value={form.seed_title}
+              onChange={(e) => setForm((f) => ({ ...f, seed_title: e.target.value }))}
+              placeholder="Ex: iPhone 13 Pro Max 256GB"
+              className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white"
+            />
+          </div>
+
+          {/* Seed Product Price */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <DollarSign className="w-4 h-4" /> Preco (CVE)
+            </label>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={form.seed_price}
+              onChange={(e) => setForm((f) => ({ ...f, seed_price: e.target.value }))}
+              placeholder="0"
+              min="0"
+              className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white"
+            />
+          </div>
+
           {/* Photo Capture */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <Camera className="w-4 h-4" /> Fotos
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <Camera className="w-4 h-4" /> Foto do Produto
             </label>
 
             {photoPreview.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {photoPreview.map((url, i) => (
-                  <div key={i} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
                     <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center text-xs"
+                    >
+                      x
+                    </button>
                   </div>
                 ))}
               </div>
@@ -284,7 +369,7 @@ export default function OnboardFormClient() {
               className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 font-medium hover:border-teal-400 hover:text-teal-600 active:bg-teal-50 transition-colors"
             >
               <Camera className="w-5 h-5" />
-              Tirar Foto
+              Tirar Foto do Produto
             </button>
             <input
               ref={fileInputRef}
@@ -295,6 +380,7 @@ export default function OnboardFormClient() {
               onChange={handlePhotoCapture}
               className="hidden"
             />
+            <p className="text-[11px] text-gray-400 mt-1">Compressao automatica WebP (max 200KB)</p>
           </div>
 
           {/* Submit */}
@@ -308,7 +394,7 @@ export default function OnboardFormClient() {
             ) : (
               <Send className="w-5 h-5" />
             )}
-            {submitting ? "A enviar..." : "Registar Vendedor"}
+            {submitting ? "A enviar..." : "Guardar Loja"}
           </button>
         </form>
 

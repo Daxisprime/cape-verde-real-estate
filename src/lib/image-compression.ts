@@ -10,11 +10,11 @@ interface CompressionOptions {
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxSizeMB: 0.15,
-  maxWidthOrHeight: 1200,
+  maxSizeMB: 0.19,
+  maxWidthOrHeight: 1024,
   useWebWorker: false,
   fileType: 'image/webp',
-  initialQuality: 0.7,
+  initialQuality: 0.75,
   maxIteration: 20,
 };
 
@@ -39,12 +39,28 @@ export async function compressImage(
     return file;
   }
 
-  if (compressed.size > merged.maxSizeMB * 1024 * 1024) {
+  // If still over 200KB, do a second aggressive pass
+  if (compressed.size > 200 * 1024) {
     try {
       compressed = await imageCompression(file, {
         ...merged,
-        fileType: file.type || 'image/jpeg',
         maxWidthOrHeight: 800,
+        initialQuality: 0.6,
+        maxIteration: 30,
+      });
+    } catch {
+      // Keep first-pass result
+    }
+  }
+
+  // Final fallback: reduce to JPEG if WebP still too large
+  if (compressed.size > 200 * 1024) {
+    try {
+      compressed = await imageCompression(file, {
+        maxSizeMB: 0.19,
+        maxWidthOrHeight: 768,
+        useWebWorker: false,
+        fileType: 'image/jpeg',
         initialQuality: 0.5,
         maxIteration: 30,
       });
@@ -57,8 +73,9 @@ export async function compressImage(
     return file;
   }
 
-  const outputType = compressed.type || file.type || 'image/jpeg';
+  const outputType = compressed.type || 'image/webp';
   const ext = outputType.includes('webp') ? 'webp' : outputType.includes('png') ? 'png' : 'jpg';
+  const baseName = file.name.replace(/\.[^.]+$/, '');
   const buffer = await compressed.arrayBuffer();
-  return new File([buffer], `avatar.${ext}`, { type: outputType, lastModified: Date.now() });
+  return new File([buffer], `${baseName}.${ext}`, { type: outputType, lastModified: Date.now() });
 }
