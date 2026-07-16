@@ -420,18 +420,18 @@ export default function StorePageClient({ profileId, slug }: Props) {
                 )}
 
                 {/* Rating */}
-                {profile.review_count > 0 && (
+                {(reviewCount > 0 || profile.review_count > 0) && (
                   <div className="mt-3 flex items-center justify-center gap-1.5">
                     <div className="flex items-center gap-0.5">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={`w-4 h-4 ${star <= Math.round(profile.rating_average) ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
+                          className={`w-4 h-4 ${star <= Math.round(avgRating || profile.rating_average) ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">{profile.rating_average.toFixed(1)}</span>
-                    <span className="text-sm text-gray-400">({profile.review_count})</span>
+                    <span className="text-sm font-semibold text-gray-700">{(avgRating || profile.rating_average).toFixed(1)}</span>
+                    <span className="text-sm text-gray-400">({reviewCount || profile.review_count} avaliacoes)</span>
                   </div>
                 )}
 

@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabas
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ShareButton from '@/components/ShareButton';
+import ReviewDrawer from '@/components/ReviewDrawer';
 import { incrementLeadsDirect } from '@/lib/vendor-performance';
 
 const CVE_TO_EUR = 0.00907;
@@ -71,6 +72,8 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
   // Inquiry form
   const [inquiryForm, setInquiryForm] = useState({ fullName: '', email: '', phone: '', message: '' });
   const [inquiryStatus, setInquiryStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [showRatePrompt, setShowRatePrompt] = useState(false);
+  const [reviewDrawerOpen, setReviewDrawerOpen] = useState(false);
 
   // Touch handling for carousel
   const touchStartX = useRef(0);
@@ -185,6 +188,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
 
       if (error) throw error;
       setInquiryStatus('sent');
+      setTimeout(() => setShowRatePrompt(true), 2000);
     } catch {
       setInquiryStatus('error');
     }
@@ -215,6 +219,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
   const extraPhotos = images.length > 4 ? images.length - 4 : 0;
 
   return (
+    <>
     <div className="fixed inset-0 z-[100]">
       {/* Backdrop */}
       <div
@@ -467,8 +472,20 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                     </div>
 
                     {inquiryStatus === 'sent' ? (
-                      <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
-                        <p className="text-sm font-medium text-green-800">{t.inquirySent}</p>
+                      <div className="space-y-3">
+                        <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+                          <p className="text-sm font-medium text-green-800">{t.inquirySent}</p>
+                        </div>
+                        {showRatePrompt && item?.user_id && (
+                          <button
+                            type="button"
+                            onClick={() => setReviewDrawerOpen(true)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                          >
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                            <span className="text-sm font-medium text-amber-800">Avaliar este Vendedor</span>
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <form onSubmit={handleInquirySubmit} className="space-y-3">
@@ -567,8 +584,20 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                   </div>
 
                   {inquiryStatus === 'sent' ? (
-                    <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
-                      <p className="text-sm font-medium text-green-800">{t.inquirySent}</p>
+                    <div className="space-y-3">
+                      <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+                        <p className="text-sm font-medium text-green-800">{t.inquirySent}</p>
+                      </div>
+                      {showRatePrompt && item?.user_id && (
+                        <button
+                          type="button"
+                          onClick={() => setReviewDrawerOpen(true)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                        >
+                          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          <span className="text-sm font-medium text-amber-800">Avaliar este Vendedor</span>
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <form onSubmit={handleInquirySubmit} className="space-y-3">
@@ -749,5 +778,15 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
         </div>
       )}
     </div>
+
+    {item?.user_id && (
+      <ReviewDrawer
+        vendorId={item.user_id}
+        vendorName={item.title || "Vendedor"}
+        isOpen={reviewDrawerOpen}
+        onClose={() => setReviewDrawerOpen(false)}
+      />
+    )}
+    </>
   );
 }
