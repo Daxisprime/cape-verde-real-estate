@@ -52,15 +52,23 @@ export default function SettingsPageClient() {
 
   const [verificationStatus, setVerificationStatus] = useState<string>("unverified");
   const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+  const [verificationForm, setVerificationForm] = useState({ fullName: "", nifNumber: "" });
+  const [verificationDoc, setVerificationDoc] = useState<File | null>(null);
 
   useEffect(() => {
     async function loadVerificationStatus() {
       if (!user?.id) return;
       const supabase = createSupabaseBrowserClient();
       if (!supabase) return;
-      const { data } = await supabase.from("profiles").select("verification_status").eq("id", user.id).maybeSingle();
-      if (data && (data as Record<string, unknown>).verification_status) {
-        setVerificationStatus((data as Record<string, unknown>).verification_status as string);
+      const { data } = await supabase
+        .from("merchant_verifications")
+        .select("status")
+        .eq("user_id", user.id)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setVerificationStatus(data.status);
       }
     }
     loadVerificationStatus();
@@ -68,15 +76,38 @@ export default function SettingsPageClient() {
 
   const handleVerificationSubmit = async () => {
     if (!user?.id) return;
+    if (!verificationForm.fullName.trim() || !verificationForm.nifNumber.trim()) {
+      toast({ title: "Erro", description: "Nome completo e NIF/BI sao obrigatorios.", variant: "destructive" });
+      return;
+    }
     setVerificationSubmitting(true);
     const supabase = createSupabaseBrowserClient();
     if (!supabase) { setVerificationSubmitting(false); return; }
-    const { error } = await supabase.from("profiles").update({ verification_status: "pending_review" } as never).eq("id", user.id);
+
+    let docUrl: string | null = null;
+    if (verificationDoc) {
+      const path = `${user.id}/${Date.now()}-${verificationDoc.name}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("verification-docs")
+        .upload(path, verificationDoc, { upsert: true });
+      if (!uploadErr) {
+        docUrl = path;
+      }
+    }
+
+    const { error } = await supabase.from("merchant_verifications").insert({
+      full_legal_name: verificationForm.fullName.trim(),
+      nif_number: verificationForm.nifNumber.trim(),
+      id_document_url: docUrl,
+    } as never);
+
     if (!error) {
       setVerificationStatus("pending_review");
+      setVerificationForm({ fullName: "", nifNumber: "" });
+      setVerificationDoc(null);
       toast({ title: "Pedido Enviado", description: "Os seus documentos estao em revisao. Sera notificado quando aprovado." });
     } else {
-      toast({ title: "Erro", description: "Falha ao submeter pedido.", variant: "destructive" });
+      toast({ title: "Erro", description: "Falha ao submeter pedido. Tente novamente.", variant: "destructive" });
     }
     setVerificationSubmitting(false);
   };
@@ -931,33 +962,84 @@ export default function SettingsPageClient() {
                       </ul>
                     </div>
 
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="v-fullname">Nome Legal Completo *</Label>
+                        <input
+                          id="v-fullname"
+                          type="text"
+                          value={verificationForm.fullName}
+                          onChange={(e) => setVerificationForm(f => ({ ...f, fullName: e.target.value }))}
+                          placeholder="Nome conforme o documento..."
+                          className="mt-1 w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="v-nif">NIF / BI *</Label>
+                        <input
+                          id="v-nif"
+                          type="text"
+                          value={verificationForm.nifNumber}
+                          onChange={(e) => setVerificationForm(f => ({ ...f, nifNumber: e.target.value }))}
+                          placeholder="Numero do NIF ou BI..."
+                          className="mt-1 w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <Label htmlFor="verification-doc">Carregar Documento (NIF ou BI)</Label>
-                      <div className="mt-1.5 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-gray-300 transition-colors cursor-pointer">
+                      <div
+                        className="mt-1.5 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-gray-300 transition-colors cursor-pointer"
+                        onClick={() => document.getElementById("verification-doc")?.click()}
+                      >
                         <Shield className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                        <p className="text-xs text-gray-500">Arraste ou clique para carregar</p>
-                        <p className="text-[11px] text-gray-400 mt-1">PDF, JPG ou PNG (max 5MB)</p>
+                        {verificationDoc ? (
+                          <p className="text-xs text-teal-700 font-medium">{verificationDoc.name}</p>
+                        ) : (
+                          <>
+                            <p className="text-xs text-gray-500">Arraste ou clique para carregar</p>
+                            <p className="text-[11px] text-gray-400 mt-1">PDF, JPG ou PNG (max 5MB)</p>
+                          </>
+                        )}
                         <input
                           type="file"
                           id="verification-doc"
                           className="hidden"
                           accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setVerificationDoc(e.target.files?.[0] || null)}
                         />
                       </div>
                     </div>
 
                     <Button
                       onClick={handleVerificationSubmit}
-                      disabled={verificationSubmitting}
+                      disabled={verificationSubmitting || !verificationForm.fullName.trim() || !verificationForm.nifNumber.trim()}
                       className="w-full"
                     >
                       <Shield className="h-4 w-4 mr-2" />
-                      {verificationSubmitting ? "A submeter..." : "Submeter para Verificacao"}
+                      {verificationSubmitting ? "A submeter..." : "Verificar Minha Loja (Gratis)"}
                     </Button>
 
                     <p className="text-[11px] text-gray-400 text-center">
                       Este servico e 100% gratuito. A verificacao demora 1-3 dias uteis.
                     </p>
+                  </div>
+                )}
+
+                {verificationStatus === "rejected" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <Shield className="h-6 w-6 text-red-600" />
+                      <div>
+                        <p className="text-sm font-bold text-red-900">Verificacao Rejeitada</p>
+                        <p className="text-xs text-red-700">Os documentos nao foram aceites. Pode submeter novamente com documentos corretos.</p>
+                      </div>
+                    </div>
+                    <Button onClick={() => setVerificationStatus("unverified")} variant="outline" className="w-full">
+                      Tentar Novamente
+                    </Button>
                   </div>
                 )}
               </CardContent>

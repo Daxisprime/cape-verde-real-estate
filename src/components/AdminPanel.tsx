@@ -14,6 +14,9 @@ import {
   ToggleLeft,
   ToggleRight,
   CreditCard,
+  Shield,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 interface AdminListing {
@@ -37,7 +40,7 @@ interface AdminProfile {
 }
 
 export default function AdminPanel() {
-  const [activeSection, setActiveSection] = useState<"listings" | "users" | "paywall">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "users" | "paywall" | "verifications">("listings");
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [profiles, setProfiles] = useState<AdminProfile[]>([]);
   const [loadingListings, setLoadingListings] = useState(false);
@@ -47,6 +50,9 @@ export default function AdminPanel() {
   const [paywallGlobal, setPaywallGlobal] = useState(false);
   const [paywallLoading, setPaywallLoading] = useState(false);
   const [paywallToggling, setPaywallToggling] = useState(false);
+  const [pendingVerifications, setPendingVerifications] = useState<Array<{id: string; user_id: string; full_legal_name: string; nif_number: string; id_document_url: string | null; status: string; submitted_at: string}>>([]);
+  const [loadingVerifications, setLoadingVerifications] = useState(false);
+  const [processingVerification, setProcessingVerification] = useState<string | null>(null);
 
   const fetchListings = useCallback(async () => {
     setLoadingListings(true);
@@ -162,11 +168,47 @@ export default function AdminPanel() {
     setPaywallToggling(false);
   };
 
+  const fetchVerifications = useCallback(async () => {
+    setLoadingVerifications(true);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setLoadingVerifications(false); return; }
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token || "";
+    try {
+      const res = await fetch("/api/verifications?status=pending_review", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingVerifications(data.verifications || []);
+      }
+    } catch { /* silent */ }
+    setLoadingVerifications(false);
+  }, []);
+
+  const handleVerificationDecision = async (verificationId: string, decision: "verified" | "rejected") => {
+    setProcessingVerification(verificationId);
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) { setProcessingVerification(null); return; }
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token || "";
+    try {
+      await fetch("/api/verifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ verificationId, newStatus: decision }),
+      });
+      setPendingVerifications((prev) => prev.filter((v) => v.id !== verificationId));
+    } catch { /* silent */ }
+    setProcessingVerification(null);
+  };
+
   useEffect(() => {
     if (activeSection === "listings") fetchListings();
     else if (activeSection === "users") fetchProfiles();
+    else if (activeSection === "verifications") fetchVerifications();
     else fetchPaywallStatus();
-  }, [activeSection, fetchListings, fetchProfiles, fetchPaywallStatus]);
+  }, [activeSection, fetchListings, fetchProfiles, fetchPaywallStatus, fetchVerifications]);
 
   const handleBanListing = async (listing: AdminListing) => {
     setBanningId(listing.id);
@@ -238,6 +280,17 @@ export default function AdminPanel() {
         >
           <CreditCard className="h-4 w-4" />
           Paywall
+        </button>
+        <button
+          onClick={() => setActiveSection("verifications")}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            activeSection === "verifications"
+              ? "text-teal-700 border-b-2 border-teal-600 bg-teal-50/50"
+              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          <Shield className="h-4 w-4" />
+          Verificacoes
         </button>
       </div>
 
@@ -464,6 +517,68 @@ export default function AdminPanel() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeSection === "verifications" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-gray-900">Pedidos de Verificacao Pendentes</h3>
+              <button onClick={fetchVerifications} className="text-xs text-teal-600 font-medium hover:underline">
+                Atualizar
+              </button>
+            </div>
+
+            {loadingVerifications ? (
+              <div className="text-center py-8 text-sm text-gray-400">A carregar...</div>
+            ) : pendingVerifications.length === 0 ? (
+              <div className="text-center py-12 bg-white border border-gray-200 rounded-xl">
+                <Shield className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">Nenhum pedido pendente</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingVerifications.map((v) => (
+                  <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{v.full_legal_name}</p>
+                        <p className="text-xs text-gray-500 font-mono mt-0.5">NIF/BI: {v.nif_number}</p>
+                      </div>
+                      <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                        Pendente
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-gray-400">
+                      Submetido: {new Date(v.submitted_at).toLocaleDateString("pt-CV")}
+                      {v.id_document_url && (
+                        <span className="ml-2 text-teal-600">Documento anexado</span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => handleVerificationDecision(v.id, "verified")}
+                        disabled={processingVerification === v.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Aprovar
+                      </button>
+                      <button
+                        onClick={() => handleVerificationDecision(v.id, "rejected")}
+                        disabled={processingVerification === v.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Rejeitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
