@@ -46,6 +46,7 @@ import {
   Ruler,
   Globe,
   RotateCcw,
+  Mail,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -577,6 +578,23 @@ export default function MyStorePageClient() {
 
         {isAdmin && <AdminPanel />}
 
+        {/* Email Verification Reminder */}
+        {user && !user.email_confirmed_at && user.email && (
+          <section className="mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-bold text-blue-900">Verifique o seu Email</h3>
+                  <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                    Enviamos um link de confirmacao para <strong>{user.email}</strong>. Verifique a caixa de entrada e spam. A sua conta funciona normalmente enquanto isso.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {paywallActive && (
           <section className="mb-6">
             <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
@@ -721,8 +739,25 @@ export default function MyStorePageClient() {
 
                   {storefrontForm.banner_style === "gradient" && (
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Pre-visualizacao</label>
-                      <div className="w-full h-20 rounded-lg bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" />
+                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Escolha um Gradiente</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: "ocean_blue", label: "Ocean Blue", css: "bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" },
+                          { id: "volcanic_sunset", label: "Volcanic Sunset", css: "bg-gradient-to-r from-orange-500 via-rose-500 to-red-600" },
+                          { id: "mindelo_night", label: "Mindelo Night", css: "bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800" },
+                          { id: "praia_palm", label: "Praia Palm", css: "bg-gradient-to-r from-emerald-600 via-green-500 to-teal-400" },
+                        ].map((grad) => (
+                          <button
+                            key={grad.id}
+                            type="button"
+                            onClick={() => setStorefrontForm((p) => ({ ...p, store_banner: grad.id }))}
+                            className={`relative rounded-lg overflow-hidden border-2 transition-all ${storefrontForm.store_banner === grad.id ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200 hover:border-gray-300"}`}
+                          >
+                            <div className={`w-full h-14 ${grad.css}`} />
+                            <span className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[9px] py-0.5 text-center font-medium">{grad.label}</span>
+                          </button>
+                        ))}
+                      </div>
                       <p className="text-[10px] text-gray-400 mt-1">Gradiente CSS — 0 bytes de imagem, carregamento instantaneo.</p>
                     </div>
                   )}

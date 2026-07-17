@@ -196,6 +196,18 @@ function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedLis
   return null;
 }
 
+const GRADIENT_MAP: Record<string, string> = {
+  ocean_blue: 'bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500',
+  volcanic_sunset: 'bg-gradient-to-r from-orange-500 via-rose-500 to-red-600',
+  mindelo_night: 'bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800',
+  praia_palm: 'bg-gradient-to-r from-emerald-600 via-green-500 to-teal-400',
+};
+
+function getGradientClass(banner: string | null): string {
+  if (!banner) return GRADIENT_MAP.ocean_blue;
+  return GRADIENT_MAP[banner] || GRADIENT_MAP.ocean_blue;
+}
+
 export default function StorePageClient({ profileId, slug, storeId }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<UnifiedListing[]>([]);
@@ -397,8 +409,17 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         <div className="w-full relative overflow-hidden">
           {/* Banner - respects banner_style preference */}
           {profile.banner_style === 'gradient' ? (
-            <div className="w-full h-48 sm:h-56 lg:h-64 bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" />
-          ) : profile.store_banner ? (
+            <div className={`w-full h-48 sm:h-56 lg:h-64 ${getGradientClass(profile.store_banner)}`} />
+          ) : profile.banner_style === 'stock' && profile.store_banner ? (
+            <div className="w-full h-48 sm:h-56 lg:h-64 relative">
+              <img
+                src={profile.store_banner}
+                alt={`${profile.store_name || profile.name} banner`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+            </div>
+          ) : profile.store_banner && profile.store_banner.startsWith('http') ? (
             <div className="w-full h-48 sm:h-56 lg:h-64 relative">
               <img
                 src={profile.store_banner}

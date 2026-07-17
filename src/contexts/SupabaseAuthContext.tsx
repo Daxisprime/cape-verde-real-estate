@@ -145,8 +145,40 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         ...(captchaToken ? { captchaToken } : {}),
       },
     });
-    const confirmationRequired = !error && !data.session;
-    return { error, confirmationRequired };
+    if (error) return { error, confirmationRequired: false };
+
+    const confirmationRequired = !data.session;
+
+    // If no session was returned (confirmation required), sign in immediately
+    // so the user isn't blocked from accessing their account
+    if (confirmationRequired && data.user) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (!signInError && signInData?.user && signInData?.session) {
+        const profile = await ensureProfile(signInData.user);
+        setState({
+          user: signInData.user,
+          session: signInData.session,
+          profile,
+          isLoading: false,
+          isAuthenticated: true,
+        });
+        return { error: null, confirmationRequired: true };
+      }
+    } else if (data.session && data.user) {
+      const profile = await ensureProfile(data.user);
+      setState({
+        user: data.user,
+        session: data.session,
+        profile,
+        isLoading: false,
+        isAuthenticated: true,
+      });
+    }
+
+    return { error: null, confirmationRequired };
   };
 
   const ensureProfile = useCallback(async (user: User): Promise<Profile | null> => {
@@ -230,7 +262,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const updateProfile = async (updates: Partial<Profile>): Promise<{ error: Error | null }> => {
     if (!supabase || !state.user) return { error: new Error('Not authenticated') };
     const { role, roles, ...safeUpdates } = updates as Partial<Profile> & { roles?: unknown };
-    const { error } = await supabase.from('profiles').update(safeUpdates).eq('id', state.user.id);
+    const { error } = await supabase.from('profiles').update(safeUpdates as never).eq('id', state.user.id);
     if (error) return { error };
     const profile = await fetchProfile(state.user.id);
     setState(prev => ({ ...prev, profile }));

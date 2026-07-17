@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const AUTH_COOKIE_NAME = 'procv-auth-token';
-const LEGACY_COOKIES = ['sb-access-token', 'sb-refresh-token'];
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -15,37 +14,30 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
+  // Check all possible Supabase session cookie shapes
   const sessionCookie = request.cookies.get(AUTH_COOKIE_NAME)?.value;
-  const legacyAccess = request.cookies.get(LEGACY_COOKIES[0])?.value;
-  const legacyRefresh = request.cookies.get(LEGACY_COOKIES[1])?.value;
 
-  const hasSession = !!(sessionCookie || legacyAccess || legacyRefresh);
+  // Supabase stores session in cookies with the pattern: sb-<ref>-auth-token
+  const allCookies = request.cookies.getAll();
+  const supabaseCookie = allCookies.find(
+    (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+  );
+  const supabaseCookieChunked = allCookies.find(
+    (c) => c.name.startsWith('sb-') && c.name.includes('-auth-token.')
+  );
 
-  if (hasSession) {
-    const tokenToCheck = legacyAccess || null;
-    if (tokenToCheck) {
-      try {
-        const parts = tokenToCheck.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          const exp = payload.exp;
-          if (exp && Date.now() / 1000 > exp) {
-            const clearResponse = NextResponse.next();
-            clearResponse.cookies.delete(LEGACY_COOKIES[0]);
-            clearResponse.cookies.delete(LEGACY_COOKIES[1]);
-            return clearResponse;
-          }
-        }
-      } catch {
-        const clearResponse = NextResponse.next();
-        clearResponse.cookies.delete(LEGACY_COOKIES[0]);
-        clearResponse.cookies.delete(LEGACY_COOKIES[1]);
-        return clearResponse;
-      }
-    }
+  const hasSession = !!(sessionCookie || supabaseCookie?.value || supabaseCookieChunked?.value);
+
+  // If no session exists at all, allow the page to render -- the client-side
+  // auth context will handle redirect if needed. This prevents blocking users
+  // who have a valid session that hasn't been written to cookies yet (e.g. fresh login).
+  if (!hasSession) {
+    // Still allow access -- the client-side SupabaseAuthContext handles auth state.
+    // This avoids the race condition where middleware blocks before the session cookie is set.
+    return response;
   }
 
-  // Set secure cookie attributes on response for production domain transit
+  // Set security headers in production
   if (process.env.NODE_ENV === 'production') {
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');

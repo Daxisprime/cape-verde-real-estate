@@ -221,20 +221,18 @@ export default function AuthClient() {
           setError(error.message);
           captchaRef.current?.resetCaptcha();
           setCaptchaToken(null);
-        } else if (confirmationRequired) {
-          setSuccess('Conta criada! Verifique o seu email para confirmar, depois entre.');
-          setFormMode('signin');
-          setPassword('');
         } else {
           if (supabase) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              await supabase.from('profiles').update({ name: fullName } as never).eq('id', user.id);
+            const { data: { user: newUser } } = await supabase.auth.getUser();
+            if (newUser) {
+              await supabase.from('profiles').update({ name: fullName } as never).eq('id', newUser.id);
             }
           }
-          setSuccess('Conta criada com sucesso!');
-          setFormMode('signin');
-          setPassword('');
+          // Redirect immediately regardless of email confirmation status
+          if (confirmationRequired) {
+            setSuccess('Conta criada! Redirecionando...');
+          }
+          router.push('/my-store');
         }
       }
     } catch {
