@@ -18,6 +18,7 @@ import {
   FileText,
 } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
+import InternationalPhoneInput from "@/components/InternationalPhoneInput";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { compressImage } from "@/lib/image-compression";
 import { useToast } from "@/hooks/use-toast";
@@ -259,15 +260,13 @@ export default function OnboardFormClient() {
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
               <Phone className="w-4 h-4" /> WhatsApp *
             </label>
-            <input
-              type="tel"
+            <InternationalPhoneInput
               value={form.whatsapp}
-              onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))}
-              placeholder="+238 9XX XXXX"
+              onChange={(val) => setForm((f) => ({ ...f, whatsapp: val }))}
               required
-              className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white"
-              autoComplete="tel"
+              placeholder="9XX XXXX"
             />
+            <p className="text-[10px] text-gray-400 mt-1">Prefixo internacional incluido automaticamente</p>
           </div>
 
           {/* Store Name */}

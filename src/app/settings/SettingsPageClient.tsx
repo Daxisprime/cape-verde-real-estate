@@ -9,6 +9,7 @@ import {
   Lock, Smartphone, Languages, Link2, Loader2
 } from "lucide-react";
 import UserLinksManager from "@/components/UserLinksManager";
+import InternationalPhoneInput from "@/components/InternationalPhoneInput";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
@@ -40,10 +41,12 @@ export default function SettingsPageClient() {
   const [activeTab, setActiveTab] = useState("profile");
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
+    whatsappNumber: "",
     avatar: user?.avatar || "",
     facebookHandle: "",
     twitterHandle: "",
@@ -76,6 +79,28 @@ export default function SettingsPageClient() {
       }
     }
     loadVerificationStatus();
+  }, [user?.id]);
+
+  useEffect(() => {
+    async function loadPhoneData() {
+      if (!user?.id) return;
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("whatsapp_number, phone_verified, phone")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) {
+        if (data.whatsapp_number) {
+          setProfileData(prev => ({ ...prev, whatsappNumber: data.whatsapp_number, phone: data.whatsapp_number }));
+        } else if (data.phone) {
+          setProfileData(prev => ({ ...prev, phone: data.phone }));
+        }
+        setPhoneVerified(data.phone_verified ?? false);
+      }
+    }
+    loadPhoneData();
   }, [user?.id]);
 
   const handleVerificationSubmit = async () => {
@@ -206,6 +231,7 @@ export default function SettingsPageClient() {
             name: profileData.name,
             email: profileData.email,
             phone: profileData.phone,
+            whatsapp_number: profileData.whatsappNumber || profileData.phone || null,
             facebook_handle: profileData.facebookHandle || null,
             twitter_handle: profileData.twitterHandle || null,
             website_url: profileData.websiteUrl || null,
@@ -525,13 +551,21 @@ export default function SettingsPageClient() {
                   </div>
 
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="+238 123 456 789"
+                    <Label htmlFor="phone" className="flex items-center gap-2">
+                      WhatsApp / Telefone
+                      {phoneVerified && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-semibold text-emerald-700">
+                          <CheckCircle className="w-3 h-3" />
+                          Contacto Verificado
+                        </span>
+                      )}
+                    </Label>
+                    <InternationalPhoneInput
+                      value={profileData.whatsappNumber || profileData.phone}
+                      onChange={(val) => setProfileData(prev => ({ ...prev, whatsappNumber: val, phone: val }))}
+                      placeholder="9XX XXXX"
                     />
+                    <p className="text-[10px] text-gray-400 mt-1">Formato internacional com prefixo de pais</p>
                   </div>
 
                   <div>
