@@ -54,6 +54,13 @@ export default function Footer() {
           >
             {isPt ? "Seguranca" : "Safety Tips"}
           </Link>
+          <span className="text-gray-600">|</span>
+          <button
+            onClick={() => window.dispatchEvent(new Event('open-cookie-settings'))}
+            className="text-xs text-gray-400 hover:text-white transition-colors"
+          >
+            {isPt ? "Definicoes de Cookies" : "Cookie Settings"}
+          </button>
         </div>
 
         {/* Social Media Icons */}
