@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User, Plus } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
-import SyncStatusBadge from '@/components/SyncStatusBadge';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useLanguage, languages as langConfig, LanguageCode } from '@/contexts/LanguageContext';
@@ -388,7 +387,6 @@ export default function Header() {
           </div>
 
           {/* Sync Status + Notification Bell */}
-          {isAuthenticated && <SyncStatusBadge />}
           {isAuthenticated && <NotificationBell />}
 
           {/* Profile Avatar - FAR RIGHT */}

@@ -4,10 +4,10 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ImagePlus, X, Loader2, Zap, AlertTriangle, Crown, Facebook } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { compressImage } from "@/lib/image-compression";
-import { isOffline, enqueueOfflineSubmission } from "@/lib/offline-queue";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkListingLimit } from "@/lib/listing-limits";
+import { useToast } from "@/hooks/use-toast";
 import AuthModal from "@/components/AuthModal";
 
 const QUICK_CATEGORIES = [
@@ -33,6 +33,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
   const { user } = useSupabaseAuth();
   const { t } = useLanguage();
   const [title, setTitle] = useState("");
+  const { toast } = useToast();
   const [price, setPrice] = useState("");
   const [island, setIsland] = useState("");
   const [municipality, setMunicipality] = useState("");
@@ -108,17 +109,6 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
     try {
       if (!user?.id) throw new Error("Authentication required");
 
-      if (isOffline()) {
-        const payload = isProperty
-          ? { title, price: parseFloat(price), property_type: category, listing_type: 'sale', island, location: municipality || island, images: [], agent_id: user.id, status: 'active' }
-          : { title, price_cve: parseFloat(price), category: category || "General", island, municipality: municipality || null, images: [], user_id: user.id, status: 'active', condition, contact_whatsapp: whatsapp || null };
-        const endpoint = isProperty ? 'properties:insert' : 'marketplace_items:insert';
-        await enqueueOfflineSubmission(endpoint, payload);
-        setStatus("success");
-        onSuccess?.();
-        return;
-      }
-
       const supabase = createSupabaseBrowserClient();
       if (!supabase) throw new Error("Supabase not configured");
 
@@ -191,9 +181,18 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       setStatus("success");
       onSuccess?.();
     } catch (err: unknown) {
-      const msg = (err as { message?: string })?.message || "Failed to post. Try again.";
-      setErrorMessage(msg);
+      const msg = (err as { message?: string })?.message || "";
+      const isNetworkError = msg.includes("fetch") || msg.includes("network") || msg.includes("Failed to fetch") || !navigator.onLine;
+      const displayMsg = isNetworkError
+        ? "Erro de conexão. Certifique-se de que tem os dados móveis ativos e tente novamente."
+        : msg || "Failed to post. Try again.";
+      setErrorMessage(displayMsg);
       setStatus("error");
+      toast({
+        title: "Erro",
+        description: displayMsg,
+        variant: "destructive",
+      });
     }
   }, [user, title, price, island, municipality, category, description, whatsapp, facebookHandle, condition, images, isProperty, onSuccess]);
 

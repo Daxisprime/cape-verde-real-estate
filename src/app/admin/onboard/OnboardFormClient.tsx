@@ -5,7 +5,6 @@ import {
   Camera,
   Loader2,
   CheckCircle,
-  WifiOff,
   User,
   Phone,
   Store,
@@ -21,9 +20,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { compressImage } from "@/lib/image-compression";
-import { enqueueOfflineSubmission, isOffline } from "@/lib/offline-queue";
 import { useToast } from "@/hooks/use-toast";
-import SyncStatusBadge from "@/components/SyncStatusBadge";
 
 const CATEGORIES = [
   "Fashion",
@@ -151,18 +148,6 @@ export default function OnboardFormClient() {
       p_product_image_path: null as string | null,
     };
 
-    if (isOffline()) {
-      await enqueueOfflineSubmission("merchant_onboardings:rpc", payload, []);
-      toast({
-        title: "Guardado localmente",
-        description: "Sera sincronizado automaticamente quando tiver sinal.",
-      });
-      setSuccess(true);
-      setSubmitting(false);
-      resetForm();
-      return;
-    }
-
     try {
       const supabase = createSupabaseBrowserClient();
       if (!supabase) throw new Error("Supabase nao configurado");
@@ -201,9 +186,13 @@ export default function OnboardFormClient() {
       setSuccess(true);
       resetForm();
     } catch (err) {
+      const message = (err as Error).message || "";
+      const isNetworkError = message.includes("fetch") || message.includes("network") || message.includes("Failed to fetch") || !navigator.onLine;
       toast({
         title: "Erro",
-        description: (err as Error).message || "Falha ao submeter registo.",
+        description: isNetworkError
+          ? "Erro de conexão. Certifique-se de que tem os dados móveis ativos e tente novamente."
+          : message || "Falha ao submeter registo.",
         variant: "destructive",
       });
     } finally {
@@ -247,7 +236,7 @@ export default function OnboardFormClient() {
               </p>
             </div>
           </div>
-          <SyncStatusBadge />
+
         </div>
       </header>
 
@@ -260,12 +249,6 @@ export default function OnboardFormClient() {
           </div>
         )}
 
-        {isOffline() && (
-          <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            <WifiOff className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <p className="text-sm font-medium text-amber-700">Modo offline — dados serao sincronizados depois.</p>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Owner Name */}

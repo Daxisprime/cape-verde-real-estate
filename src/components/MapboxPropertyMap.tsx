@@ -37,8 +37,7 @@ interface MapboxPropertyMapProps {
 }
 
 // Mapbox token
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ||
-  'process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 
 // Default properties
 const defaultProperties: PropertyData[] = [

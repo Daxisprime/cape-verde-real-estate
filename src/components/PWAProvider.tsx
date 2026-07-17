@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { flushOfflineQueue } from '@/lib/offline-queue';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
 
-// TypeScript interfaces for PWA install prompt event
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -23,14 +20,12 @@ interface PWAProviderProps {
 }
 
 export default function PWAProvider({ children }: PWAProviderProps) {
-  const [isOnline, setIsOnline] = useState(true);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const registerServiceWorker = async () => {
-      // Delay service worker registration to not block initial page load
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       try {
@@ -39,30 +34,16 @@ export default function PWAProvider({ children }: PWAProviderProps) {
           updateViaCache: 'none'
         });
 
-        console.log('Service Worker registered:', registration);
-
-        // Handle service worker updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version available
                 toast({
-                  title: "🔄 Update Available",
-                  description: "A new version of ProCV is ready. Refresh to update.",
+                  title: "Atualiza\u00e7\u00e3o dispon\u00edvel",
+                  description: "Uma nova vers\u00e3o do ProCV est\u00e1 pronta. Atualize a p\u00e1gina.",
                 });
               }
-            });
-          }
-        });
-
-        // Handle service worker messages
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data && event.data.type === 'CACHE_UPDATED') {
-            toast({
-              title: "📦 Cache Updated",
-              description: "New content is available for offline use.",
             });
           }
         });
@@ -72,43 +53,10 @@ export default function PWAProvider({ children }: PWAProviderProps) {
       }
     };
 
-    // Register service worker
     if ('serviceWorker' in navigator) {
       registerServiceWorker();
     }
 
-    // Setup online/offline listeners
-    const handleOnline = async () => {
-      setIsOnline(true);
-      toast({
-        title: "Back Online",
-        description: "Your connection has been restored.",
-      });
-      const supabase = createSupabaseBrowserClient();
-      if (supabase) {
-        const count = await flushOfflineQueue(supabase);
-        if (count > 0) {
-          toast({
-            title: "Sync Complete",
-            description: `${count} queued submission${count > 1 ? 's' : ''} sent successfully.`,
-          });
-        }
-      }
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      toast({
-        title: "Offline Mode",
-        description: "You're now offline. Some features may be limited.",
-        variant: "destructive",
-      });
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Setup PWA install prompt
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setInstallPrompt(e);
@@ -117,22 +65,18 @@ export default function PWAProvider({ children }: PWAProviderProps) {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
 
-    // Handle app installed
     const handleAppInstalled = () => {
       setInstallPrompt(null);
       setShowInstallPrompt(false);
       toast({
-        title: "🎉 App Installed",
-        description: "ProCV has been added to your home screen!",
+        title: "App Instalada",
+        description: "ProCV foi adicionado ao seu ecr\u00e3 inicial!",
       });
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Cleanup
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
@@ -143,8 +87,6 @@ export default function PWAProvider({ children }: PWAProviderProps) {
 
     try {
       const result = await installPrompt.prompt();
-      console.log('Install prompt result:', result);
-
       if (result.outcome === 'accepted') {
         setInstallPrompt(null);
         setShowInstallPrompt(false);
@@ -156,11 +98,9 @@ export default function PWAProvider({ children }: PWAProviderProps) {
 
   const dismissInstallPrompt = () => {
     setShowInstallPrompt(false);
-    // Don't show again for this session
     sessionStorage.setItem('installPromptDismissed', 'true');
   };
 
-  // Check if install prompt was already dismissed this session
   useEffect(() => {
     const dismissed = sessionStorage.getItem('installPromptDismissed');
     if (dismissed) {
@@ -172,35 +112,34 @@ export default function PWAProvider({ children }: PWAProviderProps) {
     <>
       {children}
 
-      {/* PWA Install Prompt */}
       {showInstallPrompt && installPrompt && (
         <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:w-96">
           <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  📱
+                  <span role="img" aria-label="phone">📱</span>
                 </div>
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-medium text-gray-900">
-                  Install ProCV App
+                  Instalar ProCV
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Get the full experience with offline access and push notifications.
+                  Obtenha a experi&ecirc;ncia completa com notifica&ccedil;&otilde;es push.
                 </p>
                 <div className="flex space-x-2 mt-3">
                   <button
                     onClick={handleInstallApp}
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    Install
+                    Instalar
                   </button>
                   <button
                     onClick={dismissInstallPrompt}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    Not now
+                    Agora n&atilde;o
                   </button>
                 </div>
               </div>
@@ -209,17 +148,8 @@ export default function PWAProvider({ children }: PWAProviderProps) {
         </div>
       )}
 
-      {/* Connection Status Indicator */}
-      {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-center py-2 text-sm">
-          📡 You're offline - Some features may be limited
-        </div>
-      )}
-
-      {/* PWA Meta Tags (injected via Next.js Head) */}
       <style jsx global>{`
         @media (display-mode: standalone) {
-          /* PWA-specific styles when running as installed app */
           body {
             -webkit-user-select: none;
             -webkit-touch-callout: none;
