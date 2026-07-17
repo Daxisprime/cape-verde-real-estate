@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSearchMode } from '@/contexts/SearchModeContext';
@@ -87,7 +87,10 @@ export function useListings() {
 export function useMyListings() {
   const [listings, setListings] = useState<LiveListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { user, isAuthenticated } = useSupabaseAuth();
+
+  const refetch = () => setRefreshKey((k) => k + 1);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -107,6 +110,7 @@ export function useMyListings() {
         return;
       }
 
+      setLoading(true);
       let props: unknown[] = [];
       let items: unknown[] = [];
 
@@ -162,7 +166,13 @@ export function useMyListings() {
     }
 
     fetchMyListings();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, refreshKey]);
 
-  return { listings, loading };
+  useEffect(() => {
+    const onFocus = () => refetch();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  return { listings, loading, refetch };
 }

@@ -74,7 +74,7 @@ const STATUS_TABS: { key: ListingStatus; label: string }[] = [
 
 export default function MyStorePageClient() {
   const { user, profile, isAuthenticated } = useSupabaseAuth();
-  const { listings: liveListings, loading: listingsLoading } = useMyListings();
+  const { listings: liveListings, loading: listingsLoading, refetch: refetchListings } = useMyListings();
   const router = useRouter();
   const { toast } = useToast();
   const { t } = useLanguage();

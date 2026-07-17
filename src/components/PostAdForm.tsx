@@ -248,6 +248,10 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       if (!supabase) throw new Error("Supabase not configured");
       if (!sellerId) throw new Error("Authentication required");
 
+      // Verify the session is active before proceeding
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessao expirada. Por favor, faca login novamente.");
+
       // Upload new images (skip for existing URL previews from edit mode)
       const imageUrls: string[] = [];
       // Keep existing images that came from the database
@@ -296,10 +300,13 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .eq("agent_id", sellerId);
           if (error) throw error;
         } else {
-          const { error } = await supabase
+          const { data: inserted, error } = await supabase
             .from("properties")
-            .insert({ ...propertyPayload, agent_id: sellerId, status: "active", store_id: selectedStoreId || null } as never);
+            .insert({ ...propertyPayload, status: "active", store_id: selectedStoreId || null } as never)
+            .select("id")
+            .maybeSingle();
           if (error) throw error;
+          if (!inserted) throw new Error("Falha ao publicar. Verifique que esta autenticado e tente novamente.");
         }
       } else {
         const realEstateKeywords = ['casa', 'apartamento', 'vivenda', 'terreno', 't1', 't2', 't3', 'aluga-se', 'quarto'];
@@ -329,10 +336,13 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .eq("user_id", sellerId);
           if (error) throw error;
         } else {
-          const { error } = await supabase
+          const { data: inserted, error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, user_id: sellerId, status: "active", store_id: selectedStoreId || null } as never);
+            .insert({ ...marketPayload, status: "active", store_id: selectedStoreId || null } as never)
+            .select("id")
+            .maybeSingle();
           if (error) throw error;
+          if (!inserted) throw new Error("Falha ao publicar. Verifique que esta autenticado e tente novamente.");
         }
       }
 
