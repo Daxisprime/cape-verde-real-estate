@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { ImagePlus, X, Loader2, Zap, AlertTriangle, Crown } from "lucide-react";
+import { ImagePlus, X, Loader2, Zap, AlertTriangle, Crown, Facebook } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { compressImage } from "@/lib/image-compression";
 import { isOffline, enqueueOfflineSubmission } from "@/lib/offline-queue";
@@ -35,8 +35,12 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [island, setIsland] = useState("");
+  const [municipality, setMunicipality] = useState("");
   const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [facebookHandle, setFacebookHandle] = useState("");
+  const [condition, setCondition] = useState<"new" | "used">("used");
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -68,7 +72,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !price || !island || !category) return;
+    if (!title || !price || !island) return;
 
     if (!user) {
       setPendingSubmit(true);
@@ -76,7 +80,6 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       return;
     }
 
-    // Fetch paywall status from user profile
     let paywallActive = false;
     const supabase = createSupabaseBrowserClient();
     if (supabase) {
@@ -88,7 +91,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       paywallActive = !!(prof as Record<string, unknown>)?.paywall_active;
     }
 
-    const result = await checkListingLimit(user.id, category, paywallActive);
+    const result = await checkListingLimit(user.id, category || "General", paywallActive);
     if (!result.allowed) {
       setLimitInfo({ current: result.current, limit: result.limit });
       setShowLimitModal(true);
@@ -105,11 +108,10 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
     try {
       if (!user?.id) throw new Error("Authentication required");
 
-      // If offline, queue for later sync
       if (isOffline()) {
         const payload = isProperty
-          ? { title, price: parseFloat(price), property_type: category, listing_type: 'sale', island, location: island, images: [], agent_id: user.id, status: 'active' }
-          : { title, price_cve: parseFloat(price), category, island, images: [], user_id: user.id, status: 'active', condition: 'used', contact_whatsapp: whatsapp || null };
+          ? { title, price: parseFloat(price), property_type: category, listing_type: 'sale', island, location: municipality || island, images: [], agent_id: user.id, status: 'active' }
+          : { title, price_cve: parseFloat(price), category: category || "General", island, municipality: municipality || null, images: [], user_id: user.id, status: 'active', condition, contact_whatsapp: whatsapp || null };
         const endpoint = isProperty ? 'properties:insert' : 'marketplace_items:insert';
         await enqueueOfflineSubmission(endpoint, payload);
         setStatus("success");
@@ -140,7 +142,6 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             imageUrls.push(urlData.publicUrl);
           }
         } catch {
-          // Only use placeholder as last resort if storage upload itself fails
           imageUrls.push("https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=600&h=400&fit=crop");
         }
       }
@@ -150,11 +151,12 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
           .from("properties")
           .insert({
             title,
+            description: description || null,
             price: parseFloat(price),
             property_type: category,
             listing_type: "sale",
             island,
-            location: island,
+            location: municipality || island,
             images: imageUrls,
             agent_id: user.id,
             status: "active",
@@ -165,23 +167,25 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
           .from("marketplace_items")
           .insert({
             title,
+            description: description || null,
             price_cve: parseFloat(price),
-            category,
+            category: category || "General",
             island,
+            municipality: municipality || null,
             images: imageUrls,
             user_id: user.id,
             status: "active",
-            condition: "used",
+            condition,
             contact_whatsapp: whatsapp || null,
           } as never);
         if (error) throw error;
       }
 
-      if (whatsapp) {
-        await supabase.from("profiles").upsert({
-          id: user.id,
-          whatsapp: whatsapp,
-        }, { onConflict: "id" });
+      if (facebookHandle || whatsapp) {
+        const profileUpdate: Record<string, unknown> = { id: user.id };
+        if (whatsapp) profileUpdate.whatsapp = whatsapp;
+        if (facebookHandle) profileUpdate.facebook_handle = facebookHandle;
+        await supabase.from("profiles").upsert(profileUpdate, { onConflict: "id" });
       }
 
       setStatus("success");
@@ -191,7 +195,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       setErrorMessage(msg);
       setStatus("error");
     }
-  }, [user, title, price, island, category, whatsapp, images, isProperty, onSuccess]);
+  }, [user, title, price, island, municipality, category, description, whatsapp, facebookHandle, condition, images, isProperty, onSuccess]);
 
   useEffect(() => {
     if (pendingSubmit && user) {
@@ -211,7 +215,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
         <p className="text-lg font-semibold text-green-800">Posted!</p>
         <p className="text-sm text-green-600 mt-1">Your listing is now live on Pro.CV</p>
         <button
-          onClick={() => { setStatus("idle"); setTitle(""); setPrice(""); setCategory(""); setImages([]); setPreviews([]); }}
+          onClick={() => { setStatus("idle"); setTitle(""); setPrice(""); setCategory(""); setIsland(""); setMunicipality(""); setDescription(""); setWhatsapp(""); setFacebookHandle(""); setCondition("used"); setImages([]); setPreviews([]); }}
           className="mt-4 text-sm text-blue-600 font-medium hover:underline"
         >
           Post another
@@ -222,7 +226,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4">
-      {/* Photos - big touch target */}
+      {/* Photos */}
       <div>
         <div className="flex gap-2 overflow-x-auto pb-2">
           {previews.map((src, i) => (
@@ -259,10 +263,10 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
         />
       </div>
 
-      {/* Title */}
+      {/* Title (required) */}
       <input
         type="text"
-        placeholder="What are you selling?"
+        placeholder="What are you selling? *"
         required
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -274,7 +278,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <input
           type="number"
-          placeholder="Price (CVE)"
+          placeholder="Price (CVE) *"
           required
           min="0"
           value={price}
@@ -282,19 +286,18 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
           className={inputCls}
         />
         <select
-          required
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className={`${inputCls} appearance-none`}
         >
-          <option value="">Category</option>
+          <option value="">Category (optional)</option>
           {QUICK_CATEGORIES.map((cat) => (
             <option key={cat.value} value={cat.value}>{cat.label}</option>
           ))}
         </select>
       </div>
 
-      {/* Island + WhatsApp row */}
+      {/* Island (required) + Municipality */}
       <div className="grid grid-cols-2 gap-3">
         <select
           required
@@ -302,24 +305,106 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
           onChange={(e) => setIsland(e.target.value)}
           className={`${inputCls} appearance-none`}
         >
-          <option value="">Island</option>
+          <option value="">Island *</option>
           {CAPE_VERDE_ISLANDS.map((isl) => (
             <option key={isl} value={isl}>{isl}</option>
           ))}
         </select>
         <input
-          type="tel"
-          placeholder="WhatsApp (optional)"
-          value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
+          type="text"
+          placeholder="Zone / Area (optional)"
+          value={municipality}
+          onChange={(e) => setMunicipality(e.target.value)}
           className={inputCls}
         />
       </div>
 
+      {/* Description (optional) */}
+      <textarea
+        placeholder="Description (optional)"
+        rows={2}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className={`${inputCls} resize-none`}
+      />
+
+      {/* Condition toggle - shown when a non-property category is selected */}
+      {!isProperty && category && (
+        <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setCondition("new")}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              condition === "new" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            New
+          </button>
+          <button
+            type="button"
+            onClick={() => setCondition("used")}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              condition === "used" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            Used
+          </button>
+        </div>
+      )}
+
+      {/* Additional fields shown after at least one photo is added */}
+      {previews.length > 0 && (
+        <div className="space-y-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact & Social (optional)</p>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="tel"
+              placeholder="WhatsApp number"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              className={inputCls}
+            />
+            <div className="relative">
+              <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1877F2]" />
+              <input
+                type="text"
+                placeholder="Facebook page"
+                value={facebookHandle}
+                onChange={(e) => setFacebookHandle(e.target.value.replace(/^https?:\/\/(www\.)?(facebook\.com|fb\.com)\/?/i, '').replace(/^@/, '').replace(/\/$/, ''))}
+                className={`${inputCls} pl-9`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp and Facebook shown even without photos if no previews */}
+      {previews.length === 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="tel"
+            placeholder="WhatsApp (optional)"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            className={inputCls}
+          />
+          <div className="relative">
+            <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1877F2]" />
+            <input
+              type="text"
+              placeholder="Facebook (optional)"
+              value={facebookHandle}
+              onChange={(e) => setFacebookHandle(e.target.value.replace(/^https?:\/\/(www\.)?(facebook\.com|fb\.com)\/?/i, '').replace(/^@/, '').replace(/\/$/, ''))}
+              className={`${inputCls} pl-9`}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Submit */}
       <button
         type="submit"
-        disabled={status === "submitting" || !title || !price || !island || !category}
+        disabled={status === "submitting" || !title || !price || !island}
         className="w-full py-3.5 rounded-xl bg-green-600 text-white text-base font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {status === "submitting" ? (
