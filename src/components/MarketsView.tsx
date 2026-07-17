@@ -346,12 +346,12 @@ export default function MarketsView() {
   return (
     <div className="w-full h-[calc(100vh-64px)] overflow-hidden flex flex-col bg-white">
       {/* Breadcrumb Trail - touch-optimized */}
-      <div className="w-full bg-slate-50 border-b border-slate-200 px-4 py-1 flex items-center gap-1 text-xs font-medium text-slate-500 flex-shrink-0 z-30 relative min-h-[44px]">
-        <span className="hover:text-[#0044FF] cursor-pointer flex items-center gap-1 py-2 px-1 touch-target-sm" onClick={() => setIsResultsViewActive(false)}>
+      <div className="w-full bg-slate-50 border-b border-slate-200 px-4 py-1 flex items-center gap-1 text-xs font-medium text-slate-500 flex-shrink-0 z-30 relative min-h-[44px] flex-nowrap overflow-x-auto">
+        <span className="hover:text-[#0044FF] cursor-pointer inline-flex items-center gap-1 py-2 px-1 whitespace-nowrap" onClick={() => setIsResultsViewActive(false)}>
           <Home className="w-3.5 h-3.5" /> {t.home}
         </span>
-        <ChevronRight className="w-3 h-3 text-slate-300" />
-        <span className="hover:text-[#0044FF] cursor-pointer py-2 px-1 touch-target-sm" onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}>
+        <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
+        <span className="hover:text-[#0044FF] cursor-pointer py-2 px-1 whitespace-nowrap" onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}>
           {t.markets}
         </span>
         {selectedCategory && (
