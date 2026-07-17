@@ -197,9 +197,13 @@ function hydrateFromSlug(slug: string): { profile: Profile; listings: UnifiedLis
 }
 
 const GRADIENT_MAP: Record<string, string> = {
+  santiago_blue: 'bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500',
+  fogo_volcanic: 'bg-gradient-to-r from-orange-500 via-rose-500 to-red-600',
+  sal_turquoise: 'bg-gradient-to-r from-cyan-400 via-teal-400 to-sky-500',
+  mindelo_night: 'bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800',
+  // Legacy names (backwards compat)
   ocean_blue: 'bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500',
   volcanic_sunset: 'bg-gradient-to-r from-orange-500 via-rose-500 to-red-600',
-  mindelo_night: 'bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800',
   praia_palm: 'bg-gradient-to-r from-emerald-600 via-green-500 to-teal-400',
 };
 

@@ -167,7 +167,7 @@ export default function AuthClient() {
       }
 
       setSuccess('Conta verificada com sucesso!');
-      setTimeout(() => router.push('/my-store'), 800);
+      setTimeout(() => { window.location.href = '/my-store'; }, 800);
     } catch {
       setError('Erro de rede. Tente novamente.');
     } finally {
@@ -201,7 +201,7 @@ export default function AuthClient() {
           captchaRef.current?.resetCaptcha();
           setCaptchaToken(null);
         } else {
-          router.push('/my-store');
+          window.location.href = '/my-store';
         }
       } else if (formMode === 'forgot') {
         const { error } = await resetPassword(identifier);
@@ -232,7 +232,7 @@ export default function AuthClient() {
           if (confirmationRequired) {
             setSuccess('Conta criada! Redirecionando...');
           }
-          router.push('/my-store');
+          window.location.href = '/my-store';
         }
       }
     } catch {
@@ -570,6 +570,27 @@ export default function AuthClient() {
           e{' '}
           <Link href="/privacy" className="text-[#0044FF] hover:underline">Politica de Privacidade</Link>
         </p>
+
+        {/* Hidden troubleshooting: triple-click to reveal */}
+        <details className="mt-6">
+          <summary className="text-[10px] text-gray-300 cursor-pointer hover:text-gray-400 text-center select-none">
+            Problemas a entrar?
+          </summary>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              document.cookie.split(';').forEach((c) => {
+                document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/');
+              });
+              window.location.reload();
+            }}
+            className="mt-2 w-full text-center text-xs text-red-500 hover:text-red-700 font-medium py-2 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Limpar Cache Local
+          </button>
+        </details>
       </div>
     </div>
   );

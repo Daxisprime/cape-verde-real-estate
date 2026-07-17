@@ -95,7 +95,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     initSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!isMounted) return;
         if (event === 'SIGNED_OUT' || !session?.user) {
           setState({
@@ -108,15 +108,18 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          const profile = await fetchProfile(session.user.id);
-          if (!isMounted) return;
-          setState({
-            user: session.user,
-            session,
-            profile,
-            isLoading: false,
-            isAuthenticated: true,
-          });
+          // Wrap async work in IIFE to avoid deadlock
+          (async () => {
+            const profile = await fetchProfile(session.user.id);
+            if (!isMounted) return;
+            setState({
+              user: session.user,
+              session,
+              profile,
+              isLoading: false,
+              isAuthenticated: true,
+            });
+          })();
         }
       }
     );

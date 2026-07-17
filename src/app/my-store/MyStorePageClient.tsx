@@ -742,10 +742,10 @@ export default function MyStorePageClient() {
                       <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Escolha um Gradiente</label>
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { id: "ocean_blue", label: "Ocean Blue", css: "bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" },
-                          { id: "volcanic_sunset", label: "Volcanic Sunset", css: "bg-gradient-to-r from-orange-500 via-rose-500 to-red-600" },
+                          { id: "santiago_blue", label: "Santiago Blue", css: "bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" },
+                          { id: "fogo_volcanic", label: "Fogo Volcanic", css: "bg-gradient-to-r from-orange-500 via-rose-500 to-red-600" },
+                          { id: "sal_turquoise", label: "Sal Turquoise", css: "bg-gradient-to-r from-cyan-400 via-teal-400 to-sky-500" },
                           { id: "mindelo_night", label: "Mindelo Night", css: "bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800" },
-                          { id: "praia_palm", label: "Praia Palm", css: "bg-gradient-to-r from-emerald-600 via-green-500 to-teal-400" },
                         ].map((grad) => (
                           <button
                             key={grad.id}
