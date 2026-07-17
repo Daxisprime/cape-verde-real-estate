@@ -1,20 +1,33 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SlidersHorizontal, MapPin } from 'lucide-react';
+import { SlidersHorizontal, MapPin, ChevronDown, X } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CAPE_VERDE_ISLANDS } from '@/lib/supabase';
 
 export default function ResultsFilterStrip() {
-  const { searchMode, listingType, setListingType, selectedIsland, setSelectedIsland } = useSearchMode();
+  const { searchMode, listingType, setListingType, selectedIslands, toggleIsland, clearIslands } = useSearchMode();
   const { t } = useLanguage();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isIslandPanelOpen, setIsIslandPanelOpen] = useState(false);
   const [propertyType, setPropertyType] = useState('all');
   const [minBeds, setMinBeds] = useState('0');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
+  const islandPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isIslandPanelOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (islandPanelRef.current && !islandPanelRef.current.contains(e.target as Node)) {
+        setIsIslandPanelOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isIslandPanelOpen]);
 
   useEffect(() => {
     if (!isFilterOpen) return;
@@ -27,33 +40,78 @@ export default function ResultsFilterStrip() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [isFilterOpen]);
 
+  const islandLabel = selectedIslands.length === 0
+    ? 'Todas as Ilhas'
+    : selectedIslands.length === 1
+      ? selectedIslands[0]
+      : `${selectedIslands.length} ilhas`;
+
   return (
-    <div className="sticky top-16 z-40 w-full bg-white border-b border-gray-200 shadow-sm" ref={panelRef}>
+    <div className="sticky top-16 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 py-2">
-          {/* Island Selector - Primary Filter */}
-          <div className="flex items-center gap-1.5 mr-2 border-r pr-3 border-gray-200">
-            <MapPin className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
-            <select
-              value={selectedIsland}
-              onChange={(e) => setSelectedIsland(e.target.value)}
-              className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer appearance-none pr-6 bg-no-repeat bg-[length:12px] bg-[right_6px_center] ${
-                selectedIsland
+          {/* Island Multi-Select Toggle */}
+          <div className="relative" ref={islandPanelRef}>
+            <button
+              onClick={() => setIsIslandPanelOpen(!isIslandPanelOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
+                selectedIslands.length > 0
                   ? 'bg-[#0044FF] text-white border-[#0044FF]'
                   : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-blue-50 hover:text-[#0044FF]'
               }`}
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${selectedIsland ? 'white' : '%236b7280'}' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
             >
-              <option value="">Ilha (Todas)</option>
-              {CAPE_VERDE_ISLANDS.map((island) => (
-                <option key={island} value={island}>{island}</option>
-              ))}
-            </select>
+              <MapPin className="h-3.5 w-3.5" />
+              {islandLabel}
+              <ChevronDown className={`h-3 w-3 transition-transform ${isIslandPanelOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Checkbox Panel */}
+            {isIslandPanelOpen && (
+              <div className="absolute top-full left-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-56 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-3 pb-2 mb-1 border-b border-gray-100 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Ilhas</span>
+                  {selectedIslands.length > 0 && (
+                    <button
+                      onClick={clearIslands}
+                      className="text-[10px] font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto px-1">
+                  {CAPE_VERDE_ISLANDS.map((island) => {
+                    const checked = selectedIslands.includes(island);
+                    return (
+                      <label
+                        key={island}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                          checked ? 'bg-blue-50' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleIsland(island)}
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-[#0044FF] focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <span className={`text-xs font-medium ${checked ? 'text-[#0044FF]' : 'text-gray-700'}`}>
+                          {island}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Divider */}
+          <div className="h-5 w-px bg-gray-200 mx-1" />
 
           {searchMode === "realestate" ? (
             <>
-              <div className="flex items-center gap-1 mr-3 border-r pr-3 border-gray-200">
+              <div className="flex items-center gap-1 mr-2">
                 <button
                   onClick={() => setListingType("buy")}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
@@ -102,21 +160,27 @@ export default function ResultsFilterStrip() {
             </button>
           )}
 
-          {/* Active island badge */}
-          {selectedIsland && (
-            <button
-              onClick={() => setSelectedIsland("")}
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-[#0044FF] text-[10px] font-semibold hover:bg-blue-200 transition-colors"
-            >
-              {selectedIsland}
-              <span className="ml-0.5 text-blue-400 hover:text-blue-600">&times;</span>
-            </button>
+          {/* Active island badges */}
+          {selectedIslands.length > 0 && selectedIslands.length <= 3 && (
+            <div className="flex items-center gap-1 ml-1">
+              {selectedIslands.map(island => (
+                <button
+                  key={island}
+                  onClick={() => toggleIsland(island)}
+                  className="flex items-center gap-0.5 px-2 py-1 rounded-full bg-blue-100 text-[#0044FF] text-[10px] font-semibold hover:bg-blue-200 transition-colors"
+                >
+                  {island}
+                  <X className="h-2.5 w-2.5 ml-0.5" />
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
 
+      {/* Advanced Filters Panel */}
       {isFilterOpen && searchMode === "realestate" && (
-        <div className="absolute left-0 right-0 top-full bg-white border-b border-gray-200 shadow-xl z-50">
+        <div className="absolute left-0 right-0 top-full bg-white border-b border-gray-200 shadow-xl z-30" ref={panelRef}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>

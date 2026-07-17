@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 type SearchMode = "realestate" | "markets";
 type ListingType = "buy" | "rent";
@@ -14,8 +14,9 @@ interface SearchModeContextType {
   setIsResultsViewActive: (active: boolean) => void;
   headerSearchQuery: string;
   setHeaderSearchQuery: (query: string) => void;
-  selectedIsland: string;
-  setSelectedIsland: (island: string) => void;
+  selectedIslands: string[];
+  toggleIsland: (island: string) => void;
+  clearIslands: () => void;
 }
 
 const SearchModeContext = createContext<SearchModeContextType>({
@@ -27,8 +28,9 @@ const SearchModeContext = createContext<SearchModeContextType>({
   setIsResultsViewActive: () => {},
   headerSearchQuery: "",
   setHeaderSearchQuery: () => {},
-  selectedIsland: "",
-  setSelectedIsland: () => {},
+  selectedIslands: [],
+  toggleIsland: () => {},
+  clearIslands: () => {},
 });
 
 export function SearchModeProvider({ children }: { children: ReactNode }) {
@@ -36,14 +38,27 @@ export function SearchModeProvider({ children }: { children: ReactNode }) {
   const [listingType, setListingType] = useState<ListingType>("buy");
   const [isResultsViewActive, setIsResultsViewActive] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
-  const [selectedIsland, setSelectedIsland] = useState("");
+  const [selectedIslands, setSelectedIslands] = useState<string[]>([]);
+
+  const toggleIsland = useCallback((island: string) => {
+    setSelectedIslands(prev =>
+      prev.includes(island)
+        ? prev.filter(i => i !== island)
+        : [...prev, island]
+    );
+  }, []);
+
+  const clearIslands = useCallback(() => {
+    setSelectedIslands([]);
+  }, []);
+
   return (
     <SearchModeContext.Provider value={{
       searchMode, setSearchMode,
       listingType, setListingType,
       isResultsViewActive, setIsResultsViewActive,
       headerSearchQuery, setHeaderSearchQuery,
-      selectedIsland, setSelectedIsland,
+      selectedIslands, toggleIsland, clearIslands,
     }}>
       {children}
     </SearchModeContext.Provider>

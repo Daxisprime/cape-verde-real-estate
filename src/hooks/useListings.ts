@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSearchMode } from '@/contexts/SearchModeContext';
 
 export interface LiveListing {
   id: string;
@@ -30,6 +31,7 @@ export function useListings() {
   const [listings, setListings] = useState<LiveListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
+  const { selectedIslands } = useSearchMode();
 
   useEffect(() => {
     async function fetchListings() {
@@ -45,10 +47,17 @@ export function useListings() {
       }
 
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('properties')
           .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
-          .eq('status', 'active')
+          .eq('status', 'active');
+
+        if (selectedIslands.length > 0) {
+          const orFilter = selectedIslands.map(island => `island.eq.${island}`).join(',');
+          query = query.or(orFilter);
+        }
+
+        const { data, error } = await query
           .order('is_featured', { ascending: false })
           .order('last_bumped_at', { ascending: false })
           .limit(50);
@@ -57,6 +66,9 @@ export function useListings() {
 
         if (data && data.length > 0) {
           setListings(data as unknown as LiveListing[]);
+          setIsLive(true);
+        } else {
+          setListings([]);
           setIsLive(true);
         }
       } catch {
@@ -67,7 +79,7 @@ export function useListings() {
     }
 
     fetchListings();
-  }, []);
+  }, [selectedIslands]);
 
   return { listings, loading, isLive };
 }
