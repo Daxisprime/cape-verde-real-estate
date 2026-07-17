@@ -110,7 +110,7 @@ export default function MyStorePageClient() {
   });
   const businessLogoRef = useRef<HTMLInputElement>(null);
 
-  const [storefrontForm, setStorefrontForm] = useState({ store_name: "", store_description: "", store_logo: "", store_banner: "" });
+  const [storefrontForm, setStorefrontForm] = useState({ store_name: "", store_description: "", store_logo: "", store_banner: "", banner_style: "custom" as "custom" | "gradient" | "stock" });
   const [showStorefrontPanel, setShowStorefrontPanel] = useState(false);
 
   const [activeTab, setActiveTab] = useState<ListingStatus>("active");
@@ -196,6 +196,7 @@ export default function MyStorePageClient() {
         store_description: ((profile as Record<string, unknown>).store_description as string) || "",
         store_logo: ((profile as Record<string, unknown>).store_logo as string) || "",
         store_banner: ((profile as Record<string, unknown>).store_banner as string) || "",
+        banner_style: (((profile as Record<string, unknown>).banner_style as string) || "custom") as "custom" | "gradient" | "stock",
       });
     }
   }, [profile]);
@@ -328,6 +329,7 @@ export default function MyStorePageClient() {
         store_description: storefrontForm.store_description.trim(),
         store_logo: storefrontForm.store_logo.trim(),
         store_banner: storefrontForm.store_banner.trim(),
+        banner_style: storefrontForm.banner_style,
       } as never)
       .eq("id", user.id);
     if (error) {
@@ -697,10 +699,56 @@ export default function MyStorePageClient() {
                       <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none" value={storefrontForm.store_logo} onChange={(e) => setStorefrontForm((p) => ({ ...p, store_logo: e.target.value }))} placeholder="https://..." />
                     </div>
                     <div>
+                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Estilo do Banner</label>
+                      <select
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white"
+                        value={storefrontForm.banner_style}
+                        onChange={(e) => setStorefrontForm((p) => ({ ...p, banner_style: e.target.value as "custom" | "gradient" | "stock" }))}
+                      >
+                        <option value="custom">Imagem Personalizada</option>
+                        <option value="gradient">Gradiente Moderno</option>
+                        <option value="stock">Foto de Cabo Verde</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {storefrontForm.banner_style === "custom" && (
+                    <div>
                       <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">{t.bannerUrl}</label>
                       <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none" value={storefrontForm.store_banner} onChange={(e) => setStorefrontForm((p) => ({ ...p, store_banner: e.target.value }))} placeholder="https://..." />
                     </div>
-                  </div>
+                  )}
+
+                  {storefrontForm.banner_style === "gradient" && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Pre-visualizacao</label>
+                      <div className="w-full h-20 rounded-lg bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" />
+                      <p className="text-[10px] text-gray-400 mt-1">Gradiente CSS — 0 bytes de imagem, carregamento instantaneo.</p>
+                    </div>
+                  )}
+
+                  {storefrontForm.banner_style === "stock" && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Escolha uma Foto</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { url: "https://images.pexels.com/photos/3601425/pexels-photo-3601425.jpeg?auto=compress&cs=tinysrgb&w=600", label: "Santiago" },
+                          { url: "https://images.pexels.com/photos/12674924/pexels-photo-12674924.jpeg?auto=compress&cs=tinysrgb&w=600", label: "Fogo" },
+                          { url: "https://images.pexels.com/photos/5618735/pexels-photo-5618735.jpeg?auto=compress&cs=tinysrgb&w=600", label: "Sao Vicente" },
+                        ].map((photo) => (
+                          <button
+                            key={photo.label}
+                            type="button"
+                            onClick={() => setStorefrontForm((p) => ({ ...p, store_banner: photo.url }))}
+                            className={`relative rounded-lg overflow-hidden border-2 transition-all ${storefrontForm.store_banner === photo.url ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200 hover:border-gray-300"}`}
+                          >
+                            <img src={photo.url} alt={photo.label} className="w-full h-14 object-cover" />
+                            <span className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[9px] py-0.5 text-center font-medium">{photo.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <button onClick={handleSaveStorefront} disabled={!storefrontForm.store_name.trim()} className="w-full flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50">
                     {t.saveStorefront}
                   </button>

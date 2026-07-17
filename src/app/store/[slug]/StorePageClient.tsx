@@ -42,6 +42,7 @@ interface Profile {
   store_description: string | null;
   store_logo: string | null;
   store_banner: string | null;
+  banner_style: string | null;
   rating_average: number;
   review_count: number;
 }
@@ -392,10 +393,12 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
       <Header />
 
       {/* Store Header - only rendered if store_name or store_banner are present */}
-      {(profile.store_name || profile.store_banner) && (
+      {(profile.store_name || profile.store_banner || profile.banner_style) && (
         <div className="w-full relative overflow-hidden">
-          {/* Banner */}
-          {profile.store_banner ? (
+          {/* Banner - respects banner_style preference */}
+          {profile.banner_style === 'gradient' ? (
+            <div className="w-full h-48 sm:h-56 lg:h-64 bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" />
+          ) : profile.store_banner ? (
             <div className="w-full h-48 sm:h-56 lg:h-64 relative">
               <img
                 src={profile.store_banner}
@@ -405,7 +408,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
             </div>
           ) : (
-            <div className="w-full h-36 sm:h-44 bg-gradient-to-r from-teal-600 to-emerald-500" />
+            <div className="w-full h-36 sm:h-44 bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" />
           )}
 
           {/* Store identity overlay */}
