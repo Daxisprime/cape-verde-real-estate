@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ImagePlus, X, Loader2, Zap, AlertTriangle, Crown, Facebook } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { compressImage } from "@/lib/image-compression";
@@ -32,6 +33,7 @@ interface QuickPostFormProps {
 export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
   const { user } = useSupabaseAuth();
   const { t } = useLanguage();
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const { toast } = useToast();
   const [price, setPrice] = useState("");
@@ -181,6 +183,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       }
 
       setStatus("success");
+      router.refresh();
       onSuccess?.();
     } catch (err: unknown) {
       const msg = (err as { message?: string })?.message || "";

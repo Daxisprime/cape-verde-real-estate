@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { ImagePlus, X, Loader2, MapPin, Facebook } from "lucide-react";
 import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -115,6 +116,7 @@ interface PostAdFormProps {
 export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const { user, profile } = useSupabaseAuth();
   const { t } = useLanguage();
+  const router = useRouter();
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -370,6 +372,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       }
 
       setStatus("success");
+      router.refresh();
       if (!isEditing) {
         setCategory("");
         setTitle("");

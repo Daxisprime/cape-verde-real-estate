@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, Phone, MessageCircle, MapPin, Bed, Bath, Square, ExternalLink, Globe } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -44,96 +44,121 @@ export default function VendorProfilePageClient({ id }: { id: string }) {
   const [ads, setAds] = useState<VendorAd[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      const supabase = createSupabaseBrowserClient();
+  const loadData = useCallback(async () => {
+    const supabase = createSupabaseBrowserClient();
 
-      // Try Supabase first
-      if (supabase && vendorId) {
-        const { data: profileData, error } = await supabase
-          .from("profiles")
-          .select("id, name, avatar, phone, website_url, facebook_handle, instagram_handle, whatsapp_number")
-          .eq("id", vendorId)
-          .maybeSingle();
+    if (supabase && vendorId) {
+      const { data: profileData, error } = await supabase
+        .from("profiles")
+        .select("id, name, avatar, phone, website_url, facebook_handle, instagram_handle, whatsapp_number")
+        .eq("id", vendorId)
+        .maybeSingle();
 
-        if (profileData && !error) {
-          setProfile({
-            id: profileData.id,
-            full_name: profileData.name,
-            avatar_url: profileData.avatar,
-            phone: profileData.phone,
-            website_url: profileData.website_url,
-            facebook_handle: profileData.facebook_handle,
-            instagram_handle: profileData.instagram_handle,
-            whatsapp: profileData.whatsapp_number,
-          });
-
-          const { data: adsData } = await supabase
-            .from("vendor_ads" as never)
-            .select("id, mode, title, price, island, zone, bedrooms, bathrooms, square_meters, images, created_at")
-            .eq("vendor_id", vendorId)
-            .eq("status", "active")
-            .order("created_at", { ascending: false });
-
-          if (adsData && adsData.length > 0) {
-            setAds(adsData as unknown as VendorAd[]);
-          } else {
-            // Fallback: fetch from properties table
-            const { data: propsData } = await supabase
-              .from("properties")
-              .select("id, title, price, island, location, bedrooms, bathrooms, total_area, images, created_at")
-              .eq("agent_id", vendorId)
-              .eq("status", "active")
-              .order("created_at", { ascending: false });
-            if (propsData && propsData.length > 0) {
-              setAds(propsData.map((p: any) => ({
-                id: p.id,
-                mode: 'real_estate' as const,
-                title: p.title,
-                price: p.price,
-                island: p.island,
-                zone: p.location,
-                bedrooms: p.bedrooms,
-                bathrooms: p.bathrooms,
-                square_meters: p.total_area,
-                images: p.images || [],
-                created_at: p.created_at,
-              })));
-            }
-          }
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Fall back to mock profiles
-      const mockMatch = mockProfiles.find((p) => p.id === vendorId);
-      if (mockMatch) {
+      if (profileData && !error) {
         setProfile({
-          id: mockMatch.id,
-          full_name: mockMatch.full_name,
-          avatar_url: mockMatch.avatar_url,
-          phone: mockMatch.phone,
-          whatsapp: mockMatch.whatsapp,
-          bio: mockMatch.bio,
-          company: mockMatch.company,
-          type: mockMatch.type,
-          facebook_url: mockMatch.facebook_url,
-          instagram_url: mockMatch.instagram_url,
-          facebook_shop_url: mockMatch.facebook_shop_url,
+          id: profileData.id,
+          full_name: profileData.name,
+          avatar_url: profileData.avatar,
+          phone: profileData.phone,
+          website_url: profileData.website_url,
+          facebook_handle: profileData.facebook_handle,
+          instagram_handle: profileData.instagram_handle,
+          whatsapp: profileData.whatsapp_number,
         });
-        setAds(
-          mockMatch.listings.map((l) => ({
-            ...l,
-            created_at: new Date().toISOString(),
-          }))
-        );
-      }
 
-      setLoading(false);
+        const combinedAds: VendorAd[] = [];
+
+        // Fetch properties
+        const { data: propsData } = await supabase
+          .from("properties")
+          .select("id, title, price, island, location, bedrooms, bathrooms, total_area, images, created_at")
+          .eq("agent_id", vendorId)
+          .eq("status", "active")
+          .order("created_at", { ascending: false });
+
+        if (propsData && propsData.length > 0) {
+          combinedAds.push(...propsData.map((p: any) => ({
+            id: p.id,
+            mode: 'real_estate' as const,
+            title: p.title,
+            price: p.price,
+            island: p.island,
+            zone: p.location,
+            bedrooms: p.bedrooms,
+            bathrooms: p.bathrooms,
+            square_meters: p.total_area,
+            images: p.images || [],
+            created_at: p.created_at,
+          })));
+        }
+
+        // Fetch marketplace_items
+        const { data: itemsData } = await supabase
+          .from("marketplace_items")
+          .select("id, title, price_cve, island, municipality, category, images, created_at")
+          .eq("user_id", vendorId)
+          .eq("status", "active")
+          .order("created_at", { ascending: false });
+
+        if (itemsData && itemsData.length > 0) {
+          combinedAds.push(...itemsData.map((item: any) => ({
+            id: item.id,
+            mode: 'item_service' as const,
+            title: item.title,
+            price: item.price_cve,
+            island: item.island,
+            zone: item.municipality,
+            bedrooms: null,
+            bathrooms: null,
+            square_meters: null,
+            images: item.images || [],
+            created_at: item.created_at,
+          })));
+        }
+
+        combinedAds.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setAds(combinedAds);
+        setLoading(false);
+        return;
+      }
     }
-    load();
+
+    // Fall back to mock profiles
+    const mockMatch = mockProfiles.find((p) => p.id === vendorId);
+    if (mockMatch) {
+      setProfile({
+        id: mockMatch.id,
+        full_name: mockMatch.full_name,
+        avatar_url: mockMatch.avatar_url,
+        phone: mockMatch.phone,
+        whatsapp: mockMatch.whatsapp,
+        bio: mockMatch.bio,
+        company: mockMatch.company,
+        type: mockMatch.type,
+        facebook_url: mockMatch.facebook_url,
+        instagram_url: mockMatch.instagram_url,
+        facebook_shop_url: mockMatch.facebook_shop_url,
+      });
+      setAds(
+        mockMatch.listings.map((l) => ({
+          ...l,
+          created_at: new Date().toISOString(),
+        }))
+      );
+    }
+
+    setLoading(false);
   }, [vendorId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const onFocus = () => loadData();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadData]);
 
   const handleWhatsApp = () => {
     const phone = (profile?.whatsapp || profile?.phone || "").replace(/\D/g, "");
