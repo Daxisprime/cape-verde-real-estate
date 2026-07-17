@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
+import SafetyBanner from "@/components/SafetyBanner";
 import PropertyDetailClient from "@/components/PropertyDetailClient";
 import type { SimilarProperty } from "@/components/PropertyDetailClient";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
@@ -178,6 +179,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   return (
     <div className="min-h-screen bg-white">
       <Header />
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <SafetyBanner />
+      </div>
       <PropertyDetailClient property={property} similarProperties={similarProperties} />
     </div>
   );

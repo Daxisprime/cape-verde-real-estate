@@ -47,6 +47,13 @@ export default function Footer() {
           >
             {isPt ? "Politica de Cookies" : "Cookie Policy"}
           </Link>
+          <span className="text-gray-600">|</span>
+          <Link
+            href="/safety"
+            className="text-xs text-gray-400 hover:text-white transition-colors"
+          >
+            {isPt ? "Seguranca" : "Safety Tips"}
+          </Link>
         </div>
 
         {/* Social Media Icons */}

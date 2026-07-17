@@ -33,6 +33,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+    "privacy-policy": "https://procv.cv/privacy",
   },
 };
 

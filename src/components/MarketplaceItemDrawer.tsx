@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import SafetyBanner from '@/components/SafetyBanner';
 import { X, ChevronLeft, ChevronRight, MapPin, Phone, MessageCircle, Shield, CheckCircle2, Clock, User, Send, ExternalLink, Star } from 'lucide-react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { MarketplaceItem } from '@/hooks/useMarketplace';
@@ -266,6 +267,11 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <div className="max-w-7xl mx-auto px-4 pb-8">
+
+            {/* Safety Banner */}
+            <div className="mt-4">
+              <SafetyBanner />
+            </div>
 
             {/* Full-Width Photo Gallery - same as property */}
             <section className="mt-4">
