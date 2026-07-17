@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { notFound } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { mockProfiles } from "@/lib/mockProfiles";

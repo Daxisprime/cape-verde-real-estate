@@ -114,26 +114,24 @@ export function useMyListings() {
       let props: unknown[] = [];
       let items: unknown[] = [];
 
-      try {
-        const { data } = await supabase
-          .from('properties')
-          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
-          .eq('agent_id', user!.id)
-          .order('created_at', { ascending: false });
-        props = data || [];
-      } catch {
-        // properties query failed -- continue with empty
+      const { data: propsData, error: propsError } = await supabase
+        .from('properties')
+        .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
+        .eq('agent_id', user!.id)
+        .order('created_at', { ascending: false });
+
+      if (!propsError && propsData) {
+        props = propsData;
       }
 
-      try {
-        const { data } = await supabase
-          .from('marketplace_items')
-          .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
-          .eq('user_id', user!.id)
-          .order('created_at', { ascending: false });
-        items = data || [];
-      } catch {
-        // marketplace_items query failed -- continue with empty
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('marketplace_items')
+        .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+
+      if (!itemsError && itemsData) {
+        items = itemsData;
       }
 
       const combined: LiveListing[] = [
