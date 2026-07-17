@@ -146,6 +146,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             property_type: category,
             listing_type: "sale",
             island,
+            zone: municipality || null,
             location: municipality || island,
             images: imageUrls,
             agent_id: user.id,
@@ -161,6 +162,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             price_cve: parseFloat(price),
             category: category || "General",
             island,
+            zone: municipality || null,
             municipality: municipality || null,
             images: imageUrls,
             user_id: user.id,
@@ -311,7 +313,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
         </select>
         <input
           type="text"
-          placeholder="Zone / Area (optional)"
+          placeholder="Zona / Bairro"
           value={municipality}
           onChange={(e) => setMunicipality(e.target.value)}
           className={inputCls}

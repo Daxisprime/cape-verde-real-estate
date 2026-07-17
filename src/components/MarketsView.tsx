@@ -208,7 +208,7 @@ const MUNICIPALITIES = [
 
 export default function MarketsView() {
   const router = useRouter();
-  const { headerSearchQuery, setIsResultsViewActive } = useSearchMode();
+  const { headerSearchQuery, setIsResultsViewActive, selectedIsland } = useSearchMode();
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -253,15 +253,16 @@ export default function MarketsView() {
       const matchSearch = headerSearchQuery
         ? item.title.toLowerCase().includes(headerSearchQuery.toLowerCase())
         : true;
+      const matchIsland = selectedIsland ? item.location.includes(selectedIsland) : true;
       const matchCat = selectedCategory ? item.category === selectedCategory : true;
       const matchSub = selectedSubcategory ? item.subcategory === selectedSubcategory : true;
       const matchLoc = selectedLocation !== "All Locations" ? item.location === selectedLocation : true;
       const matchMin = minPrice ? item.price >= parseFloat(minPrice) : true;
       const matchMax = maxPrice ? item.price <= parseFloat(maxPrice) : true;
-      return matchSearch && matchCat && matchSub && matchLoc && matchMin && matchMax;
+      return matchSearch && matchIsland && matchCat && matchSub && matchLoc && matchMin && matchMax;
     });
     return filtered.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
-  }, [itemsPool, headerSearchQuery, selectedCategory, selectedSubcategory, selectedLocation, minPrice, maxPrice]);
+  }, [itemsPool, headerSearchQuery, selectedIsland, selectedCategory, selectedSubcategory, selectedLocation, minPrice, maxPrice]);
 
   const activeSubcategories = useMemo(() => {
     if (!hoveredCategory) return [];

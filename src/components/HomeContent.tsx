@@ -34,7 +34,7 @@ export default function HomeContent() {
   const { t } = useLanguage();
   const {
     isResultsViewActive, setIsResultsViewActive,
-    searchMode, listingType, headerSearchQuery,
+    searchMode, listingType, headerSearchQuery, selectedIsland,
   } = useSearchMode();
 
   const { listings: liveRealEstate, isLive } = useListings();
@@ -126,9 +126,10 @@ export default function HomeContent() {
         property.location.toLowerCase().includes(headerSearchQuery.toLowerCase()) ||
         property.island.toLowerCase().includes(headerSearchQuery.toLowerCase()) ||
         property.title.toLowerCase().includes(headerSearchQuery.toLowerCase());
-      return matchesQuery;
+      const matchesIsland = !selectedIsland || property.island === selectedIsland;
+      return matchesQuery && matchesIsland;
     });
-  }, [headerSearchQuery, liveRealEstate, isLive]);
+  }, [headerSearchQuery, selectedIsland, liveRealEstate, isLive]);
 
   const mapMarkers = useMemo(() => {
     return filteredProperties.map(p => ({

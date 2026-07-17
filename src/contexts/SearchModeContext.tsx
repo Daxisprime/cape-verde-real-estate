@@ -14,6 +14,8 @@ interface SearchModeContextType {
   setIsResultsViewActive: (active: boolean) => void;
   headerSearchQuery: string;
   setHeaderSearchQuery: (query: string) => void;
+  selectedIsland: string;
+  setSelectedIsland: (island: string) => void;
 }
 
 const SearchModeContext = createContext<SearchModeContextType>({
@@ -25,6 +27,8 @@ const SearchModeContext = createContext<SearchModeContextType>({
   setIsResultsViewActive: () => {},
   headerSearchQuery: "",
   setHeaderSearchQuery: () => {},
+  selectedIsland: "",
+  setSelectedIsland: () => {},
 });
 
 export function SearchModeProvider({ children }: { children: ReactNode }) {
@@ -32,12 +36,14 @@ export function SearchModeProvider({ children }: { children: ReactNode }) {
   const [listingType, setListingType] = useState<ListingType>("buy");
   const [isResultsViewActive, setIsResultsViewActive] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [selectedIsland, setSelectedIsland] = useState("");
   return (
     <SearchModeContext.Provider value={{
       searchMode, setSearchMode,
       listingType, setListingType,
       isResultsViewActive, setIsResultsViewActive,
       headerSearchQuery, setHeaderSearchQuery,
+      selectedIsland, setSelectedIsland,
     }}>
       {children}
     </SearchModeContext.Provider>

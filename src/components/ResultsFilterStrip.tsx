@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, MapPin } from 'lucide-react';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CAPE_VERDE_ISLANDS } from '@/lib/supabase';
 
 export default function ResultsFilterStrip() {
-  const { searchMode, listingType, setListingType } = useSearchMode();
+  const { searchMode, listingType, setListingType, selectedIsland, setSelectedIsland } = useSearchMode();
   const { t } = useLanguage();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [propertyType, setPropertyType] = useState('all');
@@ -30,6 +31,26 @@ export default function ResultsFilterStrip() {
     <div className="sticky top-16 z-40 w-full bg-white border-b border-gray-200 shadow-sm" ref={panelRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 py-2">
+          {/* Island Selector - Primary Filter */}
+          <div className="flex items-center gap-1.5 mr-2 border-r pr-3 border-gray-200">
+            <MapPin className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
+            <select
+              value={selectedIsland}
+              onChange={(e) => setSelectedIsland(e.target.value)}
+              className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer appearance-none pr-6 bg-no-repeat bg-[length:12px] bg-[right_6px_center] ${
+                selectedIsland
+                  ? 'bg-[#0044FF] text-white border-[#0044FF]'
+                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-blue-50 hover:text-[#0044FF]'
+              }`}
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${selectedIsland ? 'white' : '%236b7280'}' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
+            >
+              <option value="">Ilha (Todas)</option>
+              {CAPE_VERDE_ISLANDS.map((island) => (
+                <option key={island} value={island}>{island}</option>
+              ))}
+            </select>
+          </div>
+
           {searchMode === "realestate" ? (
             <>
               <div className="flex items-center gap-1 mr-3 border-r pr-3 border-gray-200">
@@ -78,6 +99,17 @@ export default function ResultsFilterStrip() {
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               {t.filters}
+            </button>
+          )}
+
+          {/* Active island badge */}
+          {selectedIsland && (
+            <button
+              onClick={() => setSelectedIsland("")}
+              className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-[#0044FF] text-[10px] font-semibold hover:bg-blue-200 transition-colors"
+            >
+              {selectedIsland}
+              <span className="ml-0.5 text-blue-400 hover:text-blue-600">&times;</span>
             </button>
           )}
         </div>

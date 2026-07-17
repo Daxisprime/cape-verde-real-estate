@@ -17,7 +17,7 @@ import {
   Lock,
   FileText,
 } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { compressImage } from "@/lib/image-compression";
 import { useToast } from "@/hooks/use-toast";
@@ -35,29 +35,15 @@ const CATEGORIES = [
   "Health & Beauty",
 ];
 
-const REGIONS = [
-  "Praia - Plateau",
-  "Praia - Palmarejo",
-  "Praia - Achada Sto Antonio",
-  "Praia - Fazenda",
-  "Praia - Sucupira",
-  "Mindelo - Centro",
-  "Mindelo - Laginha",
-  "Santa Maria - Sal",
-  "Espargos - Sal",
-  "Assomada - Santiago",
-  "Tarrafal - Santiago",
-  "Sal Rei - Boa Vista",
-  "Porto Novo - Santo Antao",
-  "Sao Filipe - Fogo",
-];
+
 
 interface FormState {
   owner_name: string;
   whatsapp: string;
   store_name: string;
   category: string;
-  region: string;
+  island: string;
+  zone: string;
   nif: string;
   seed_title: string;
   seed_price: string;
@@ -68,7 +54,8 @@ const INITIAL_FORM: FormState = {
   whatsapp: "",
   store_name: "",
   category: "",
-  region: "",
+  island: "",
+  zone: "",
   nif: "",
   seed_title: "",
   seed_price: "",
@@ -131,7 +118,7 @@ export default function OnboardFormClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !form.owner_name.trim() || !form.store_name.trim() || !form.whatsapp.trim()) return;
+    if (!user || !form.owner_name.trim() || !form.store_name.trim() || !form.whatsapp.trim() || !form.island) return;
 
     setSubmitting(true);
 
@@ -140,7 +127,7 @@ export default function OnboardFormClient() {
       p_merchant_phone: form.whatsapp.trim(),
       p_store_name: form.store_name.trim(),
       p_category: form.category || null,
-      p_region: form.region || null,
+      p_region: form.island ? `${form.island}${form.zone ? ` - ${form.zone}` : ''}` : null,
       p_nif: form.nif.trim() || "",
       p_id_image_path: null as string | null,
       p_seed_product_title: form.seed_title.trim() || null,
@@ -315,21 +302,35 @@ export default function OnboardFormClient() {
             </select>
           </div>
 
-          {/* Region Dropdown */}
+          {/* Island + Zone */}
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-              <MapPin className="w-4 h-4" /> Bairro / Regiao
+              <MapPin className="w-4 h-4" /> Ilha *
             </label>
             <select
-              value={form.region}
-              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+              value={form.island}
+              onChange={(e) => setForm((f) => ({ ...f, island: e.target.value }))}
+              required
               className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white appearance-none"
             >
-              <option value="">Selecionar zona...</option>
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
+              <option value="">Selecionar ilha...</option>
+              {CAPE_VERDE_ISLANDS.map((island) => (
+                <option key={island} value={island}>{island}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <MapPin className="w-4 h-4" /> Zona / Bairro
+            </label>
+            <input
+              type="text"
+              value={form.zone}
+              onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))}
+              placeholder="Ex: Palmarejo, São Filipe Centro..."
+              className="w-full px-4 py-3.5 text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none bg-white"
+            />
           </div>
 
           {/* NIF / BI (Encrypted) */}
@@ -472,7 +473,7 @@ export default function OnboardFormClient() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting || !form.owner_name.trim() || !form.store_name.trim() || !form.whatsapp.trim()}
+            disabled={submitting || !form.owner_name.trim() || !form.store_name.trim() || !form.whatsapp.trim() || !form.island}
             className="w-full flex items-center justify-center gap-2 py-4 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-base font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-teal-600/20"
           >
             {submitting ? (
