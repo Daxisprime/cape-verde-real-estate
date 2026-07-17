@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import StorePageClient from "./StorePageClient";
 
@@ -25,14 +26,6 @@ async function getProfile(slugParam: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  const { data: byId } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", slugParam)
-    .maybeSingle();
-
-  if (byId) return byId;
-
   const { data: bySlug } = await supabase
     .from("profiles")
     .select("*")
@@ -41,7 +34,13 @@ async function getProfile(slugParam: string) {
 
   if (bySlug) return bySlug;
 
-  return null;
+  const { data: byId } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", slugParam)
+    .maybeSingle();
+
+  return byId;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -99,5 +98,11 @@ export default async function StorePage({ params }: PageProps) {
   }
 
   const profile = await getProfile(currentSlug);
-  return <StorePageClient profileId={profile?.id || null} slug={currentSlug} storeId={null} />;
+  if (profile) {
+    return <StorePageClient profileId={profile.id} slug={currentSlug} storeId={null} />;
+  }
+
+  // Client-side mock hydration handles vendor-xxx and agent slugs;
+  // pass null and let the client attempt mock lookup before showing 404
+  return <StorePageClient profileId={null} slug={currentSlug} storeId={null} />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { notFound } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { mockProfiles } from "@/lib/mockProfiles";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
@@ -378,18 +379,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
   }
 
   if (!profile) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="max-w-7xl mx-auto px-4 py-24 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Eye className="w-8 h-8 text-gray-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Loja Nao Encontrada</h1>
-          <p className="text-gray-500">Este perfil de vendedor nao existe na nossa plataforma.</p>
-        </div>
-      </div>
-    );
+    notFound();
   }
 
   const memberDate = new Date(profile.created_at);

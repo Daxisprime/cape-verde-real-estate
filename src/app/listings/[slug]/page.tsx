@@ -5,18 +5,10 @@ import SafetyBanner from "@/components/SafetyBanner";
 import PropertyDetailClient from "@/components/PropertyDetailClient";
 import type { SimilarProperty } from "@/components/PropertyDetailClient";
 import { capeVerdeProperties, agentDatabase } from "@/data/cape-verde-properties";
+import { slugify } from "@/lib/slugify";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 function findPropertyBySlug(slug: string) {
