@@ -48,6 +48,10 @@ export default function SettingsPageClient() {
     facebookHandle: "",
     twitterHandle: "",
     websiteUrl: "",
+    storeName: "",
+    storeDescription: "",
+    storeLogoUrl: "",
+    storeBannerUrl: "",
   });
 
   const [verificationStatus, setVerificationStatus] = useState<string>("unverified");
@@ -156,9 +160,21 @@ export default function SettingsPageClient() {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
     (async () => {
-      const { data } = await supabase.from("profiles").select("notification_preferences").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("notification_preferences, facebook_handle, twitter_handle, website_url, store_name, store_description, store_logo, store_banner").eq("id", user.id).maybeSingle();
       if (data?.notification_preferences && typeof data.notification_preferences === "object") {
         setNotifPrefs(prev => ({ ...prev, ...(data.notification_preferences as Record<string, boolean>) }));
+      }
+      if (data) {
+        setProfileData(prev => ({
+          ...prev,
+          facebookHandle: (data as Record<string, string | null>).facebook_handle || "",
+          twitterHandle: (data as Record<string, string | null>).twitter_handle || "",
+          websiteUrl: (data as Record<string, string | null>).website_url || "",
+          storeName: (data as Record<string, string | null>).store_name || "",
+          storeDescription: (data as Record<string, string | null>).store_description || "",
+          storeLogoUrl: (data as Record<string, string | null>).store_logo || "",
+          storeBannerUrl: (data as Record<string, string | null>).store_banner || "",
+        }));
       }
     })();
   }, [user]);
@@ -193,6 +209,10 @@ export default function SettingsPageClient() {
             facebook_handle: profileData.facebookHandle || null,
             twitter_handle: profileData.twitterHandle || null,
             website_url: profileData.websiteUrl || null,
+            store_name: profileData.storeName || null,
+            store_description: profileData.storeDescription || null,
+            store_logo: profileData.storeLogoUrl || null,
+            store_banner: profileData.storeBannerUrl || null,
           }, { onConflict: 'id' });
         }
       }
@@ -568,6 +588,60 @@ export default function SettingsPageClient() {
                         placeholder="https://yourwebsite.com"
                       />
                       <p className="text-xs text-gray-400 mt-1">Your business or personal website URL</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Store Branding Section */}
+                <Separator />
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Branding da Loja (Opcional)
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Personalize a aparencia da sua pagina de vendedor. Estes campos sao opcionais.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="storeName">Store Title</Label>
+                      <Input
+                        id="storeName"
+                        value={profileData.storeName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, storeName: e.target.value }))}
+                        placeholder="My Store Name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="storeLogoUrl">Store Logo URL</Label>
+                      <Input
+                        id="storeLogoUrl"
+                        value={profileData.storeLogoUrl}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, storeLogoUrl: e.target.value }))}
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label htmlFor="storeBannerUrl">Store Banner URL</Label>
+                      <Input
+                        id="storeBannerUrl"
+                        value={profileData.storeBannerUrl}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, storeBannerUrl: e.target.value }))}
+                        placeholder="https://example.com/banner.jpg"
+                      />
+                      <p className="text-xs text-gray-400">Recommended: 1200x400 pixels</p>
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label htmlFor="storeDescription">Store Description</Label>
+                      <Textarea
+                        id="storeDescription"
+                        value={profileData.storeDescription}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, storeDescription: e.target.value }))}
+                        placeholder="Tell buyers about your store..."
+                        rows={3}
+                      />
                     </div>
                   </div>
                 </div>

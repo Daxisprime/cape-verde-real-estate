@@ -391,15 +391,45 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Store Banner */}
-      {profile.store_banner && (
-        <div className="w-full h-48 sm:h-56 lg:h-64 relative overflow-hidden">
-          <img
-            src={profile.store_banner}
-            alt={`${profile.store_name || profile.name} banner`}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      {/* Store Header - only rendered if store_name or store_banner are present */}
+      {(profile.store_name || profile.store_banner) && (
+        <div className="w-full relative overflow-hidden">
+          {/* Banner */}
+          {profile.store_banner ? (
+            <div className="w-full h-48 sm:h-56 lg:h-64 relative">
+              <img
+                src={profile.store_banner}
+                alt={`${profile.store_name || profile.name} banner`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+            </div>
+          ) : (
+            <div className="w-full h-36 sm:h-44 bg-gradient-to-r from-teal-600 to-emerald-500" />
+          )}
+
+          {/* Store identity overlay */}
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-5">
+            <div className="max-w-7xl mx-auto flex items-end gap-4">
+              {profile.store_logo && (
+                <img
+                  src={profile.store_logo}
+                  alt={`${profile.store_name || profile.name} logo`}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border-2 border-white shadow-lg flex-shrink-0"
+                />
+              )}
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-white truncate drop-shadow-sm">
+                  {profile.store_name}
+                </h1>
+                {profile.store_description && (
+                  <p className="text-sm text-white/80 line-clamp-2 mt-0.5 drop-shadow-sm">
+                    {profile.store_description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -584,24 +614,36 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
 
           {/* Right: Listing Feed */}
           <section className="lg:col-span-2">
-            {/* Category Filter */}
+            {/* Category Tab Buttons */}
             {listings.length > 0 && (
-              <div className="mb-4 flex items-center gap-3">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-4 py-2.5 text-sm font-medium border border-gray-200 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none appearance-none pr-8"
-                >
-                  <option value="all">Todos os Anuncios</option>
-                  <option value="property">Imobiliario</option>
-                  <option value="marketplace">Marketplace</option>
-                  {[...new Set(listings.filter(l => l.category).map(l => l.category!))].map((cat) => (
-                    <option key={cat} value={`cat:${cat}`}>{cat}</option>
+              <div className="mb-5">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {[
+                    { value: "all", label: "Todos" },
+                    { value: "property", label: "Imoveis" },
+                    { value: "marketplace", label: "Moveis" },
+                    ...[...new Set(listings.filter(l => l.category).map(l => l.category!))].map((cat) => ({
+                      value: `cat:${cat}`,
+                      label: cat,
+                    })),
+                  ].map((tab) => (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => setCategoryFilter(tab.value)}
+                      className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${
+                        categoryFilter === tab.value
+                          ? "bg-teal-600 text-white shadow-sm"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
                   ))}
-                </select>
-                <span className="text-xs text-gray-400">
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
                   {filteredListings.length} {filteredListings.length === 1 ? "resultado" : "resultados"}
-                </span>
+                </p>
               </div>
             )}
 
