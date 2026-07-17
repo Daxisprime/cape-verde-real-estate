@@ -19,6 +19,7 @@ import {
   normalizeWhatsAppUrl,
   normalizeWebsiteUrl,
 } from "@/lib/social-normalize";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Phone,
   MessageCircle,
@@ -72,6 +73,7 @@ export default function MyStorePageClient() {
   const { listings: liveListings, loading: listingsLoading } = useMyListings();
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const fallbackVendor = mockProfiles[0];
 
   const vendorName = profile?.name || fallbackVendor.full_name;
@@ -375,7 +377,7 @@ export default function MyStorePageClient() {
       setIsBusiness(true);
       setShowBusinessPanel(false);
       await refreshProfile();
-      toast({ title: "Conta de Empresa Ativada!", description: "A sua loja profissional esta agora ativa." });
+      toast({ title: t.businessAccountActive + "!", description: t.storeConfigured + "." });
     } catch (err) {
       toast({ title: "Erro", description: err instanceof Error ? err.message : "Erro desconhecido", variant: "destructive" });
     } finally {
@@ -542,16 +544,15 @@ export default function MyStorePageClient() {
                 <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-amber-900">A sua loja gerou mais de 15 leads de clientes!</h3>
+                <h3 className="text-sm font-bold text-amber-900">{t.paywallTitle}</h3>
                 <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                  Parabens pelo sucesso! Para continuar a publicar anuncios e receber contactos de clientes, 
-                  atualize para uma subscricao mensal que lhe da acesso ilimitado.
+                  {t.paywallDesc}
                 </p>
                 <a
                   href="/subscription"
                   className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition-colors"
                 >
-                  Ver Planos de Subscricao
+                  {t.viewSubscriptionPlans}
                 </a>
               </div>
             </div>
@@ -595,7 +596,7 @@ export default function MyStorePageClient() {
                   onClick={() => avatarInputRef.current?.click()}
                   className="mt-2 w-full text-center text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
                 >
-                  Alterar Foto
+                  {t.changePhoto}
                 </button>
               )}
             </div>
@@ -615,7 +616,7 @@ export default function MyStorePageClient() {
                     )}
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full shadow-sm">
                       <Crown className="h-3 w-3" />
-                      Plano Patrão (Grátis)
+                      {t.planFree}
                     </span>
                   </div>
                   {vendorEmail && (
@@ -628,14 +629,14 @@ export default function MyStorePageClient() {
                     className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors"
                   >
                     <Eye className="h-3.5 w-3.5" />
-                    Ver Minha Loja
+                    {t.viewMyStore}
                   </Link>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
                     className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
                   >
                     {isEditing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-                    {isEditing ? "Cancel" : "Edit Profile"}
+                    {isEditing ? t.cancel : t.editProfile}
                   </button>
                 </div>
               </div>
@@ -796,20 +797,20 @@ export default function MyStorePageClient() {
           {!isBusiness ? (
             <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 border border-slate-200 rounded-2xl p-5">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#2563EB] flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <Building2 className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-bold text-gray-900 mb-1">Ativar Conta de Empresa</h3>
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">{t.activateBusinessAccount}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed mb-3">
-                    Transforme o seu perfil numa loja profissional com nome de marca, logotipo e banner personalizados. Totalmente gratuito!
+                    {t.activateBusinessDesc}
                   </p>
                   <button
                     onClick={() => setShowBusinessPanel(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-600/20"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2563EB] text-white text-sm font-semibold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md shadow-blue-600/20"
                   >
                     <Store className="h-4 w-4" />
-                    Ativar Conta de Empresa
+                    {t.activateBusinessAccount}
                   </button>
                 </div>
               </div>
@@ -821,8 +822,8 @@ export default function MyStorePageClient() {
                   <Check className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900">Conta de Empresa Ativa</h3>
-                  <p className="text-xs text-gray-500">{businessForm.business_name || "Loja configurada"}</p>
+                  <h3 className="text-sm font-bold text-gray-900">{t.businessAccountActive}</h3>
+                  <p className="text-xs text-gray-500">{businessForm.business_name || t.storeConfigured}</p>
                 </div>
                 {businessForm.business_logo && (
                   <img src={businessForm.business_logo} alt="Logo" className="ml-auto w-10 h-10 rounded-lg object-cover border border-green-200" />
@@ -833,13 +834,13 @@ export default function MyStorePageClient() {
                   onClick={() => setShowBusinessPanel(true)}
                   className="text-xs px-3 py-1.5 bg-white border border-green-200 text-green-700 rounded-lg hover:bg-green-50 transition-colors font-medium"
                 >
-                  Editar Dados
+                  {t.editData}
                 </button>
                 <button
                   onClick={handleDeactivateBusiness}
                   className="text-xs px-3 py-1.5 text-gray-400 hover:text-red-500 transition-colors"
                 >
-                  Desativar
+                  {t.deactivate}
                 </button>
               </div>
             </div>
@@ -861,13 +862,13 @@ export default function MyStorePageClient() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 mb-3">
                   <Building2 className="w-6 h-6 text-blue-700" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Configurar Loja Profissional</h3>
-                <p className="text-sm text-gray-500 mt-1">Personalize a identidade da sua empresa</p>
+                <h3 className="text-lg font-bold text-gray-900">{t.configureBusinessStore}</h3>
+                <p className="text-sm text-gray-500 mt-1">{t.personalizeIdentity}</p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Nome da Empresa *</label>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">{t.businessName} *</label>
                   <input
                     type="text"
                     placeholder="Ex: Imobiliaria Sol de Cabo Verde"
@@ -878,7 +879,7 @@ export default function MyStorePageClient() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Logotipo da Loja</label>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">{t.storeLogo}</label>
                   <div className="flex items-center gap-3">
                     {businessForm.business_logo ? (
                       <img src={businessForm.business_logo} alt="Logo" className="w-14 h-14 rounded-xl object-cover border-2 border-blue-100" />
@@ -892,16 +893,16 @@ export default function MyStorePageClient() {
                       onClick={() => businessLogoRef.current?.click()}
                       className="text-xs px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors font-medium text-gray-600"
                     >
-                      Escolher Ficheiro
+                      {t.chooseFile}
                     </button>
                     <input ref={businessLogoRef} type="file" accept="image/*" onChange={handleBusinessLogoUpload} className="hidden" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Bio / Descricao</label>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">{t.bioDescription}</label>
                   <textarea
-                    placeholder="Descreva a sua empresa em poucas palavras..."
+                    placeholder={t.describeYourBusiness}
                     value={businessForm.business_bio}
                     onChange={(e) => setBusinessForm((p) => ({ ...p, business_bio: e.target.value }))}
                     rows={3}
@@ -914,16 +915,16 @@ export default function MyStorePageClient() {
                 <button
                   onClick={handleActivateBusiness}
                   disabled={savingBusiness || !businessForm.business_name.trim()}
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 bg-[#2563EB] text-white text-sm font-semibold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {savingBusiness ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {isBusiness ? "Guardar Alteracoes" : "Ativar Conta de Empresa"}
+                  {isBusiness ? t.saveChanges : t.saveOrActivate}
                 </button>
                 <button
                   onClick={() => setShowBusinessPanel(false)}
                   className="px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
-                  Cancelar
+                  {t.cancel}
                 </button>
               </div>
             </div>
@@ -935,47 +936,47 @@ export default function MyStorePageClient() {
           <section className="mb-6">
             <div className="bg-white border border-gray-200 rounded-2xl p-5">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#2563EB] flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <Store className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-bold text-gray-900">Gerir Montra</h3>
+                    <h3 className="text-sm font-bold text-gray-900">{t.manageStorefront}</h3>
                     <button
                       onClick={() => setShowStorefrontPanel(!showStorefrontPanel)}
                       className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
                     >
-                      {showStorefrontPanel ? "Fechar" : "Editar"}
+                      {showStorefrontPanel ? t.close : t.edit}
                     </button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Personalize a pagina publica da sua loja com logotipo, banner e descricao.
+                    {t.manageStorefrontDesc}
                   </p>
 
                   {showStorefrontPanel && (
                     <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Nome da Loja</label>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">{t.storeName}</label>
                         <input
                           type="text"
                           value={storefrontForm.store_name}
                           onChange={(e) => setStorefrontForm(p => ({ ...p, store_name: e.target.value }))}
-                          placeholder="Nome da sua loja..."
+                          placeholder={t.storeName + "..."}
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">Descricao</label>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">{t.storeDescription}</label>
                         <textarea
                           value={storefrontForm.store_description}
                           onChange={(e) => setStorefrontForm(p => ({ ...p, store_description: e.target.value }))}
-                          placeholder="Descreva a sua loja em poucas palavras..."
+                          placeholder={t.describeStoreFocus}
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none h-20"
                           maxLength={300}
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">URL do Logotipo</label>
+                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">{t.logoUrl}</label>
                         <input
                           type="url"
                           value={storefrontForm.store_logo}
@@ -997,10 +998,10 @@ export default function MyStorePageClient() {
                       <button
                         onClick={handleSaveStorefront}
                         disabled={savingStorefront}
-                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
                       >
                         {savingStorefront ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                        Guardar Montra
+                        {t.saveStorefront}
                       </button>
                     </div>
                   )}
@@ -1015,28 +1016,28 @@ export default function MyStorePageClient() {
           <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="w-10 h-10 rounded-xl bg-[#2563EB] flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <Store className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900">Minhas Lojas</h3>
-                  <p className="text-[11px] text-gray-500">{userStores.length} loja{userStores.length !== 1 ? "s" : ""} ativa{userStores.length !== 1 ? "s" : ""}</p>
+                  <h3 className="text-sm font-bold text-gray-900">{t.myStores}</h3>
+                  <p className="text-[11px] text-gray-500">{userStores.length} {t.activeStores}</p>
                 </div>
               </div>
               <button
                 onClick={handleCreateStoreClick}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1d4ed8] rounded-lg transition-colors shadow-sm"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Criar Nova Loja
+                {t.createNewStore}
               </button>
             </div>
 
             {userStores.length === 0 ? (
               <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                 <Store className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-500">Nenhuma loja criada ainda.</p>
-                <p className="text-[10px] text-gray-400 mt-1">Crie montras separadas para diferentes categorias.</p>
+                <p className="text-xs text-gray-500">{t.noStoresYet}</p>
+                <p className="text-[10px] text-gray-400 mt-1">{t.createSeparateStorefronts}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -1067,10 +1068,10 @@ export default function MyStorePageClient() {
         {showCreateStoreForm && (
           <section className="mb-6">
             <div className="bg-white border border-blue-200 rounded-2xl p-5 shadow-md">
-              <h3 className="text-base font-bold text-gray-900 mb-4">Criar Nova Loja</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-4">{t.createNewStore}</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 block mb-1">Titulo da Loja *</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">{t.storeTitle} *</label>
                   <input
                     type="text"
                     value={newStoreForm.title}
@@ -1080,7 +1081,7 @@ export default function MyStorePageClient() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 block mb-1">URL Personalizado (Slug) *</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">{t.customUrl} *</label>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-gray-400">pro.cv/store/</span>
                     <input
@@ -1094,7 +1095,7 @@ export default function MyStorePageClient() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 block mb-1">Localizacao</label>
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">{t.locationLabel}</label>
                     <input
                       type="text"
                       value={newStoreForm.location}
@@ -1104,13 +1105,13 @@ export default function MyStorePageClient() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 block mb-1">Categoria</label>
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">{t.categoryLabel}</label>
                     <select
                       value={newStoreForm.category_focus}
                       onChange={(e) => setNewStoreForm(f => ({ ...f, category_focus: e.target.value }))}
                       className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none bg-white appearance-none"
                     >
-                      <option value="">Selecionar...</option>
+                      <option value="">{t.selectCategory}</option>
                       <option value="Imobiliario">Imobiliario</option>
                       <option value="Automovel">Automovel</option>
                       <option value="Moveis">Moveis</option>
@@ -1122,18 +1123,18 @@ export default function MyStorePageClient() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 block mb-1">Descricao</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">{t.descriptionLabel}</label>
                   <textarea
                     value={newStoreForm.description}
                     onChange={(e) => setNewStoreForm(f => ({ ...f, description: e.target.value }))}
-                    placeholder="Descreva o foco da sua loja..."
+                    placeholder={t.describeStoreFocus}
                     className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none h-16"
                     maxLength={300}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 block mb-1">Logo URL</label>
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">{t.logoUrl}</label>
                     <input
                       type="url"
                       value={newStoreForm.logo_url}
@@ -1143,7 +1144,7 @@ export default function MyStorePageClient() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 block mb-1">Banner URL</label>
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">{t.bannerUrl}</label>
                     <input
                       type="url"
                       value={newStoreForm.banner_url}
@@ -1158,15 +1159,15 @@ export default function MyStorePageClient() {
                     onClick={() => setShowCreateStoreForm(false)}
                     className="flex-1 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    Cancelar
+                    {t.cancel}
                   </button>
                   <button
                     onClick={handleCreateStore}
                     disabled={creatingStore || !newStoreForm.title.trim() || !newStoreForm.slug.trim()}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1d4ed8] rounded-lg transition-colors disabled:opacity-50"
                   >
                     {creatingStore ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                    Criar Loja
+                    {t.createStore}
                   </button>
                 </div>
               </div>
@@ -1182,16 +1183,16 @@ export default function MyStorePageClient() {
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-500/30">
                   <Crown className="h-7 w-7 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Expandir o Seu Negocio!</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{t.expandBusiness}</h3>
                 <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                  A sua conta atual atingiu o limite de lojas gratuitas. Desbloqueie lojas personalizadas adicionais para separar os seus produtos (Ex: Imobiliario vs. Moveis) por apenas <span className="font-bold text-orange-600">1.500 CVE/mes</span>.
+                  {t.expandBusinessDesc} <span className="font-bold text-orange-600">1.500 CVE/mes</span>.
                 </p>
                 <div className="space-y-2">
                   <button className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-bold rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/20">
-                    Desbloquear Lojas Premium
+                    {t.unlockPremiumStores}
                   </button>
                   <button onClick={() => setShowPaywallModal(false)} className="w-full py-2 text-xs text-gray-500 hover:text-gray-700 transition-colors">
-                    Talvez depois
+                    {t.maybeLater}
                   </button>
                 </div>
               </div>
@@ -1208,18 +1209,18 @@ export default function MyStorePageClient() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-bold text-gray-900">Minha Carteira</h3>
+                  <h3 className="text-sm font-bold text-gray-900">{t.myWallet}</h3>
                   <span className="text-lg font-bold text-emerald-700">{walletBalance.toFixed(0)} CVE</span>
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
-                  Use o saldo para impulsionar anuncios e ativar funcionalidades premium.
+                  {t.walletDesc}
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Gift className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Codigo do voucher (ex: XXXX-XXXX-XXXX)"
+                      placeholder={t.voucherPlaceholder}
                       value={voucherPin}
                       onChange={(e) => setVoucherPin(e.target.value)}
                       className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"
@@ -1231,7 +1232,7 @@ export default function MyStorePageClient() {
                     disabled={!voucherPin || voucherLoading}
                     className="px-3 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                   >
-                    {voucherLoading ? "..." : "Resgatar"}
+                    {voucherLoading ? "..." : t.redeem}
                   </button>
                 </div>
               </div>
@@ -1243,7 +1244,7 @@ export default function MyStorePageClient() {
         {bumpConfirmTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative animate-in fade-in zoom-in-95">
-              <h3 className="text-base font-bold text-gray-900 mb-2">Impulsionar Anuncio</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-2">{t.boostListing}</h3>
               <p className="text-sm text-gray-600 mb-4">
                 O seu anuncio sera colocado no topo dos resultados.
               </p>
@@ -1266,7 +1267,7 @@ export default function MyStorePageClient() {
                   onClick={() => setBumpConfirmTarget(null)}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Cancelar
+                  {t.cancel}
                 </button>
                 <button
                   onClick={handleBumpWithWallet}
@@ -1282,16 +1283,9 @@ export default function MyStorePageClient() {
         {/* Listings Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">My Active Listings</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t.myActiveListings}</h2>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100 transition-colors"
-              >
-                <Store className="h-3.5 w-3.5" />
-                + Criar Nova Loja
-              </button>
-              <a href="/sell" className="text-sm text-[#2563EB] font-medium hover:underline">+ Post New</a>
+              <a href="/sell" className="text-sm text-[#2563EB] font-medium hover:underline">{t.postNew}</a>
             </div>
           </div>
 
@@ -1347,28 +1341,28 @@ export default function MyStorePageClient() {
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-400/95 backdrop-blur border border-amber-300 rounded-md text-white hover:bg-amber-500 shadow-sm"
                       >
                         <Star className="h-3 w-3 fill-white" />
-                        Destacar
+                        {t.highlight}
                       </button>
                       <button
                         onClick={() => handleBumpListing(listing.id)}
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-md hover:from-orange-600 hover:to-amber-600 shadow-sm"
                       >
                         <Rocket className="h-3 w-3" />
-                        Impulsionar
+                        {t.boost}
                       </button>
                       <button
                         onClick={() => handleEdit(listing.id)}
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm"
                       >
                         <Pencil className="h-3 w-3" />
-                        Edit
+                        {t.edit}
                       </button>
                       <button
                         onClick={() => handleMarkSold(listing.id)}
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 shadow-sm"
                       >
                         <Archive className="h-3 w-3" />
-                        Sold
+                        {t.sold}
                       </button>
                       <button
                         onClick={() => setDeleteTarget(listing.id)}
@@ -1387,7 +1381,7 @@ export default function MyStorePageClient() {
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur border border-blue-200 rounded-md text-[#2563EB] hover:bg-blue-50 shadow-sm"
                       >
                         <RotateCcw className="h-3 w-3" />
-                        Relist Ad
+                        {t.relistAd}
                       </button>
                       <button
                         onClick={() => setDeleteTarget(listing.id)}
@@ -1414,7 +1408,7 @@ export default function MyStorePageClient() {
                           ? "bg-blue-50 text-[#2563EB]"
                           : "bg-amber-50 text-amber-700"
                       }`}>
-                        {listing.mode === "real_estate" ? "Property" : "Item / Service"}
+                        {listing.mode === "real_estate" ? t.property : t.itemService}
                       </span>
                     </div>
                     <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-1">{listing.title || "Untitled Listing"}</h3>
@@ -1508,22 +1502,22 @@ export default function MyStorePageClient() {
                   <Sparkles className="w-8 h-8 text-amber-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Desbloqueie Lojas Adicionais!
+                  {t.unlockAdditionalStores}
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed mb-6">
-                  A sua conta atual permite 1 loja. Atualize para o plano <span className="font-semibold text-amber-700">Premium Multi-Store</span> para expandir a sua marca em Cabo Verde com multiplas lojas tematicas.
+                  {t.unlockAdditionalStoresDesc}
                 </p>
 
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Lock className="w-4 h-4 text-amber-600" />
-                    <span className="text-sm font-bold text-amber-800">Plano Premium</span>
+                    <span className="text-sm font-bold text-amber-800">{t.premiumPlan}</span>
                   </div>
                   <ul className="text-xs text-amber-700 space-y-1.5 text-left">
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />Ate 5 lojas independentes</li>
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />URLs personalizados para cada loja</li>
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />Cores e branding customizaveis</li>
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />Estatisticas avancadas por loja</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />{t.upTo5Stores}</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />{t.customUrlsPerStore}</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />{t.customBranding}</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500" />{t.advancedStatsPerStore}</li>
                   </ul>
                 </div>
 
@@ -1531,13 +1525,13 @@ export default function MyStorePageClient() {
                   onClick={() => setShowUpgradeModal(false)}
                   className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20"
                 >
-                  Atualizar Agora
+                  {t.upgradeNow}
                 </button>
                 <button
                   onClick={() => setShowUpgradeModal(false)}
                   className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  Talvez mais tarde
+                  {t.maybeLater}
                 </button>
               </div>
             </div>

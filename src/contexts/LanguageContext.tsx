@@ -222,6 +222,88 @@ export interface Translations {
   condition: string;
   newItem: string;
   usedItem: string;
+
+  // My Store page
+  viewMyStore: string;
+  editProfile: string;
+  cancel: string;
+  saveChanges: string;
+  changePhoto: string;
+  activateBusinessAccount: string;
+  activateBusinessDesc: string;
+  businessAccountActive: string;
+  storeConfigured: string;
+  editData: string;
+  deactivate: string;
+  manageStorefront: string;
+  manageStorefrontDesc: string;
+  close: string;
+  edit: string;
+  storeName: string;
+  storeDescription: string;
+  logoUrl: string;
+  bannerUrl: string;
+  saveStorefront: string;
+  myStores: string;
+  activeStores: string;
+  createNewStore: string;
+  noStoresYet: string;
+  createSeparateStorefronts: string;
+  storeTitle: string;
+  customUrl: string;
+  locationLabel: string;
+  categoryLabel: string;
+  selectCategory: string;
+  descriptionLabel: string;
+  describeStoreFocus: string;
+  createStore: string;
+  myWallet: string;
+  walletDesc: string;
+  voucherPlaceholder: string;
+  redeem: string;
+  boostListing: string;
+  boostListingDesc: string;
+  cost: string;
+  currentBalance: string;
+  balanceAfter: string;
+  payWithBalance: string;
+  myActiveListings: string;
+  postNew: string;
+  noListingsFound: string;
+  postYourFirstAd: string;
+  highlight: string;
+  boost: string;
+  sold: string;
+  relistAd: string;
+  deleteLabel: string;
+  deletePermanently: string;
+  deleteConfirmDesc: string;
+  expandBusiness: string;
+  expandBusinessDesc: string;
+  unlockPremiumStores: string;
+  maybeLater: string;
+  planFree: string;
+  configureBusinessStore: string;
+  personalizeIdentity: string;
+  businessName: string;
+  storeLogo: string;
+  chooseFile: string;
+  bioDescription: string;
+  describeYourBusiness: string;
+  saveOrActivate: string;
+  paywallTitle: string;
+  paywallDesc: string;
+  viewSubscriptionPlans: string;
+  unlockAdditionalStores: string;
+  unlockAdditionalStoresDesc: string;
+  premiumPlan: string;
+  upTo5Stores: string;
+  customUrlsPerStore: string;
+  customBranding: string;
+  advancedStatsPerStore: string;
+  upgradeNow: string;
+  property: string;
+  itemService: string;
 }
 
 // Translations data
@@ -435,6 +517,88 @@ const translations: Record<LanguageCode, Translations> = {
     condition: 'Condition',
     newItem: 'New',
     usedItem: 'Used',
+
+    // My Store page
+    viewMyStore: 'View My Store',
+    editProfile: 'Edit Profile',
+    cancel: 'Cancel',
+    saveChanges: 'Save Changes',
+    changePhoto: 'Change Photo',
+    activateBusinessAccount: 'Activate Business Account',
+    activateBusinessDesc: 'Turn your profile into a professional store with custom brand name, logo and banner. Completely free!',
+    businessAccountActive: 'Business Account Active',
+    storeConfigured: 'Store configured',
+    editData: 'Edit Details',
+    deactivate: 'Deactivate',
+    manageStorefront: 'Manage Storefront',
+    manageStorefrontDesc: 'Customize your store public page with logo, banner and description.',
+    close: 'Close',
+    edit: 'Edit',
+    storeName: 'Store Name',
+    storeDescription: 'Description',
+    logoUrl: 'Logo URL',
+    bannerUrl: 'Banner URL',
+    saveStorefront: 'Save Storefront',
+    myStores: 'My Stores',
+    activeStores: 'active stores',
+    createNewStore: 'Create New Store',
+    noStoresYet: 'No stores created yet.',
+    createSeparateStorefronts: 'Create separate storefronts for different categories.',
+    storeTitle: 'Store Title',
+    customUrl: 'Custom URL (Slug)',
+    locationLabel: 'Location',
+    categoryLabel: 'Category',
+    selectCategory: 'Select...',
+    descriptionLabel: 'Description',
+    describeStoreFocus: 'Describe your store focus...',
+    createStore: 'Create Store',
+    myWallet: 'My Wallet',
+    walletDesc: 'Use your balance to boost ads and activate premium features.',
+    voucherPlaceholder: 'Voucher code (e.g. XXXX-XXXX-XXXX)',
+    redeem: 'Redeem',
+    boostListing: 'Boost Listing',
+    boostListingDesc: 'Your listing will be placed at the top of results.',
+    cost: 'Cost',
+    currentBalance: 'Current balance',
+    balanceAfter: 'Balance after',
+    payWithBalance: 'Pay with Balance',
+    myActiveListings: 'My Active Listings',
+    postNew: '+ Post New',
+    noListingsFound: 'No listings found in this category.',
+    postYourFirstAd: 'Post your first ad',
+    highlight: 'Highlight',
+    boost: 'Boost',
+    sold: 'Sold',
+    relistAd: 'Relist Ad',
+    deleteLabel: 'Delete',
+    deletePermanently: 'Delete Permanently',
+    deleteConfirmDesc: 'This listing will be removed forever.',
+    expandBusiness: 'Expand Your Business!',
+    expandBusinessDesc: 'Your current account has reached the free store limit. Unlock additional custom stores to separate your products (e.g. Real Estate vs. Furniture) for just',
+    unlockPremiumStores: 'Unlock Premium Stores',
+    maybeLater: 'Maybe later',
+    planFree: 'Boss Plan (Free)',
+    configureBusinessStore: 'Configure Professional Store',
+    personalizeIdentity: 'Personalize your business identity',
+    businessName: 'Business Name',
+    storeLogo: 'Store Logo',
+    chooseFile: 'Choose File',
+    bioDescription: 'Bio / Description',
+    describeYourBusiness: 'Describe your business in a few words...',
+    saveOrActivate: 'Activate Business Account',
+    paywallTitle: 'Your store has generated over 15 client leads!',
+    paywallDesc: 'Congratulations on your success! To continue posting ads and receiving client contacts, upgrade to a monthly subscription for unlimited access.',
+    viewSubscriptionPlans: 'View Subscription Plans',
+    unlockAdditionalStores: 'Unlock Additional Stores!',
+    unlockAdditionalStoresDesc: 'Your current account allows 1 store. Upgrade to the Premium Multi-Store plan to expand your brand in Cape Verde with multiple themed stores.',
+    premiumPlan: 'Premium Plan',
+    upTo5Stores: 'Up to 5 independent stores',
+    customUrlsPerStore: 'Custom URLs for each store',
+    customBranding: 'Customizable colors and branding',
+    advancedStatsPerStore: 'Advanced stats per store',
+    upgradeNow: 'Upgrade Now',
+    property: 'Property',
+    itemService: 'Item / Service',
   },
   pt: {
     // UI Navigation
@@ -645,6 +809,88 @@ const translations: Record<LanguageCode, Translations> = {
     condition: 'Condição',
     newItem: 'Novo',
     usedItem: 'Usado',
+
+    // My Store page
+    viewMyStore: 'Ver Minha Loja',
+    editProfile: 'Editar Perfil',
+    cancel: 'Cancelar',
+    saveChanges: 'Guardar Alterações',
+    changePhoto: 'Alterar Foto',
+    activateBusinessAccount: 'Ativar Conta de Empresa',
+    activateBusinessDesc: 'Transforme o seu perfil numa loja profissional com nome de marca, logotipo e banner personalizados. Totalmente gratuito!',
+    businessAccountActive: 'Conta de Empresa Ativa',
+    storeConfigured: 'Loja configurada',
+    editData: 'Editar Dados',
+    deactivate: 'Desativar',
+    manageStorefront: 'Gerir Montra',
+    manageStorefrontDesc: 'Personalize a página pública da sua loja com logotipo, banner e descrição.',
+    close: 'Fechar',
+    edit: 'Editar',
+    storeName: 'Nome da Loja',
+    storeDescription: 'Descrição',
+    logoUrl: 'URL do Logotipo',
+    bannerUrl: 'URL do Banner',
+    saveStorefront: 'Guardar Montra',
+    myStores: 'Minhas Lojas',
+    activeStores: 'lojas ativas',
+    createNewStore: 'Criar Nova Loja',
+    noStoresYet: 'Nenhuma loja criada ainda.',
+    createSeparateStorefronts: 'Crie montras separadas para diferentes categorias.',
+    storeTitle: 'Título da Loja',
+    customUrl: 'URL Personalizado (Slug)',
+    locationLabel: 'Localização',
+    categoryLabel: 'Categoria',
+    selectCategory: 'Selecionar...',
+    descriptionLabel: 'Descrição',
+    describeStoreFocus: 'Descreva o foco da sua loja...',
+    createStore: 'Criar Loja',
+    myWallet: 'Minha Carteira',
+    walletDesc: 'Use o saldo para impulsionar anúncios e ativar funcionalidades premium.',
+    voucherPlaceholder: 'Código do voucher (ex: XXXX-XXXX-XXXX)',
+    redeem: 'Resgatar',
+    boostListing: 'Impulsionar Anúncio',
+    boostListingDesc: 'O seu anúncio será colocado no topo dos resultados.',
+    cost: 'Custo',
+    currentBalance: 'Saldo atual',
+    balanceAfter: 'Saldo após',
+    payWithBalance: 'Pagar com Saldo',
+    myActiveListings: 'Meus Anúncios Ativos',
+    postNew: '+ Publicar Novo',
+    noListingsFound: 'Nenhum anúncio encontrado nesta categoria.',
+    postYourFirstAd: 'Publique o seu primeiro anúncio',
+    highlight: 'Destacar',
+    boost: 'Impulsionar',
+    sold: 'Vendido',
+    relistAd: 'Republicar',
+    deleteLabel: 'Eliminar',
+    deletePermanently: 'Eliminar Permanentemente',
+    deleteConfirmDesc: 'Este anúncio será removido para sempre.',
+    expandBusiness: 'Expandir o Seu Negócio!',
+    expandBusinessDesc: 'A sua conta atual atingiu o limite de lojas gratuitas. Desbloqueie lojas personalizadas adicionais para separar os seus produtos (Ex: Imobiliário vs. Móveis) por apenas',
+    unlockPremiumStores: 'Desbloquear Lojas Premium',
+    maybeLater: 'Talvez depois',
+    planFree: 'Plano Patrão (Grátis)',
+    configureBusinessStore: 'Configurar Loja Profissional',
+    personalizeIdentity: 'Personalize a identidade da sua empresa',
+    businessName: 'Nome da Empresa',
+    storeLogo: 'Logotipo da Loja',
+    chooseFile: 'Escolher Ficheiro',
+    bioDescription: 'Bio / Descrição',
+    describeYourBusiness: 'Descreva a sua empresa em poucas palavras...',
+    saveOrActivate: 'Ativar Conta de Empresa',
+    paywallTitle: 'A sua loja gerou mais de 15 leads de clientes!',
+    paywallDesc: 'Parabéns pelo sucesso! Para continuar a publicar anúncios e receber contactos de clientes, atualize para uma subscrição mensal que lhe dá acesso ilimitado.',
+    viewSubscriptionPlans: 'Ver Planos de Subscrição',
+    unlockAdditionalStores: 'Desbloqueie Lojas Adicionais!',
+    unlockAdditionalStoresDesc: 'A sua conta atual permite 1 loja. Atualize para o plano Premium Multi-Store para expandir a sua marca em Cabo Verde com múltiplas lojas temáticas.',
+    premiumPlan: 'Plano Premium',
+    upTo5Stores: 'Até 5 lojas independentes',
+    customUrlsPerStore: 'URLs personalizados para cada loja',
+    customBranding: 'Cores e branding customizáveis',
+    advancedStatsPerStore: 'Estatísticas avançadas por loja',
+    upgradeNow: 'Atualizar Agora',
+    property: 'Propriedade',
+    itemService: 'Artigo / Serviço',
   },
   fr: {
     // UI Navigation
@@ -845,6 +1091,88 @@ const translations: Record<LanguageCode, Translations> = {
     condition: 'État',
     newItem: 'Neuf',
     usedItem: 'Occasion',
+
+    // My Store page
+    viewMyStore: 'Voir Ma Boutique',
+    editProfile: 'Modifier le Profil',
+    cancel: 'Annuler',
+    saveChanges: 'Enregistrer',
+    changePhoto: 'Changer la Photo',
+    activateBusinessAccount: 'Activer le Compte Professionnel',
+    activateBusinessDesc: 'Transformez votre profil en boutique professionnelle avec un nom de marque, un logo et une bannière personnalisés. Totalement gratuit!',
+    businessAccountActive: 'Compte Professionnel Actif',
+    storeConfigured: 'Boutique configurée',
+    editData: 'Modifier',
+    deactivate: 'Désactiver',
+    manageStorefront: 'Gérer la Vitrine',
+    manageStorefrontDesc: 'Personnalisez la page publique de votre boutique avec un logo, une bannière et une description.',
+    close: 'Fermer',
+    edit: 'Modifier',
+    storeName: 'Nom de la Boutique',
+    storeDescription: 'Description',
+    logoUrl: 'URL du Logo',
+    bannerUrl: 'URL de la Bannière',
+    saveStorefront: 'Enregistrer la Vitrine',
+    myStores: 'Mes Boutiques',
+    activeStores: 'boutiques actives',
+    createNewStore: 'Créer une Boutique',
+    noStoresYet: 'Aucune boutique créée.',
+    createSeparateStorefronts: 'Créez des vitrines séparées pour différentes catégories.',
+    storeTitle: 'Titre de la Boutique',
+    customUrl: 'URL Personnalisée (Slug)',
+    locationLabel: 'Localisation',
+    categoryLabel: 'Catégorie',
+    selectCategory: 'Sélectionner...',
+    descriptionLabel: 'Description',
+    describeStoreFocus: 'Décrivez le focus de votre boutique...',
+    createStore: 'Créer la Boutique',
+    myWallet: 'Mon Portefeuille',
+    walletDesc: 'Utilisez votre solde pour booster des annonces et activer des fonctionnalités premium.',
+    voucherPlaceholder: 'Code voucher (ex: XXXX-XXXX-XXXX)',
+    redeem: 'Échanger',
+    boostListing: 'Booster l\'Annonce',
+    boostListingDesc: 'Votre annonce sera placée en haut des résultats.',
+    cost: 'Coût',
+    currentBalance: 'Solde actuel',
+    balanceAfter: 'Solde après',
+    payWithBalance: 'Payer avec le Solde',
+    myActiveListings: 'Mes Annonces Actives',
+    postNew: '+ Publier',
+    noListingsFound: 'Aucune annonce trouvée dans cette catégorie.',
+    postYourFirstAd: 'Publiez votre première annonce',
+    highlight: 'Mettre en Avant',
+    boost: 'Booster',
+    sold: 'Vendu',
+    relistAd: 'Republier',
+    deleteLabel: 'Supprimer',
+    deletePermanently: 'Supprimer Définitivement',
+    deleteConfirmDesc: 'Cette annonce sera supprimée pour toujours.',
+    expandBusiness: 'Développez Votre Business!',
+    expandBusinessDesc: 'Votre compte actuel a atteint la limite de boutiques gratuites. Débloquez des boutiques personnalisées supplémentaires pour séparer vos produits pour seulement',
+    unlockPremiumStores: 'Débloquer les Boutiques Premium',
+    maybeLater: 'Peut-être plus tard',
+    planFree: 'Plan Boss (Gratuit)',
+    configureBusinessStore: 'Configurer la Boutique Pro',
+    personalizeIdentity: 'Personnalisez l\'identité de votre entreprise',
+    businessName: 'Nom de l\'Entreprise',
+    storeLogo: 'Logo de la Boutique',
+    chooseFile: 'Choisir un Fichier',
+    bioDescription: 'Bio / Description',
+    describeYourBusiness: 'Décrivez votre entreprise en quelques mots...',
+    saveOrActivate: 'Activer le Compte Pro',
+    paywallTitle: 'Votre boutique a généré plus de 15 prospects!',
+    paywallDesc: 'Félicitations! Pour continuer à publier et recevoir des contacts, passez à un abonnement mensuel pour un accès illimité.',
+    viewSubscriptionPlans: 'Voir les Plans',
+    unlockAdditionalStores: 'Débloquez des Boutiques Supplémentaires!',
+    unlockAdditionalStoresDesc: 'Votre compte actuel permet 1 boutique. Passez au plan Premium Multi-Store pour développer votre marque au Cap-Vert.',
+    premiumPlan: 'Plan Premium',
+    upTo5Stores: 'Jusqu\'à 5 boutiques indépendantes',
+    customUrlsPerStore: 'URLs personnalisées par boutique',
+    customBranding: 'Couleurs et branding personnalisables',
+    advancedStatsPerStore: 'Statistiques avancées par boutique',
+    upgradeNow: 'Mettre à Niveau',
+    property: 'Propriété',
+    itemService: 'Article / Service',
   },
   cv: {
     // UI Navigation
@@ -1045,6 +1373,88 @@ const translations: Record<LanguageCode, Translations> = {
     condition: 'Kondisão',
     newItem: 'Novu',
     usedItem: 'Uzadu',
+
+    // My Store page
+    viewMyStore: 'Ber Nha Loja',
+    editProfile: 'Edita Perfil',
+    cancel: 'Kansela',
+    saveChanges: 'Guarda Mudansas',
+    changePhoto: 'Troka Foto',
+    activateBusinessAccount: 'Ativa Konta di Empreza',
+    activateBusinessDesc: 'Transforma bu perfil numa loja profisional ku nomi di marka, logotipu i banner personalizadu. Totalmenti grátis!',
+    businessAccountActive: 'Konta di Empreza Ativa',
+    storeConfigured: 'Loja konfiguradu',
+    editData: 'Edita Dadus',
+    deactivate: 'Dezativa',
+    manageStorefront: 'Jeri Montra',
+    manageStorefrontDesc: 'Personaliza pájina públiku di bu loja ku logotipu, banner i descrição.',
+    close: 'Fitxa',
+    edit: 'Edita',
+    storeName: 'Nomi di Loja',
+    storeDescription: 'Descrição',
+    logoUrl: 'URL di Logotipu',
+    bannerUrl: 'URL di Banner',
+    saveStorefront: 'Guarda Montra',
+    myStores: 'Nhas Lojas',
+    activeStores: 'lojas ativas',
+    createNewStore: 'Kria Loja Novu',
+    noStoresYet: 'Ningum loja kriadu ainda.',
+    createSeparateStorefronts: 'Kria montras separadu pa diferenti kategorias.',
+    storeTitle: 'Títulu di Loja',
+    customUrl: 'URL Personalizadu (Slug)',
+    locationLabel: 'Lokalizasão',
+    categoryLabel: 'Kategoria',
+    selectCategory: 'Selecion...',
+    descriptionLabel: 'Descrição',
+    describeStoreFocus: 'Deskrebe foku di bu loja...',
+    createStore: 'Kria Loja',
+    myWallet: 'Nha Karteira',
+    walletDesc: 'Uza bu saldu pa impulsiona anúnsius i ativa funsionalidadis premium.',
+    voucherPlaceholder: 'Kódigu di voucher (ex: XXXX-XXXX-XXXX)',
+    redeem: 'Resgata',
+    boostListing: 'Impulsiona Anúnsiu',
+    boostListingDesc: 'Bu anúnsiu ta ser kolokadu na topu di resultadus.',
+    cost: 'Kustu',
+    currentBalance: 'Saldu atual',
+    balanceAfter: 'Saldu dipôs',
+    payWithBalance: 'Paga ku Saldu',
+    myActiveListings: 'Nhas Anúnsius Ativus',
+    postNew: '+ Publika Novu',
+    noListingsFound: 'Ningum anúnsiu nkontradu nesta kategoria.',
+    postYourFirstAd: 'Publika bu primeiru anúnsiu',
+    highlight: 'Destaka',
+    boost: 'Impulsiona',
+    sold: 'Vendidu',
+    relistAd: 'Republika',
+    deleteLabel: 'Elimina',
+    deletePermanently: 'Elimina Permanentementi',
+    deleteConfirmDesc: 'Es anúnsiu ta ser removidu pa sempri.',
+    expandBusiness: 'Espandi Bu Negósiu!',
+    expandBusinessDesc: 'Bu konta atual txiga na limiti di lojas grátis. Desblokeia lojas personalizadus adisional pa separa bus produtus por apena',
+    unlockPremiumStores: 'Desblokeia Lojas Premium',
+    maybeLater: 'Talves dipôs',
+    planFree: 'Planu Patrão (Grátis)',
+    configureBusinessStore: 'Konfigura Loja Profisional',
+    personalizeIdentity: 'Personaliza identidadi di bu empreza',
+    businessName: 'Nomi di Empreza',
+    storeLogo: 'Logotipu di Loja',
+    chooseFile: 'Skolhe Fixeru',
+    bioDescription: 'Bio / Descrição',
+    describeYourBusiness: 'Deskrebe bu empreza na pokus palavras...',
+    saveOrActivate: 'Ativa Konta di Empreza',
+    paywallTitle: 'Bu loja jera más di 15 leads di klientis!',
+    paywallDesc: 'Parabéns! Pa kontinua publika anúnsius i resebe kontaktus, atualiza pa subskrição mensal ku asesu ilimitadu.',
+    viewSubscriptionPlans: 'Ber Planus di Subskrição',
+    unlockAdditionalStores: 'Desblokeia Lojas Adisional!',
+    unlockAdditionalStoresDesc: 'Bu konta atual permiti 1 loja. Atualiza pa planu Premium Multi-Store pa espandi bu marka na Kabu Verdi.',
+    premiumPlan: 'Planu Premium',
+    upTo5Stores: 'Té 5 lojas independentis',
+    customUrlsPerStore: 'URLs personalizadus pa kada loja',
+    customBranding: 'Koris i branding personalizável',
+    advancedStatsPerStore: 'Estatístikas avansadus por loja',
+    upgradeNow: 'Atualiza Agora',
+    property: 'Propriedadi',
+    itemService: 'Artigu / Servisu',
   }
 };
 
