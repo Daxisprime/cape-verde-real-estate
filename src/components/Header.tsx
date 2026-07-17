@@ -265,14 +265,16 @@ export default function Header() {
                   Marketplace
                 </Link>
                 <div className="border-t border-gray-100 mt-1 pt-1">
-                  <Link
-                    href="/my-store"
-                    onClick={() => setIsNavOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <Store className="h-4 w-4 text-gray-400" />
-                    {t.myStore}
-                  </Link>
+                  {profile?.store_name && (
+                    <Link
+                      href="/my-store"
+                      onClick={() => setIsNavOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Store className="h-4 w-4 text-gray-400" />
+                      {t.myStore}
+                    </Link>
+                  )}
                   <Link
                     href="/sell"
                     onClick={() => setIsNavOpen(false)}
@@ -421,14 +423,16 @@ export default function Header() {
                       <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'User'}</p>
                       <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                     </div>
-                    <Link
-                      href="/my-store"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Store className="h-4 w-4 text-gray-400" />
-                      {t.myStore}
-                    </Link>
+                    {profile?.store_name && (
+                      <Link
+                        href="/my-store"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Store className="h-4 w-4 text-gray-400" />
+                        {t.myStore}
+                      </Link>
+                    )}
                     <Link
                       href="/sell"
                       onClick={() => setIsProfileOpen(false)}
