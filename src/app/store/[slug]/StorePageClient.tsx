@@ -235,6 +235,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
     }
   }, [listings, setSearchMode]);
 
+  const [profileNotFound, setProfileNotFound] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!profileId) {
       const mockData = hydrateFromSlug(slug);
@@ -252,6 +254,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
       setLoading(false);
       return;
     }
+
+    try {
 
     let propertiesQuery = supabase
         .from("properties")
@@ -285,7 +289,15 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .eq("vendor_id", profileId),
     ]);
 
-    if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+    if (propertiesRes.error) console.error("[StorePageClient] properties query error:", propertiesRes.error);
+    if (marketplaceRes.error) console.error("[StorePageClient] marketplace query error:", marketplaceRes.error);
+    if (profileRes.error) console.error("[StorePageClient] profile query error:", profileRes.error);
+
+    if (profileRes.data) {
+      setProfile(profileRes.data as unknown as Profile);
+    } else if (!profileRes.error) {
+      setProfileNotFound(true);
+    }
 
     if (reviewsRes.data) {
       setReviewCount(reviewsRes.data.length);
@@ -341,7 +353,11 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
     );
 
     setListings(unified);
-    setLoading(false);
+    } catch (err) {
+      console.error("[StorePageClient] fetchData failed:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [profileId, slug, storeId]);
 
   useEffect(() => {
@@ -386,8 +402,16 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
     );
   }
 
-  if (!profile) {
+  if (!profile && profileNotFound) {
     notFound();
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Nao foi possivel carregar o perfil. Tente novamente.</p>
+      </div>
+    );
   }
 
   const memberDate = new Date(profile.created_at);
