@@ -114,6 +114,14 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       const supabase = createSupabaseBrowserClient();
       if (!supabase) throw new Error("Supabase not configured");
 
+      // Refresh session to ensure JWT is valid for RLS
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error("Session expired. Please sign out and sign back in.");
+      }
+      // Use the session's user ID (fresh from JWT) rather than potentially stale React state
+      const authenticatedUserId = session.user.id;
+
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
@@ -149,7 +157,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             zone: municipality || null,
             location: municipality || island,
             images: imageUrls,
-            agent_id: user.id,
+            agent_id: authenticatedUserId,
             status: "active",
         };
         console.log("[QuickPostForm] Inserting property:", insertPayload);
@@ -177,7 +185,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             zone: municipality || null,
             municipality: municipality || null,
             images: imageUrls,
-            user_id: user.id,
+            user_id: authenticatedUserId,
             status: "active",
             condition,
             contact_whatsapp: whatsapp || null,
@@ -200,7 +208,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       }
 
       if (facebookHandle || whatsapp) {
-        const profileUpdate: Record<string, unknown> = { id: user.id };
+        const profileUpdate: Record<string, unknown> = { id: authenticatedUserId };
         if (whatsapp) profileUpdate.whatsapp = whatsapp;
         if (facebookHandle) profileUpdate.facebook_handle = facebookHandle;
         await supabase.from("profiles").upsert(profileUpdate, { onConflict: "id" });
