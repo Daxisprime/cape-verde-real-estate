@@ -193,7 +193,17 @@ export const createSupabaseBrowserClient = () => {
 // Server client bypasses RLS — use only in API routes / server components, never in 'use client' files
 export const createSupabaseServerClient = () => {
   if (!supabaseUrl) return null;
-  const key = supabaseServiceRoleKey || supabaseAnonKey;
+  let key = supabaseAnonKey;
+  if (supabaseServiceRoleKey) {
+    try {
+      const payload = JSON.parse(atob(supabaseServiceRoleKey.split('.')[1]));
+      if (supabaseUrl.includes(payload.ref)) {
+        key = supabaseServiceRoleKey;
+      }
+    } catch {
+      // malformed key, fall back to anon
+    }
+  }
   return createClient<Database>(supabaseUrl, key, {
     auth: { persistSession: false },
   });

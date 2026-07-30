@@ -238,15 +238,32 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
   const [profileNotFound, setProfileNotFound] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!profileId) {
-      const mockData = hydrateFromSlug(slug);
-      if (mockData) {
-        setProfile(mockData.profile);
-        setListings(mockData.listings);
-        setIsMockProfile(true);
+    let resolvedProfileId = profileId;
+
+    if (!resolvedProfileId) {
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        const { data: bySlug } = await supabase.from("profiles").select("id").eq("slug", slug).maybeSingle();
+        if (bySlug) {
+          resolvedProfileId = bySlug.id;
+        } else {
+          const { data: byId } = await supabase.from("profiles").select("id").eq("id", slug).maybeSingle();
+          if (byId) resolvedProfileId = byId.id;
+        }
       }
-      setLoading(false);
-      return;
+
+      if (!resolvedProfileId) {
+        const mockData = hydrateFromSlug(slug);
+        if (mockData) {
+          setProfile(mockData.profile);
+          setListings(mockData.listings);
+          setIsMockProfile(true);
+        } else {
+          setProfileNotFound(true);
+        }
+        setLoading(false);
+        return;
+      }
     }
 
     const supabase = createSupabaseBrowserClient();
@@ -257,7 +274,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
 
     try {
 
-    console.log("[StorePageClient] fetchData called with:", { profileId, storeId, slug });
+    console.log("[StorePageClient] fetchData called with:", { profileId: resolvedProfileId, storeId, slug });
 
     let propertiesQuery = supabase
         .from("properties")
@@ -277,18 +294,18 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
       propertiesQuery = propertiesQuery.eq("store_id", storeId);
       marketplaceQuery = marketplaceQuery.eq("store_id", storeId);
     } else {
-      propertiesQuery = propertiesQuery.eq("agent_id", profileId);
-      marketplaceQuery = marketplaceQuery.eq("user_id", profileId);
+      propertiesQuery = propertiesQuery.eq("agent_id", resolvedProfileId);
+      marketplaceQuery = marketplaceQuery.eq("user_id", resolvedProfileId);
     }
 
     const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
+      supabase.from("profiles").select("*").eq("id", resolvedProfileId).maybeSingle(),
       propertiesQuery,
       marketplaceQuery,
       supabase
         .from("vendor_reviews")
         .select("rating")
-        .eq("vendor_id", profileId),
+        .eq("vendor_id", resolvedProfileId),
     ]);
 
     console.log("[StorePageClient] Query results:", {
