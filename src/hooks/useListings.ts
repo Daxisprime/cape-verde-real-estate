@@ -49,7 +49,7 @@ export function useListings() {
       try {
         let query = supabase
           .from('properties')
-          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
+          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude, last_bumped_at')
           .eq('status', 'active');
 
         if (selectedIslands.length > 0) {
@@ -62,9 +62,7 @@ export function useListings() {
           .order('last_bumped_at', { ascending: false })
           .limit(50);
 
-        if (error) throw error;
-
-        if (data && data.length > 0) {
+        if (!error && data) {
           setListings(data as unknown as LiveListing[]);
           setIsLive(true);
         } else {
@@ -72,7 +70,8 @@ export function useListings() {
           setIsLive(true);
         }
       } catch {
-        // Silently fall back to mock data
+        setListings([]);
+        setIsLive(true);
       } finally {
         setLoading(false);
       }

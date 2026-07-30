@@ -235,118 +235,126 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
     }
   }, [listings, setSearchMode]);
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!profileId) {
-        const mockData = hydrateFromSlug(slug);
-        if (mockData) {
-          setProfile(mockData.profile);
-          setListings(mockData.listings);
-          setIsMockProfile(true);
-        }
-        setLoading(false);
-        return;
+  const fetchData = useCallback(async () => {
+    if (!profileId) {
+      const mockData = hydrateFromSlug(slug);
+      if (mockData) {
+        setProfile(mockData.profile);
+        setListings(mockData.listings);
+        setIsMockProfile(true);
       }
-
-      const supabase = createSupabaseBrowserClient();
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-
-      let propertiesQuery = supabase
-          .from("properties")
-          .select("*")
-          .eq("status", "active")
-          .order("is_featured", { ascending: false })
-          .order("last_bumped_at", { ascending: false });
-
-      let marketplaceQuery = supabase
-          .from("marketplace_items")
-          .select("*")
-          .eq("status", "active")
-          .order("is_featured", { ascending: false })
-          .order("last_bumped_at", { ascending: false });
-
-      if (storeId) {
-        propertiesQuery = propertiesQuery.eq("store_id", storeId);
-        marketplaceQuery = marketplaceQuery.eq("store_id", storeId);
-      } else {
-        propertiesQuery = propertiesQuery.eq("agent_id", profileId);
-        marketplaceQuery = marketplaceQuery.eq("user_id", profileId);
-      }
-
-      const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
-        propertiesQuery,
-        marketplaceQuery,
-        supabase
-          .from("vendor_reviews")
-          .select("rating")
-          .eq("vendor_id", profileId),
-      ]);
-
-      if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
-
-      if (reviewsRes.data) {
-        setReviewCount(reviewsRes.data.length);
-        if (reviewsRes.data.length > 0) {
-          const avg = reviewsRes.data.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviewsRes.data.length;
-          setAvgRating(avg);
-        }
-      }
-
-      const unified: UnifiedListing[] = [];
-
-      if (propertiesRes.data) {
-        for (const p of propertiesRes.data) {
-          unified.push({
-            id: p.id,
-            type: "property",
-            title: p.title,
-            description: p.description || null,
-            price: Number(p.price),
-            images: (p.images as string[]) || [],
-            island: p.island || "",
-            location: p.city || null,
-            created_at: p.created_at,
-            bedrooms: p.bedrooms,
-            bathrooms: p.bathrooms,
-            total_area: p.total_area ? Number(p.total_area) : null,
-            property_type: p.property_type,
-            listing_type: p.price_type,
-          });
-        }
-      }
-
-      if (marketplaceRes.data) {
-        for (const m of marketplaceRes.data) {
-          unified.push({
-            id: m.id,
-            type: "marketplace",
-            title: m.title,
-            description: m.description || null,
-            price: Number(m.price_cve),
-            images: (m.images as string[]) || [],
-            island: m.island || "",
-            location: m.municipality || null,
-            created_at: m.created_at,
-            category: m.category,
-            condition: m.condition,
-          });
-        }
-      }
-
-      unified.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setListings(unified);
       setLoading(false);
+      return;
     }
 
-    fetchData();
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    let propertiesQuery = supabase
+        .from("properties")
+        .select("*")
+        .eq("status", "active")
+        .order("is_featured", { ascending: false })
+        .order("last_bumped_at", { ascending: false });
+
+    let marketplaceQuery = supabase
+        .from("marketplace_items")
+        .select("*")
+        .eq("status", "active")
+        .order("is_featured", { ascending: false })
+        .order("last_bumped_at", { ascending: false });
+
+    if (storeId) {
+      propertiesQuery = propertiesQuery.eq("store_id", storeId);
+      marketplaceQuery = marketplaceQuery.eq("store_id", storeId);
+    } else {
+      propertiesQuery = propertiesQuery.eq("agent_id", profileId);
+      marketplaceQuery = marketplaceQuery.eq("user_id", profileId);
+    }
+
+    const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", profileId).maybeSingle(),
+      propertiesQuery,
+      marketplaceQuery,
+      supabase
+        .from("vendor_reviews")
+        .select("rating")
+        .eq("vendor_id", profileId),
+    ]);
+
+    if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+
+    if (reviewsRes.data) {
+      setReviewCount(reviewsRes.data.length);
+      if (reviewsRes.data.length > 0) {
+        const avg = reviewsRes.data.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviewsRes.data.length;
+        setAvgRating(avg);
+      }
+    }
+
+    const unified: UnifiedListing[] = [];
+
+    if (propertiesRes.data) {
+      for (const p of propertiesRes.data) {
+        unified.push({
+          id: p.id,
+          type: "property",
+          title: p.title,
+          description: p.description || null,
+          price: Number(p.price),
+          images: (p.images as string[]) || [],
+          island: p.island || "",
+          location: p.location || null,
+          created_at: p.created_at,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          total_area: p.total_area ? Number(p.total_area) : null,
+          property_type: p.property_type,
+          listing_type: p.listing_type,
+        });
+      }
+    }
+
+    if (marketplaceRes.data) {
+      for (const m of marketplaceRes.data) {
+        unified.push({
+          id: m.id,
+          type: "marketplace",
+          title: m.title,
+          description: m.description || null,
+          price: Number(m.price_cve),
+          images: (m.images as string[]) || [],
+          island: m.island || "",
+          location: m.municipality || null,
+          created_at: m.created_at,
+          category: m.category,
+          condition: m.condition,
+        });
+      }
+    }
+
+    unified.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    setListings(unified);
+    setLoading(false);
   }, [profileId, slug, storeId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    function handleFocus() {
+      if (profileId) fetchData();
+    }
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [fetchData, profileId]);
 
   const filteredListings = listings.filter((item) => {
     if (categoryFilter === "all") return true;
