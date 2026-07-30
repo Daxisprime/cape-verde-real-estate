@@ -257,6 +257,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
 
     try {
 
+    console.log("[StorePageClient] fetchData called with:", { profileId, storeId, slug });
+
     let propertiesQuery = supabase
         .from("properties")
         .select("*")
@@ -288,6 +290,13 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .select("rating")
         .eq("vendor_id", profileId),
     ]);
+
+    console.log("[StorePageClient] Query results:", {
+      profile: { data: profileRes.data ? "found" : null, error: profileRes.error },
+      properties: { count: propertiesRes.data?.length ?? 0, error: propertiesRes.error },
+      marketplace: { count: marketplaceRes.data?.length ?? 0, error: marketplaceRes.error },
+      reviews: { count: reviewsRes.data?.length ?? 0, error: reviewsRes.error },
+    });
 
     if (propertiesRes.error) console.error("[StorePageClient] properties query error:", propertiesRes.error);
     if (marketplaceRes.error) console.error("[StorePageClient] marketplace query error:", marketplaceRes.error);
@@ -352,6 +361,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
+    console.log("[StorePageClient] Setting listings, count:", unified.length, "titles:", unified.slice(0, 3).map(l => l.title));
     setListings(unified);
     } catch (err) {
       console.error("[StorePageClient] fetchData failed:", err);
