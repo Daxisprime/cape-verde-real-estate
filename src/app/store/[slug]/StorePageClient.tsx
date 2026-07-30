@@ -310,7 +310,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .eq("vendor_id", resolvedProfileId),
     ]);
 
-    console.log("[StorePageClient] Fetched data:", {
+    console.log("Public fetch result:", {
       profile: { data: profileRes.data, error: profileRes.error },
       properties: { data: propertiesRes.data, error: propertiesRes.error },
       marketplace: { data: marketplaceRes.data, error: marketplaceRes.error },
