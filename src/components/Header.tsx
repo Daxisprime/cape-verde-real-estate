@@ -434,6 +434,22 @@ export default function Header() {
                       </Link>
                     )}
                     <Link
+                      href="/dashboard"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Home className="h-4 w-4 text-gray-400" />
+                      {t.dashboard || "Dashboard"}
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="h-4 w-4 text-gray-400" />
+                      {t.myProfile || "My Profile"}
+                    </Link>
+                    <Link
                       href="/sell"
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

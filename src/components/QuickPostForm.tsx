@@ -139,9 +139,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       }
 
       if (isProperty) {
-        const { error } = await supabase
-          .from("properties")
-          .insert({
+        const insertPayload = {
             title,
             description: description || null,
             price: parseFloat(price),
@@ -153,12 +151,24 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             images: imageUrls,
             agent_id: user.id,
             status: "active",
-          } as never);
-        if (error) throw error;
+        };
+        console.log("[QuickPostForm] Inserting property:", insertPayload);
+        const { data: insertedRow, error } = await supabase
+          .from("properties")
+          .insert(insertPayload as never)
+          .select("id")
+          .single();
+        if (error) {
+          console.error("[QuickPostForm] Property insert error:", error);
+          throw error;
+        }
+        if (!insertedRow) {
+          console.error("[QuickPostForm] Property insert returned no row -- likely RLS block");
+          throw new Error("Insert failed: no row returned. Please sign out and sign back in.");
+        }
+        console.log("[QuickPostForm] Property inserted successfully, id:", insertedRow.id);
       } else {
-        const { error } = await supabase
-          .from("marketplace_items")
-          .insert({
+        const insertPayload = {
             title,
             description: description || null,
             price_cve: parseFloat(price),
@@ -171,8 +181,22 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             status: "active",
             condition,
             contact_whatsapp: whatsapp || null,
-          } as never);
-        if (error) throw error;
+        };
+        console.log("[QuickPostForm] Inserting marketplace_item:", insertPayload);
+        const { data: insertedRow, error } = await supabase
+          .from("marketplace_items")
+          .insert(insertPayload as never)
+          .select("id")
+          .single();
+        if (error) {
+          console.error("[QuickPostForm] Marketplace insert error:", error);
+          throw error;
+        }
+        if (!insertedRow) {
+          console.error("[QuickPostForm] Marketplace insert returned no row -- likely RLS block");
+          throw new Error("Insert failed: no row returned. Please sign out and sign back in.");
+        }
+        console.log("[QuickPostForm] Marketplace item inserted successfully, id:", insertedRow.id);
       }
 
       if (facebookHandle || whatsapp) {
