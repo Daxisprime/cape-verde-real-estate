@@ -298,6 +298,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
       marketplaceQuery = marketplaceQuery.eq("user_id", resolvedProfileId);
     }
 
+    console.log("[StorePageClient] Query params:", { resolvedProfileId, storeId });
+
     const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", resolvedProfileId).maybeSingle(),
       propertiesQuery,
@@ -308,16 +310,12 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .eq("vendor_id", resolvedProfileId),
     ]);
 
-    console.log("[StorePageClient] Query results:", {
-      profile: { data: profileRes.data ? "found" : null, error: profileRes.error },
-      properties: { count: propertiesRes.data?.length ?? 0, error: propertiesRes.error },
-      marketplace: { count: marketplaceRes.data?.length ?? 0, error: marketplaceRes.error },
-      reviews: { count: reviewsRes.data?.length ?? 0, error: reviewsRes.error },
+    console.log("[StorePageClient] Fetched data:", {
+      profile: { data: profileRes.data, error: profileRes.error },
+      properties: { data: propertiesRes.data, error: propertiesRes.error },
+      marketplace: { data: marketplaceRes.data, error: marketplaceRes.error },
+      reviews: { data: reviewsRes.data, error: reviewsRes.error },
     });
-
-    if (propertiesRes.error) console.error("[StorePageClient] properties query error:", propertiesRes.error);
-    if (marketplaceRes.error) console.error("[StorePageClient] marketplace query error:", marketplaceRes.error);
-    if (profileRes.error) console.error("[StorePageClient] profile query error:", profileRes.error);
 
     if (profileRes.data) {
       setProfile(profileRes.data as unknown as Profile);
