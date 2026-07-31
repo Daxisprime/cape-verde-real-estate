@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, X, Loader2, Zap, AlertTriangle, Crown, Facebook } from "lucide-react";
 import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
 import { compressImage } from "@/lib/image-compression";
+import { slugify } from "@/lib/slugify";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkListingLimit } from "@/lib/listing-limits";
@@ -123,6 +124,28 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       // Use the session's user ID (fresh from JWT) rather than potentially stale React state
       const authenticatedUserId = session.user.id;
 
+      // Resolve or auto-create a store for this user
+      let resolvedStoreId: string | null = null;
+      const { data: existingStore } = await supabase
+        .from("stores" as never)
+        .select("id")
+        .eq("owner_id", authenticatedUserId)
+        .limit(1)
+        .maybeSingle() as { data: { id: string } | null };
+      if (existingStore) {
+        resolvedStoreId = existingStore.id;
+      } else {
+        const storeName = profile?.name || session.user.email?.split("@")[0] || "Minha Loja";
+        const storeSlug = slugify(storeName) + "-" + Date.now().toString(36);
+        const { data: newStore, error: storeErr } = await supabase
+          .from("stores" as never)
+          .insert({ owner_id: authenticatedUserId, title: storeName, slug: storeSlug } as never)
+          .select("id")
+          .single() as { data: { id: string } | null; error: unknown };
+        if (storeErr) throw storeErr;
+        resolvedStoreId = newStore!.id;
+      }
+
       const imageUrls: string[] = [];
       for (const file of images) {
         try {
@@ -160,6 +183,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             images: imageUrls,
             agent_id: authenticatedUserId,
             status: "active",
+            store_id: resolvedStoreId,
         };
         console.log("[QuickPostForm] Inserting property:", insertPayload);
         const { data: insertedRow, error } = await supabase
@@ -190,6 +214,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             status: "active",
             condition,
             contact_whatsapp: whatsapp || null,
+            store_id: resolvedStoreId,
         };
         console.log("[QuickPostForm] Inserting marketplace_item:", insertPayload);
         const { data: insertedRow, error } = await supabase

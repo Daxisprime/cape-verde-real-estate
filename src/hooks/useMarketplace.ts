@@ -283,7 +283,11 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
         setItems(filterMockItems(options));
       } else if (data && data.length > 0) {
         console.log('Marketplace items fetched:', data.length);
-        setItems(data as MarketplaceItem[]);
+        const sanitized = data.map((item: Record<string, unknown>) => ({
+          ...item,
+          images: Array.isArray(item.images) ? item.images : [],
+        })) as MarketplaceItem[];
+        setItems(sanitized);
       } else {
         console.log('DB returned empty, using mock data');
         setItems(filterMockItems(options));
