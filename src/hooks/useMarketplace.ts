@@ -220,7 +220,10 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchItems = useCallback(async () => {
+    console.log('Fetching from URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+
     if (!isSupabaseConfigured()) {
+      console.log('Supabase not configured, using mock data');
       setItems(filterMockItems(options));
       setLoading(false);
       return;
@@ -228,6 +231,7 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
+      console.log('Supabase client creation failed, using mock data');
       setItems(filterMockItems(options));
       setLoading(false);
       return;
@@ -266,15 +270,18 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
       const { data, error: fetchError } = await query;
 
       if (fetchError) {
+        console.log('Error details:', fetchError);
         setError(fetchError.message);
         setItems(filterMockItems(options));
       } else if (data && data.length > 0) {
+        console.log('Marketplace items fetched:', data.length);
         setItems(data as MarketplaceItem[]);
       } else {
-        // DB returned empty -- show mock data so the UI is never blank
+        console.log('DB returned empty, using mock data');
         setItems(filterMockItems(options));
       }
-    } catch {
+    } catch (err) {
+      console.log('Error details:', err);
       setItems(filterMockItems(options));
     } finally {
       setLoading(false);
