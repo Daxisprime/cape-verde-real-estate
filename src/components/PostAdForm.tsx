@@ -356,7 +356,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           console.log("[PostAdForm] Inserting property with store_id:", resolvedStoreId, "island:", island);
           const { data: inserted, error } = await supabase
             .from("properties")
-            .insert({ ...propertyPayload, status: "active", store_id: resolvedStoreId } as never)
+            .insert({ ...propertyPayload, agent_id: sellerId, status: "active", store_id: resolvedStoreId } as never)
             .select("id")
             .maybeSingle();
           if (error) throw error;
@@ -393,7 +393,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           console.log("[PostAdForm] Inserting marketplace_item with store_id:", resolvedStoreId, "island:", island, "category:", category);
           const { data: inserted, error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, status: "active", store_id: resolvedStoreId } as never)
+            .insert({ ...marketPayload, user_id: sellerId, status: "active", store_id: resolvedStoreId } as never)
             .select("id")
             .maybeSingle();
           if (error) throw error;

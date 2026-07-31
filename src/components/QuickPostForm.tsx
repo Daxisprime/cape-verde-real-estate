@@ -135,7 +135,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       if (existingStore) {
         resolvedStoreId = existingStore.id;
       } else {
-        const storeName = profile?.name || session.user.email?.split("@")[0] || "Minha Loja";
+        const storeName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Minha Loja";
         const storeSlug = slugify(storeName) + "-" + Date.now().toString(36);
         const { data: newStore, error: storeErr } = await supabase
           .from("stores" as never)
