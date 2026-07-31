@@ -291,8 +291,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .order("last_bumped_at", { ascending: false });
 
     if (storeId) {
-      propertiesQuery = propertiesQuery.eq("store_id", storeId);
-      marketplaceQuery = marketplaceQuery.eq("store_id", storeId);
+      propertiesQuery = propertiesQuery.or(`store_id.eq.${storeId},and(store_id.is.null,agent_id.eq.${resolvedProfileId})`);
+      marketplaceQuery = marketplaceQuery.or(`store_id.eq.${storeId},and(store_id.is.null,user_id.eq.${resolvedProfileId})`);
     } else {
       propertiesQuery = propertiesQuery.eq("agent_id", resolvedProfileId);
       marketplaceQuery = marketplaceQuery.eq("user_id", resolvedProfileId);

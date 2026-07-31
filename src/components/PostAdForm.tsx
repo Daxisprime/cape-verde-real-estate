@@ -169,7 +169,12 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     const sb = createSupabaseBrowserClient();
     if (!sb) return;
     sb.from("stores").select("id, title").eq("owner_id", user.id).then(({ data }) => {
-      if (data) setUserStores(data);
+      if (data) {
+        setUserStores(data);
+        if (data.length > 0 && !selectedStoreId) {
+          setSelectedStoreId(data[0].id);
+        }
+      }
     });
   }, [user?.id]);
 
