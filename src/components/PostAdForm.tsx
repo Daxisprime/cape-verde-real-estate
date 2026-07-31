@@ -204,7 +204,21 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !price || !island || !category) return;
+    if (!title.trim() || !price) {
+      setStatus("error");
+      setErrorMessage("Preencha o titulo e o preco.");
+      return;
+    }
+    if (!island) {
+      setStatus("error");
+      setErrorMessage("Selecione uma ilha.");
+      return;
+    }
+    if (!category) {
+      setStatus("error");
+      setErrorMessage("Selecione uma categoria.");
+      return;
+    }
 
     if (!user) {
       setPendingSubmit(true);
@@ -282,6 +296,10 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           resolvedStoreId = newStore!.id;
         }
         setSelectedStoreId(resolvedStoreId ?? "");
+      }
+
+      if (!resolvedStoreId) {
+        throw new Error("Nao foi possivel associar a sua loja. Tente novamente.");
       }
 
       // Upload new images (skip for existing URL previews from edit mode)
