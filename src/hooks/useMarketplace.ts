@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
+import { onListingCreated } from '@/lib/listing-events';
 
 export interface MarketplaceItem {
   id: string;
@@ -218,6 +219,13 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    return onListingCreated((detail) => {
+      if (detail.type === "marketplace") setRefreshKey((k) => k + 1);
+    });
+  }, []);
 
   const fetchItems = useCallback(async () => {
     console.log('Fetching from URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
@@ -286,7 +294,7 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [options.category, options.subcategory, options.island, options.searchQuery, options.minPrice, options.maxPrice]);
+  }, [options.category, options.subcategory, options.island, options.searchQuery, options.minPrice, options.maxPrice, refreshKey]);
 
   useEffect(() => {
     fetchItems();

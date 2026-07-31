@@ -8,6 +8,7 @@ import { compressImage } from "@/lib/image-compression";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkListingLimit } from "@/lib/listing-limits";
+import { emitListingCreated } from "@/lib/listing-events";
 import { useToast } from "@/hooks/use-toast";
 import AuthModal from "@/components/AuthModal";
 
@@ -216,6 +217,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
 
       setStatus("success");
       router.refresh();
+      emitListingCreated({ type: "marketplace" });
       onSuccess?.();
     } catch (err: unknown) {
       const msg = (err as { message?: string })?.message || "";

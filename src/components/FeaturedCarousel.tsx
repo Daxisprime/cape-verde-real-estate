@@ -5,6 +5,7 @@ import { Star, MapPin, Bed, Bath } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { capeVerdeProperties } from "@/data/cape-verde-properties";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { onListingCreated } from "@/lib/listing-events";
 
 interface FeaturedItem {
   id: string;
@@ -32,6 +33,12 @@ function formatPrice(price: number): string {
 export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarouselProps) {
   const { t } = useLanguage();
   const [items, setItems] = useState<FeaturedItem[]>([]);
+
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    return onListingCreated(() => setRefreshKey((k) => k + 1));
+  }, []);
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -124,7 +131,7 @@ export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarousel
     }
 
     fetchFeatured();
-  }, [mode]);
+  }, [mode, refreshKey]);
 
   if (items.length === 0) return null;
 

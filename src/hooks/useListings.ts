@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSearchMode } from '@/contexts/SearchModeContext';
+import { onListingCreated } from '@/lib/listing-events';
 
 export interface LiveListing {
   id: string;
@@ -31,7 +32,12 @@ export function useListings() {
   const [listings, setListings] = useState<LiveListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { selectedIslands } = useSearchMode();
+
+  useEffect(() => {
+    return onListingCreated(() => setRefreshKey((k) => k + 1));
+  }, []);
 
   useEffect(() => {
     async function fetchListings() {
@@ -83,7 +89,7 @@ export function useListings() {
     }
 
     fetchListings();
-  }, [selectedIslands]);
+  }, [selectedIslands, refreshKey]);
 
   return { listings, loading, isLive };
 }

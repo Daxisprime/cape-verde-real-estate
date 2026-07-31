@@ -10,6 +10,7 @@ import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage, type Translations } from "@/contexts/LanguageContext";
 import AuthModal from "@/components/AuthModal";
 import { checkListingLimit } from "@/lib/listing-limits";
+import { emitListingCreated } from "@/lib/listing-events";
 
 const LeafletPicker = dynamic(() => import("@/components/LeafletCoordinatePicker"), {
   ssr: false,
@@ -426,6 +427,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       setStatus("success");
       router.refresh();
       if (!isEditing) {
+        emitListingCreated({ type: isPropertyCategory ? "property" : "marketplace" });
         setCategory("");
         setTitle("");
         setDescription("");

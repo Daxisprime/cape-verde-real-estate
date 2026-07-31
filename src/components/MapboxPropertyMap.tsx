@@ -188,7 +188,9 @@ export default function MapboxPropertyMap({
         <NavigationControl position="top-right" />
 
         {/* Property Markers */}
-        {properties.map((property) => (
+        {properties
+          .filter((property) => property.coordinates && property.coordinates[0] !== 0 && property.coordinates[1] !== 0)
+          .map((property) => (
           <Marker
             key={property.property_id}
             longitude={property.coordinates[0]}
@@ -225,11 +227,17 @@ export default function MapboxPropertyMap({
               onClick={() => handleViewDetails(selectedPin)}
             >
               <CardContent className="p-3">
-                <img
-                  src={selectedPin.image}
-                  alt={selectedPin.title}
-                  className="w-full h-24 object-cover rounded mb-2"
-                />
+                {selectedPin.image ? (
+                  <img
+                    src={selectedPin.image}
+                    alt={selectedPin.title}
+                    className="w-full h-24 object-cover rounded mb-2"
+                  />
+                ) : (
+                  <div className="w-full h-24 bg-gray-100 rounded mb-2 flex items-center justify-center">
+                    <MapPin className="h-6 w-6 text-gray-300" />
+                  </div>
+                )}
                 <div className="space-y-1">
                   <div className="flex justify-between items-start">
                     <span className="font-bold text-blue-600">

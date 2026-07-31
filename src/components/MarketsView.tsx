@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useLanguage, type Translations } from '@/contexts/LanguageContext';
-import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus } from 'lucide-react';
+import { MapPin, ChevronRight, Home, LayoutGrid, Phone, MessageCircle, Facebook, Package, Plus, ShoppingBag } from 'lucide-react';
 import { useMarketplace, type MarketplaceItem } from '@/hooks/useMarketplace';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
@@ -487,13 +487,21 @@ export default function MarketsView() {
                       }`}
                     >
                       <div className="relative overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className={`w-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105 bg-slate-100 ${
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className={`w-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105 bg-slate-100 ${
+                              index % 2 === 0 ? 'h-36' : 'h-48'
+                            }`}
+                          />
+                        ) : (
+                          <div className={`w-full bg-slate-100 rounded-t-lg flex items-center justify-center ${
                             index % 2 === 0 ? 'h-36' : 'h-48'
-                          }`}
-                        />
+                          }`}>
+                            <ShoppingBag className="h-8 w-8 text-slate-300" />
+                          </div>
+                        )}
                         <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-slate-600 px-1.5 py-0.5 rounded-full">
                           {item.posted}
                         </span>
@@ -620,11 +628,17 @@ export default function MarketsView() {
                           activeHoverId === item.id ? 'border-[#0044FF] shadow-sm scale-[0.99]' : 'border-slate-100'
                         }`}
                       >
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className={`w-full object-cover bg-slate-100 ${index % 2 === 0 ? 'h-20 md:h-24' : 'h-28 md:h-32'}`}
-                        />
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className={`w-full object-cover bg-slate-100 ${index % 2 === 0 ? 'h-20 md:h-24' : 'h-28 md:h-32'}`}
+                          />
+                        ) : (
+                          <div className={`w-full bg-slate-100 flex items-center justify-center ${index % 2 === 0 ? 'h-20 md:h-24' : 'h-28 md:h-32'}`}>
+                            <ShoppingBag className="h-6 w-6 text-slate-300" />
+                          </div>
+                        )}
                         <div className="p-1.5 md:p-2">
                           <h3 className="font-bold text-[11px] text-slate-900 line-clamp-1">{item.title}</h3>
                           <p className="font-extrabold text-xs text-slate-900 mt-0.5">

@@ -111,18 +111,24 @@ export default function VerifiedPropertyCard({
       >
         {/* Property Image */}
         <div className="relative h-48 sm:h-56 overflow-hidden">
-          <img
-            src={property.images[0]?.replace(/w=800/, 'w=400').replace(/h=600/, 'h=300') || "/api/placeholder/400/300"}
-            alt={property.title}
-            className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-              isImageLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            loading="lazy"
-            onLoad={() => setIsImageLoaded(true)}
-          />
+          {property.images?.[0] ? (
+            <img
+              src={property.images[0].replace(/w=800/, 'w=400').replace(/h=600/, 'h=300')}
+              alt={property.title}
+              className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                isImageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+              onLoad={() => setIsImageLoaded(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 w-full h-full bg-gray-100 flex items-center justify-center">
+              <MapPin className="h-10 w-10 text-gray-300" />
+            </div>
+          )}
 
           {/* Image overlay for loading */}
-          {!isImageLoaded && (
+          {!isImageLoaded && property.images?.[0] && (
             <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
               <div className="w-8 h-8 bg-gray-300 rounded"></div>
             </div>

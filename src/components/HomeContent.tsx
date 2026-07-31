@@ -132,14 +132,16 @@ export default function HomeContent() {
   }, [headerSearchQuery, selectedIslands, liveRealEstate, isLive]);
 
   const mapMarkers = useMemo(() => {
-    return filteredProperties.map(p => ({
-      id: p.id,
-      latitude: p.coordinates[1],
-      longitude: p.coordinates[0],
-      price: p.price,
-      title: p.title,
-      is_featured: p.featured,
-    }));
+    return filteredProperties
+      .filter(p => p.coordinates[0] !== 0 && p.coordinates[1] !== 0)
+      .map(p => ({
+        id: p.id,
+        latitude: p.coordinates[1],
+        longitude: p.coordinates[0],
+        price: p.price,
+        title: p.title,
+        is_featured: p.featured,
+      }));
   }, [filteredProperties]);
 
   const hoveredMapItem = useMemo(() => {
@@ -214,11 +216,17 @@ export default function HomeContent() {
                   onMouseEnter={() => setHoveredId(property.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
-                  <img
-                    src={property.images?.[0] || property.image}
-                    alt={property.title || 'Property'}
-                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                  />
+                  {(property.images?.[0] || property.image) ? (
+                    <img
+                      src={property.images?.[0] || property.image}
+                      alt={property.title || 'Property'}
+                      className="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-gray-100"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                      <MapPin className="h-5 w-5 text-gray-300" />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-sm text-gray-900 truncate">{property.title || 'Untitled'}</p>
                     <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
@@ -307,13 +315,21 @@ export default function HomeContent() {
                     : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
                 }`}>
                   <div className="relative overflow-hidden">
-                    <img
-                      src={property.images?.[0] || property.image}
-                      alt={property.title || 'Property'}
-                      className={`w-full object-cover group-hover:scale-[1.03] transition-transform duration-300 ${
+                    {(property.images?.[0] || property.image) ? (
+                      <img
+                        src={property.images?.[0] || property.image}
+                        alt={property.title || 'Property'}
+                        className={`w-full object-cover group-hover:scale-[1.03] transition-transform duration-300 bg-gray-100 ${
+                          index % 3 === 0 ? 'h-48' : index % 3 === 1 ? 'h-56' : 'h-40'
+                        }`}
+                      />
+                    ) : (
+                      <div className={`w-full bg-gray-100 flex items-center justify-center ${
                         index % 3 === 0 ? 'h-48' : index % 3 === 1 ? 'h-56' : 'h-40'
-                      }`}
-                    />
+                      }`}>
+                        <MapPin className="h-10 w-10 text-gray-300" />
+                      </div>
+                    )}
                     <span className="absolute top-2 left-2 text-[9px] font-bold bg-white/90 backdrop-blur-sm text-[#2563EB] px-2 py-0.5 rounded-full uppercase tracking-wider">
                       {listingType === 'rent' ? t.forRent : t.forSale}
                     </span>

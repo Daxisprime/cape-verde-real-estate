@@ -37,14 +37,16 @@ export default function ResultsSplitView() {
   }, [listingType, headerSearchQuery]);
 
   const mapMarkers = useMemo(() => {
-    return listings.map((p: Property) => ({
-      id: p.id,
-      latitude: p.coordinates[1],
-      longitude: p.coordinates[0],
-      price: p.price,
-      title: p.title,
-      listing_type: listingType,
-    }));
+    return listings
+      .filter((p: Property) => p.coordinates && p.coordinates[0] !== 0 && p.coordinates[1] !== 0)
+      .map((p: Property) => ({
+        id: p.id,
+        latitude: p.coordinates[1],
+        longitude: p.coordinates[0],
+        price: p.price,
+        title: p.title,
+        listing_type: listingType,
+      }));
   }, [listings, listingType]);
 
   function handlePinClick(item: { id: string }) {
@@ -115,11 +117,17 @@ export default function ResultsSplitView() {
                       : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                   }`}
                 >
-                  <img
-                    src={item.images?.[0]}
-                    alt={item.title}
-                    className={`w-full object-cover rounded-t-lg bg-gray-100 ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
-                  />
+                  {item.images?.[0] ? (
+                    <img
+                      src={item.images[0]}
+                      alt={item.title}
+                      className={`w-full object-cover rounded-t-lg bg-gray-100 ${index % 2 === 0 ? 'h-40' : 'h-52'}`}
+                    />
+                  ) : (
+                    <div className={`w-full bg-gray-100 rounded-t-lg flex items-center justify-center ${index % 2 === 0 ? 'h-40' : 'h-52'}`}>
+                      <MapPin className="h-8 w-8 text-gray-300" />
+                    </div>
+                  )}
                   <div className="p-2">
                     <span className="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider">
                       {listingType === "buy" ? "Sale" : "Rent"} &bull; {item.island}
