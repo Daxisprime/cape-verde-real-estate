@@ -172,8 +172,12 @@ export const isSupabaseConfigured = (): boolean => {
 let _browserClient: ReturnType<typeof createClient<Database>> | null = null;
 
 export const createSupabaseBrowserClient = () => {
-  if (!isSupabaseConfigured()) return null;
+  if (!isSupabaseConfigured()) {
+    console.log('Supabase not configured. URL:', supabaseUrl);
+    return null;
+  }
   if (_browserClient) return _browserClient;
+  console.log('Fetching from URL:', supabaseUrl);
   _browserClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: true,
