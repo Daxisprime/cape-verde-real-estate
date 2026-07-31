@@ -310,11 +310,11 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .eq("vendor_id", resolvedProfileId),
     ]);
 
-    console.log("Public fetch result:", {
-      profile: { data: profileRes.data, error: profileRes.error },
-      properties: { data: propertiesRes.data, error: propertiesRes.error },
-      marketplace: { data: marketplaceRes.data, error: marketplaceRes.error },
-      reviews: { data: reviewsRes.data, error: reviewsRes.error },
+    console.log("[StorePageClient] Raw Supabase response:", {
+      profile: { data: profileRes.data, error: profileRes.error?.message || null },
+      properties: { count: propertiesRes.data?.length ?? 0, error: propertiesRes.error?.message || null, data: propertiesRes.data },
+      marketplace: { count: marketplaceRes.data?.length ?? 0, error: marketplaceRes.error?.message || null, data: marketplaceRes.data },
+      reviews: { count: reviewsRes.data?.length ?? 0, error: reviewsRes.error?.message || null },
     });
 
     if (profileRes.data) {

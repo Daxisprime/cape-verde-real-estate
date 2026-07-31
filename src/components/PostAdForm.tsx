@@ -302,6 +302,8 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         throw new Error("Nao foi possivel associar a sua loja. Tente novamente.");
       }
 
+      console.log("[PostAdForm] Resolved store_id:", resolvedStoreId);
+
       // Upload new images (skip for existing URL previews from edit mode)
       const imageUrls: string[] = [];
       // Keep existing images that came from the database
@@ -350,6 +352,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .eq("agent_id", sellerId);
           if (error) throw error;
         } else {
+          console.log("[PostAdForm] Inserting property with store_id:", resolvedStoreId, "island:", island);
           const { data: inserted, error } = await supabase
             .from("properties")
             .insert({ ...propertyPayload, status: "active", store_id: resolvedStoreId } as never)
@@ -386,6 +389,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .eq("user_id", sellerId);
           if (error) throw error;
         } else {
+          console.log("[PostAdForm] Inserting marketplace_item with store_id:", resolvedStoreId, "island:", island, "category:", category);
           const { data: inserted, error } = await supabase
             .from("marketplace_items")
             .insert({ ...marketPayload, status: "active", store_id: resolvedStoreId } as never)
