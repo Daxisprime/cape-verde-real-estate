@@ -10,6 +10,7 @@ import { mockProfiles } from "@/lib/mockProfiles";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useMyListings } from "@/hooks/useListings";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { slugify } from "@/lib/slugify";
 import { bumpListing } from "@/lib/vendor-performance";
 import { getWalletBalance, deductFromWallet, redeemVoucher, FEATURE_PRICES } from "@/lib/wallet";
 import {
@@ -203,10 +204,10 @@ export default function MyStorePageClient() {
   }, [profile]);
 
   const createNewStore = async () => {
-    if (!user?.id || !newStoreForm.title.trim() || !newStoreForm.slug.trim()) return;
+    if (!user?.id || !newStoreForm.title.trim()) return;
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
-    const slug = newStoreForm.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
+    const slug = (newStoreForm.slug.trim() || slugify(newStoreForm.title.trim()) || "store-" + Date.now().toString(36)).toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
     const { data, error } = await supabase
       .from("stores")
       .insert({
@@ -842,7 +843,7 @@ export default function MyStorePageClient() {
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-1">{t.storeTitle} *</label>
-                  <input placeholder="Ex: Casa & Decoracao CV" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none" value={newStoreForm.title} onChange={(e) => setNewStoreForm((p) => ({ ...p, title: e.target.value }))} />
+                  <input placeholder="Ex: Casa & Decoracao CV" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none" value={newStoreForm.title} onChange={(e) => { const title = e.target.value; setNewStoreForm((p) => ({ ...p, title, slug: slugify(title) })); }} />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-1">{t.customUrl} *</label>
@@ -886,7 +887,7 @@ export default function MyStorePageClient() {
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button onClick={() => setShowNewStoreForm(false)} className="flex-1 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">{t.cancel}</button>
-                  <button disabled={!newStoreForm.title.trim() || !newStoreForm.slug.trim()} onClick={createNewStore} className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1d4ed8] rounded-lg transition-colors disabled:opacity-50">
+                  <button disabled={!newStoreForm.title.trim()} onClick={createNewStore} className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1d4ed8] rounded-lg transition-colors disabled:opacity-50">
                     <Plus className="h-4 w-4" />
                     {t.createStore}
                   </button>
