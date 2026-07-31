@@ -77,7 +77,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
             description: 'You have successfully signed in.',
           });
           onClose();
-          router.push('/dashboard');
+          router.push('/my-store');
         }
       } else if (mode === 'signup') {
         if (!captchaToken) {
@@ -113,7 +113,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
             description: 'Welcome to PropertyCV.',
           });
           onClose();
-          router.push('/dashboard');
+          router.push('/my-store');
         }
       } else if (mode === 'reset') {
         const { error } = await resetPassword(formData.email);

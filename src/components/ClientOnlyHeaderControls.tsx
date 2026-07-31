@@ -102,7 +102,7 @@ export default function ClientOnlyHeaderControls({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem asChild>
-                <Link href="/dashboard" className="w-full cursor-pointer">
+                <Link href="/my-store" className="w-full cursor-pointer">
                   <User className="h-4 w-4 mr-2" />
                   Dashboard
                 </Link>

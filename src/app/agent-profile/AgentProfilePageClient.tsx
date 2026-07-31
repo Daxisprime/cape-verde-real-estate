@@ -87,7 +87,7 @@ export default function AgentProfilePageClient() {
     if (isAuthenticated === false && user === null && !isLoading) {
       router.push("/");
     } else if (isAuthenticated && user && !user.roles?.includes('agent')) {
-      router.push("/dashboard");
+      router.push("/my-store");
     }
   }, [isAuthenticated, user, isLoading, router]);
 

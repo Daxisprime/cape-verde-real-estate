@@ -87,7 +87,7 @@ export default function DataIntegrationAdminPageClient() {
     }
 
     if (!user?.roles?.includes('admin')) {
-      router.push('/dashboard');
+      router.push('/my-store');
       return;
     }
 

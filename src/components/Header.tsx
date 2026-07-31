@@ -434,7 +434,7 @@ export default function Header() {
                       </Link>
                     )}
                     <Link
-                      href="/dashboard"
+                      href="/my-store"
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
