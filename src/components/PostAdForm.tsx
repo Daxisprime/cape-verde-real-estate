@@ -4,8 +4,8 @@ import React, { useState, useRef, useMemo, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation";
 import { ImagePlus, X, Loader2, MapPin, Facebook } from "lucide-react";
 import dynamic from "next/dynamic";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
-import { CAPE_VERDE_ISLANDS } from "@/lib/supabase";
+import { createSupabaseBrowserClient, CAPE_VERDE_ISLANDS } from "@/lib/supabase";
+import { slugify } from "@/lib/slugify";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage, type Translations } from "@/contexts/LanguageContext";
 import AuthModal from "@/components/AuthModal";
@@ -168,7 +168,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     if (!user?.id) return;
     const sb = createSupabaseBrowserClient();
     if (!sb) return;
-    sb.from("stores").select("id, title").eq("owner_id", user.id).then(({ data }) => {
+    (sb.from("stores" as never).select("id, title").eq("owner_id", user.id) as unknown as Promise<{ data: Array<{id: string; title: string}> | null }>).then(({ data }) => {
       if (data) {
         setUserStores(data);
         if (data.length > 0 && !selectedStoreId) {
@@ -259,6 +259,31 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessao expirada. Por favor, faca login novamente.");
 
+      // Resolve or auto-create a store for this user
+      let resolvedStoreId = selectedStoreId || null;
+      if (!resolvedStoreId) {
+        const { data: existingStore } = await supabase
+          .from("stores" as never)
+          .select("id")
+          .eq("owner_id", sellerId)
+          .limit(1)
+          .maybeSingle() as { data: { id: string } | null };
+        if (existingStore) {
+          resolvedStoreId = existingStore.id;
+        } else {
+          const storeName = profile?.name || session.user.email?.split("@")[0] || "Minha Loja";
+          const storeSlug = slugify(storeName) + "-" + Date.now().toString(36);
+          const { data: newStore, error: storeErr } = await supabase
+            .from("stores" as never)
+            .insert({ owner_id: sellerId, title: storeName, slug: storeSlug } as never)
+            .select("id")
+            .single() as { data: { id: string } | null; error: unknown };
+          if (storeErr) throw storeErr;
+          resolvedStoreId = newStore!.id;
+        }
+        setSelectedStoreId(resolvedStoreId ?? "");
+      }
+
       // Upload new images (skip for existing URL previews from edit mode)
       const imageUrls: string[] = [];
       // Keep existing images that came from the database
@@ -309,7 +334,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         } else {
           const { data: inserted, error } = await supabase
             .from("properties")
-            .insert({ ...propertyPayload, status: "active", store_id: selectedStoreId || null } as never)
+            .insert({ ...propertyPayload, status: "active", store_id: resolvedStoreId } as never)
             .select("id")
             .maybeSingle();
           if (error) throw error;
@@ -345,7 +370,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         } else {
           const { data: inserted, error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, status: "active", store_id: selectedStoreId || null } as never)
+            .insert({ ...marketPayload, status: "active", store_id: resolvedStoreId } as never)
             .select("id")
             .maybeSingle();
           if (error) throw error;
