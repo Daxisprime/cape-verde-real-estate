@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User, Plus } from 'lucide-react';
+import { Menu, X, Store, PlusCircle, ChevronDown, Search, LogOut, Home, MapPin, Tag, DollarSign, ShoppingBag, User, Plus, Settings } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import { useSearchMode } from '@/contexts/SearchModeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -405,7 +405,7 @@ export default function Header() {
                     <img
                       src={profile.avatar}
                       alt={profile.name || 'User'}
-                      className="h-8 w-8 rounded-full object-cover"
+                      className="h-8 w-8 rounded-full object-cover aspect-square"
                     />
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-[#0044FF] flex items-center justify-center">
@@ -446,8 +446,8 @@ export default function Header() {
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      <User className="h-4 w-4 text-gray-400" />
-                      {t.myProfile || "My Profile"}
+                      <Settings className="h-4 w-4 text-gray-400" />
+                      {t.accountSettings || "Account Settings"}
                     </Link>
                     <Link
                       href="/sell"
