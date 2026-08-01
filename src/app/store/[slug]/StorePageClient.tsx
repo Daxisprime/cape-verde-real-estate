@@ -276,6 +276,18 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
 
     console.log("[StorePageClient] fetchData called with:", { profileId: resolvedProfileId, storeId, slug });
 
+    // If storeId was not provided, try to look it up by owner_id
+    let effectiveStoreId = storeId;
+    if (!effectiveStoreId && resolvedProfileId) {
+      const { data: ownerStore } = await supabase
+        .from("stores")
+        .select("id")
+        .eq("owner_id", resolvedProfileId)
+        .limit(1)
+        .maybeSingle();
+      if (ownerStore) effectiveStoreId = (ownerStore as { id: string }).id;
+    }
+
     let propertiesQuery = supabase
         .from("properties")
         .select("*")
@@ -290,15 +302,15 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .order("is_featured", { ascending: false })
         .order("last_bumped_at", { ascending: false });
 
-    if (storeId) {
-      propertiesQuery = propertiesQuery.or(`store_id.eq.${storeId},and(store_id.is.null,agent_id.eq.${resolvedProfileId})`);
-      marketplaceQuery = marketplaceQuery.or(`store_id.eq.${storeId},and(store_id.is.null,user_id.eq.${resolvedProfileId})`);
+    if (effectiveStoreId) {
+      propertiesQuery = propertiesQuery.or(`store_id.eq.${effectiveStoreId},and(store_id.is.null,agent_id.eq.${resolvedProfileId})`);
+      marketplaceQuery = marketplaceQuery.or(`store_id.eq.${effectiveStoreId},and(store_id.is.null,user_id.eq.${resolvedProfileId})`);
     } else {
       propertiesQuery = propertiesQuery.eq("agent_id", resolvedProfileId);
       marketplaceQuery = marketplaceQuery.eq("user_id", resolvedProfileId);
     }
 
-    console.log("[StorePageClient] Query params:", { resolvedProfileId, storeId });
+    console.log("[StorePageClient] Query params:", { resolvedProfileId, effectiveStoreId });
 
     const [profileRes, propertiesRes, marketplaceRes, reviewsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", resolvedProfileId).maybeSingle(),

@@ -99,7 +99,19 @@ export default async function StorePage({ params }: PageProps) {
 
   const profile = await getProfile(currentSlug);
   if (profile) {
-    return <StorePageClient profileId={profile.id} slug={currentSlug} storeId={null} />;
+    // Look up store by owner_id so the client can query by store_id too
+    const supabase = createSupabaseServerClient();
+    let userStoreId: string | null = null;
+    if (supabase) {
+      const { data: userStore } = await supabase
+        .from("stores")
+        .select("id")
+        .eq("owner_id", profile.id)
+        .limit(1)
+        .maybeSingle();
+      if (userStore) userStoreId = userStore.id;
+    }
+    return <StorePageClient profileId={profile.id} slug={currentSlug} storeId={userStoreId} />;
   }
 
   // Client-side mock hydration handles vendor-xxx and agent slugs;
