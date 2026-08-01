@@ -124,6 +124,21 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       // Use the session's user ID (fresh from JWT) rather than potentially stale React state
       const authenticatedUserId = session.user.id;
 
+      // Ensure the user has a profiles row (required by FK constraints)
+      const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", authenticatedUserId).maybeSingle();
+      if (!existingProfile) {
+        const profileName = user?.user_metadata?.name || session.user.email?.split("@")[0] || "";
+        await supabase.from("profiles").upsert({
+          id: authenticatedUserId,
+          email: session.user.email || "",
+          name: profileName,
+          avatar: user?.user_metadata?.avatar_url || null,
+          phone: user?.user_metadata?.phone || null,
+          role: "buyer",
+          verified: false,
+        } as never);
+      }
+
       // Resolve or auto-create a store for this user
       let resolvedStoreId: string | null = null;
       const { data: existingStore } = await supabase
@@ -142,8 +157,11 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
           .insert({ owner_id: authenticatedUserId, title: storeName, slug: storeSlug } as never)
           .select("id")
           .single() as { data: { id: string } | null; error: unknown };
-        if (storeErr) throw storeErr;
-        resolvedStoreId = newStore!.id;
+        if (storeErr) {
+          console.warn("[QuickPostForm] Store creation failed, proceeding without store_id:", storeErr);
+        } else {
+          resolvedStoreId = newStore!.id;
+        }
       }
 
       const imageUrls: string[] = [];
@@ -183,7 +201,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             images: imageUrls,
             agent_id: authenticatedUserId,
             status: "active",
-            store_id: resolvedStoreId,
+            ...(resolvedStoreId ? { store_id: resolvedStoreId } : {}),
         };
         console.log("[QuickPostForm] Inserting property:", insertPayload);
         const { data: insertedRow, error } = await supabase
@@ -214,7 +232,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
             status: "active",
             condition,
             contact_whatsapp: whatsapp || null,
-            store_id: resolvedStoreId,
+            ...(resolvedStoreId ? { store_id: resolvedStoreId } : {}),
         };
         console.log("[QuickPostForm] Inserting marketplace_item:", insertPayload);
         const { data: insertedRow, error } = await supabase

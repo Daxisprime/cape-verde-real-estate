@@ -274,6 +274,21 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Sessao expirada. Por favor, faca login novamente.");
 
+      // Ensure the user has a profiles row (required by FK constraints)
+      const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", sellerId).maybeSingle();
+      if (!existingProfile) {
+        const profileName = profile?.name || session.user.user_metadata?.name || session.user.email?.split("@")[0] || "";
+        await supabase.from("profiles").upsert({
+          id: sellerId,
+          email: session.user.email || "",
+          name: profileName,
+          avatar: session.user.user_metadata?.avatar_url || null,
+          phone: session.user.user_metadata?.phone || null,
+          role: "buyer",
+          verified: false,
+        } as never);
+      }
+
       // Resolve or auto-create a store for this user
       let resolvedStoreId = selectedStoreId || null;
       if (!resolvedStoreId) {
@@ -293,14 +308,17 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .insert({ owner_id: sellerId, title: storeName, slug: storeSlug } as never)
             .select("id")
             .single() as { data: { id: string } | null; error: unknown };
-          if (storeErr) throw storeErr;
-          resolvedStoreId = newStore!.id;
+          if (storeErr) {
+            console.warn("[PostAdForm] Store creation failed, proceeding without store_id:", storeErr);
+          } else {
+            resolvedStoreId = newStore!.id;
+          }
         }
         setSelectedStoreId(resolvedStoreId ?? "");
       }
 
       if (!resolvedStoreId) {
-        throw new Error("Nao foi possivel associar a sua loja. Tente novamente.");
+        console.warn("[PostAdForm] Could not resolve store_id — proceeding without it.");
       }
 
       console.log("[PostAdForm] Resolved store_id:", resolvedStoreId);
@@ -356,7 +374,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           console.log("[PostAdForm] Inserting property with store_id:", resolvedStoreId, "island:", island);
           const { data: inserted, error } = await supabase
             .from("properties")
-            .insert({ ...propertyPayload, agent_id: sellerId, status: "active", store_id: resolvedStoreId } as never)
+            .insert({ ...propertyPayload, agent_id: sellerId, status: "active", ...(resolvedStoreId ? { store_id: resolvedStoreId } : {}) } as never)
             .select("id")
             .maybeSingle();
           if (error) throw error;
@@ -393,7 +411,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
           console.log("[PostAdForm] Inserting marketplace_item with store_id:", resolvedStoreId, "island:", island, "category:", category);
           const { data: inserted, error } = await supabase
             .from("marketplace_items")
-            .insert({ ...marketPayload, user_id: sellerId, status: "active", store_id: resolvedStoreId } as never)
+            .insert({ ...marketPayload, user_id: sellerId, status: "active", ...(resolvedStoreId ? { store_id: resolvedStoreId } : {}) } as never)
             .select("id")
             .maybeSingle();
           if (error) throw error;
