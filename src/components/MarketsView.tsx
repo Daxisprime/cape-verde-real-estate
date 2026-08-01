@@ -36,51 +36,61 @@ const MARKET_TAXONOMY = [
   {
     name: "Vehicles & Automotive",
     icon: "\uD83D\uDE97",
+    dbCategory: "Vehicles",
     subcategories: ["Cars & SUVs", "Motorbikes & Scooters", "Vehicle Parts & Accessories", "Heavy Duty & Trucks", "Car Rental Services"],
   },
   {
     name: "Electronics & Computers",
     icon: "\uD83D\uDCF1",
+    dbCategory: "Electronics",
     subcategories: ["Smartphones & Tablets", "Laptops & Desktops", "Computer Hardware & Accessories", "TV, Audio & Video", "Video Game Consoles"],
   },
   {
     name: "Home, Furniture & Appliances",
     icon: "\uD83D\uDECB\uFE0F",
+    dbCategory: "Home & Furniture",
     subcategories: ["Beds & Mattresses", "Sofas & Living Room Chairs", "Kitchen Appliances", "Home Decor & Lighting", "Generators & Solar Energy Equipment"],
   },
   {
     name: "Building Materials & Tools",
     icon: "\uD83C\uDFD7\uFE0F",
+    dbCategory: "Building Materials",
     subcategories: ["Cement, Blocks & Aggregates", "Tiles & Flooring", "Hand & Power Tools", "Electrical Supplies & Cables", "Plumbing Pipes & Fixtures"],
   },
   {
     name: "Restaurants & Menus (Takeaway)",
     icon: "\uD83C\uDF73",
+    dbCategory: "Food & Restaurants",
     subcategories: ["Praia Local Eats", "Mindelo Cafes & Bars", "Sal Resort Takeaway", "Daily Menu Uploads", "Bakery & Catering Options"],
   },
   {
     name: "Fashion, Clothing & Retail",
     icon: "\uD83D\uDC55",
+    dbCategory: "Fashion",
     subcategories: ["Shoes & Sneakers", "Men's Clothing", "Women's Clothing", "Bags & Accessories", "Watches & Jewelry"],
   },
   {
     name: "Babies & Kids Items",
     icon: "\uD83D\uDC76",
+    dbCategory: "Babies & Kids",
     subcategories: ["Children's Apparel", "Toys & Games", "Strollers & Car Seats", "Baby Care & Feeding Essentials"],
   },
   {
     name: "Pets & Animal Supplies",
     icon: "\uD83D\uDC3E",
+    dbCategory: "Pets & Animals",
     subcategories: ["Pet Food", "Dog & Cat Accessories", "Livestock & Poultry Feed"],
   },
   {
     name: "Maintenance & Repair Services",
     icon: "\uD83D\uDEE0\uFE0F",
+    dbCategory: "Services",
     subcategories: ["Emergency Plumbing", "Residential Electricians", "AC & Appliance Repair", "Masonry & Painting Pro's", "Car Mechanics"],
   },
   {
     name: "Professional & Event Services",
     icon: "\uD83D\uDCBC",
+    dbCategory: "Services",
     subcategories: ["Web Developers & IT Support", "Photography & Video Production", "Legal & Business Consulting", "Event Planning & DJ Services", "Private Tutors & Lessons"],
   },
 ];
@@ -220,15 +230,22 @@ export default function MarketsView() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
 
-  const { items: marketplaceDbItems } = useMarketplace({ category: selectedCategory || undefined });
+  const { items: marketplaceDbItems } = useMarketplace({});
 
   const itemsPool = useMemo(() => {
+    const dbCategoryToTaxonomy: Record<string, string> = {};
+    for (const tax of MARKET_TAXONOMY) {
+      if (tax.dbCategory) {
+        dbCategoryToTaxonomy[tax.dbCategory] = tax.name;
+      }
+    }
+
     const dbFormatted = marketplaceDbItems.map((item, index) => ({
       id: item.id,
       title: item.title,
       price: item.price_cve,
       location: `${item.municipality || ''}, ${item.island}`.replace(/^, /, ''),
-      category: item.category,
+      category: dbCategoryToTaxonomy[item.category] || item.category,
       subcategory: item.subcategory,
       image: item.images?.[0] || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=400&h=300&fit=crop',
       posted: new Date(item.created_at).toLocaleDateString(),
@@ -251,7 +268,8 @@ export default function MarketsView() {
   const filteredItems = useMemo(() => {
     const filtered = itemsPool.filter(item => {
       const matchSearch = headerSearchQuery
-        ? item.title.toLowerCase().includes(headerSearchQuery.toLowerCase())
+        ? item.title.toLowerCase().includes(headerSearchQuery.toLowerCase()) ||
+          (item.location && item.location.toLowerCase().includes(headerSearchQuery.toLowerCase()))
         : true;
       const matchIsland = selectedIslands.length === 0 || selectedIslands.some(isl => item.location.includes(isl));
       const matchCat = selectedCategory ? item.category === selectedCategory : true;
