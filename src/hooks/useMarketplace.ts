@@ -249,6 +249,18 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
     setError(null);
 
     try {
+      // DIAGNOSTIC: raw unfiltered query first
+      const { data: rawAll, error: rawError, count } = await supabase
+        .from('marketplace_items')
+        .select('*', { count: 'exact' });
+
+      console.group('[DIAG] marketplace_items raw query');
+      console.log('Raw row count:', count);
+      console.log('Raw data:', rawAll);
+      console.log('Raw error:', rawError);
+      console.groupEnd();
+
+      // DIAGNOSTIC: the actual filtered query
       let query = supabase
         .from('marketplace_items')
         .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
@@ -257,25 +269,31 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
         .order('last_bumped_at', { ascending: false });
 
       if (options.category) {
+        console.log('[DIAG] Filtering by category:', options.category);
         query = query.eq('category', options.category);
       }
       if (options.subcategory) {
+        console.log('[DIAG] Filtering by subcategory:', options.subcategory);
         query = query.eq('subcategory', options.subcategory);
       }
       if (options.island) {
+        console.log('[DIAG] Filtering by island:', options.island);
         query = query.eq('island', options.island);
       }
       if (options.searchQuery) {
+        console.log('[DIAG] Filtering by searchQuery:', options.searchQuery);
         query = query.ilike('title', `%${options.searchQuery}%`);
       }
-      if (options.minPrice != null) {
-        query = query.gte('price_cve', options.minPrice);
-      }
-      if (options.maxPrice != null) {
-        query = query.lte('price_cve', options.maxPrice);
-      }
 
-      const { data, error: fetchError } = await query;
+      const { data, error: fetchError, status, statusText } = await query;
+
+      console.group('[DIAG] marketplace_items filtered query');
+      console.log('HTTP status:', status, statusText);
+      console.log('Fetch error object:', fetchError);
+      console.log('Data array:', data);
+      console.log('Data length:', data?.length ?? 'null');
+      console.log('Options passed:', JSON.stringify(options));
+      console.groupEnd();
 
       if (fetchError) {
         console.log('Error details:', fetchError);

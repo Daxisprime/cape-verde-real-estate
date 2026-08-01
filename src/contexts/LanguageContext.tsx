@@ -20,6 +20,8 @@ export interface Translations {
   postAd: string;
   myStore: string;
   signOut: string;
+  dashboard: string;
+  accountSettings: string;
   home: string;
   allCat: string;
   location: string;
@@ -315,6 +317,8 @@ const translations: Record<LanguageCode, Translations> = {
     postAd: "Post an Ad",
     myStore: "My Store",
     signOut: "Sign Out",
+    dashboard: "Dashboard",
+    accountSettings: "Account Settings",
     home: "Home",
     allCat: "All Subcategories",
     location: "LOCATION",
@@ -607,6 +611,8 @@ const translations: Record<LanguageCode, Translations> = {
     postAd: "Publicar An\u00FAncio",
     myStore: "Meu Neg\u00F3cio",
     signOut: "Sair",
+    dashboard: "Painel",
+    accountSettings: "Configura\u00E7\u00F5es da Conta",
     home: "In\u00EDcio",
     allCat: "Todas as Subcategorias",
     location: "LOCALIZA\u00C7\u00C3O",
@@ -899,6 +905,8 @@ const translations: Record<LanguageCode, Translations> = {
     postAd: "Publier une Annonce",
     myStore: "Mon Magasin",
     signOut: "D\u00E9connexion",
+    dashboard: "Tableau de bord",
+    accountSettings: "Param\u00E8tres du compte",
     home: "Accueil",
     allCat: "Toutes les sous-cat\u00E9gories",
     location: "LOCALISATION",
@@ -1181,6 +1189,8 @@ const translations: Record<LanguageCode, Translations> = {
     postAd: "Po An\u00FAnsiu",
     myStore: "Nha Neg\u00F3siu",
     signOut: "Sa\u00ED",
+    dashboard: "Painel",
+    accountSettings: "Definisoins di Konta",
     home: "In\u00EDsiu",
     allCat: "Tudu Subkategoria",
     location: "LOKALIZASION",
