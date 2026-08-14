@@ -53,8 +53,6 @@ export function useListings() {
       }
 
       try {
-        console.log('Fetching from URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-
         let query = supabase
           .from('properties')
           .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude, last_bumped_at')
@@ -71,16 +69,13 @@ export function useListings() {
           .limit(50);
 
         if (!error && data) {
-          console.log('Properties fetched:', data.length);
           setListings(data as unknown as LiveListing[]);
           setIsLive(true);
         } else {
-          console.log('Error details:', error);
           setListings([]);
           setIsLive(true);
         }
       } catch (err) {
-        console.log('Error details:', err);
         setListings([]);
         setIsLive(true);
       } finally {
@@ -121,7 +116,6 @@ export function useMyListings() {
       }
 
       setLoading(true);
-      console.log('Fetching my listings from URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
       let props: unknown[] = [];
       let items: unknown[] = [];
 
@@ -133,9 +127,7 @@ export function useMyListings() {
 
       if (!propsError && propsData) {
         props = propsData;
-        console.log('My properties fetched:', propsData.length);
       } else if (propsError) {
-        console.log('Error details:', propsError);
       }
 
       const { data: itemsData, error: itemsError } = await supabase
@@ -146,9 +138,7 @@ export function useMyListings() {
 
       if (!itemsError && itemsData) {
         items = itemsData;
-        console.log('My marketplace items fetched:', itemsData.length);
       } else if (itemsError) {
-        console.log('Error details:', itemsError);
       }
 
       const combined: LiveListing[] = [
