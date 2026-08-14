@@ -321,7 +321,6 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         console.warn("[PostAdForm] Could not resolve store_id — proceeding without it.");
       }
 
-      console.log("[PostAdForm] Resolved store_id:", resolvedStoreId);
 
       // Upload new images (skip for existing URL previews from edit mode)
       const imageUrls: string[] = [];
@@ -371,7 +370,6 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .eq("agent_id", sellerId);
           if (error) throw error;
         } else {
-          console.log("[PostAdForm] Inserting property with store_id:", resolvedStoreId, "island:", island);
           const { data: inserted, error } = await supabase
             .from("properties")
             .insert({ ...propertyPayload, agent_id: sellerId, status: "active", ...(resolvedStoreId ? { store_id: resolvedStoreId } : {}) } as never)
@@ -408,7 +406,6 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .eq("user_id", sellerId);
           if (error) throw error;
         } else {
-          console.log("[PostAdForm] Inserting marketplace_item with store_id:", resolvedStoreId, "island:", island, "category:", category);
           const { data: inserted, error } = await supabase
             .from("marketplace_items")
             .insert({ ...marketPayload, user_id: sellerId, status: "active", ...(resolvedStoreId ? { store_id: resolvedStoreId } : {}) } as never)
