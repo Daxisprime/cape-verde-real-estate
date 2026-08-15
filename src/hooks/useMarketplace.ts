@@ -86,7 +86,7 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
     try {
       let query = supabase
         .from('marketplace_items')
-        .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
+        .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at, last_bumped_at')
         .eq('status', 'active')
         .order('is_featured', { ascending: false })
         .order('last_bumped_at', { ascending: false });

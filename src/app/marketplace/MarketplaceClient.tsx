@@ -43,7 +43,7 @@ export default function MarketplaceClient() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
 
-  const { items, loading } = useMarketplace({
+  const { items, loading, error } = useMarketplace({
     category: selectedCategory,
     subcategory: selectedSubcategory,
     island: selectedIsland,
@@ -284,6 +284,13 @@ export default function MarketplaceClient() {
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
             {loading ? 'Loading...' : `${items.length} items found`}
           </p>
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+              Something went wrong loading listings. Please refresh the page.
+            </div>
+          )}
 
           {/* Loading State */}
           {loading && (
