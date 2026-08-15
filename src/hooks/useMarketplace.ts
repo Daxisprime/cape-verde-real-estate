@@ -40,7 +40,7 @@ export const MARKETPLACE_CATEGORIES = [
 ] as const;
 
 export const CAPE_VERDE_ISLANDS = [
-  'Santiago', 'Santo Antao', 'Sao Vicente', 'Sao Nicolau',
+  'Santiago', 'Santo Antão', 'São Vicente', 'São Nicolau',
   'Sal', 'Boa Vista', 'Maio', 'Fogo', 'Brava'
 ] as const;
 
