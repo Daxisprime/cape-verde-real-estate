@@ -243,13 +243,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
     if (!resolvedProfileId) {
       const supabase = createSupabaseBrowserClient();
       if (supabase) {
-        const { data: bySlug } = await supabase.from("profiles").select("id").eq("slug", slug).maybeSingle();
-        if (bySlug) {
-          resolvedProfileId = bySlug.id;
-        } else {
-          const { data: byId } = await supabase.from("profiles").select("id").eq("id", slug).maybeSingle();
-          if (byId) resolvedProfileId = byId.id;
-        }
+        const { data: byId } = await supabase.from("profiles").select("id").eq("id", slug).maybeSingle();
+        if (byId) resolvedProfileId = byId.id;
       }
 
       if (!resolvedProfileId) {
@@ -300,7 +295,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .select("*")
         .eq("status", "active")
         .order("is_featured", { ascending: false })
-        .order("updated_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
     if (effectiveStoreId) {
       propertiesQuery = propertiesQuery.or(`store_id.eq.${effectiveStoreId},and(store_id.is.null,agent_id.eq.${resolvedProfileId})`);

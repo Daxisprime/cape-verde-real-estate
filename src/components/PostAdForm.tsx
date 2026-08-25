@@ -340,8 +340,8 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             const { data: urlData } = supabase.storage.from("ad-images").getPublicUrl(data.path);
             imageUrls.push(urlData.publicUrl);
           }
-        } catch {
-          imageUrls.push("https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=600&h=400&fit=crop");
+        } catch (uploadErr) {
+          console.error("Image upload failed:", uploadErr);
         }
       }
 

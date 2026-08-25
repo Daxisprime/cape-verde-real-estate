@@ -478,7 +478,7 @@ export default function MyStorePageClient() {
                   <p className="text-sm text-gray-500 mt-0.5">{vendorEmail}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors" href={`/store/${profile?.slug || user?.id || fallbackVendor.id}`}>
+                  <a className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors" href={`/store/${user?.id || fallbackVendor.id}`}>
                     <Eye className="h-3.5 w-3.5" />
                     {t.viewMyStore}
                   </a>

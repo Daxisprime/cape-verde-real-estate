@@ -26,14 +26,7 @@ async function getProfile(slugParam: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  const { data: bySlug } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("slug", slugParam)
-    .maybeSingle();
-
-  if (bySlug) return bySlug;
-
+  // Try by UUID id first
   const { data: byId } = await supabase
     .from("profiles")
     .select("*")
