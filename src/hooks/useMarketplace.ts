@@ -10,19 +10,15 @@ export interface MarketplaceItem {
   description: string | null;
   price_cve: number;
   category: string;
-  subcategory: string | null;
   condition: string;
   island: string;
   municipality: string | null;
   images: string[];
   status: string;
   user_id: string | null;
-  contact_phone: string | null;
   contact_whatsapp: string | null;
-  view_count: number;
   is_featured: boolean;
   created_at: string;
-  updated_at: string;
 }
 
 export const MARKETPLACE_CATEGORIES = [
@@ -86,17 +82,15 @@ export function useMarketplace(options: UseMarketplaceOptions = {}) {
     try {
       let query = supabase
         .from('marketplace_items')
-        .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
+        .select('id, title, description, price_cve, category, condition, island, municipality, images, status, user_id, contact_whatsapp, is_featured, created_at')
         .eq('status', 'active')
         .order('is_featured', { ascending: false })
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (options.category) {
         query = query.eq('category', options.category);
       }
-      if (options.subcategory) {
-        query = query.eq('subcategory', options.subcategory);
-      }
+
       if (options.island) {
         query = query.eq('island', options.island);
       }

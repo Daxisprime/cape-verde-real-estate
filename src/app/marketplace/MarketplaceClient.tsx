@@ -45,7 +45,7 @@ export default function MarketplaceClient() {
 
   const { items, loading, error } = useMarketplace({
     category: selectedCategory,
-    subcategory: selectedSubcategory,
+    subcategory: undefined,
     island: selectedIsland,
     searchQuery: submittedQuery || undefined,
     minPrice: minPrice ? Number(minPrice) : null,
@@ -385,9 +385,9 @@ export default function MarketplaceClient() {
                         {timeAgo(item.created_at)}
                       </span>
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        {(item.contact_whatsapp || item.contact_phone) && (
+                        {item.contact_whatsapp && (
                           <a
-                            href={`https://wa.me/${(item.contact_whatsapp || item.contact_phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Olá, vi o item "${item.title}" no Pro.CV. Ainda está disponível?`)}`}
+                            href={`https://wa.me/${(item.contact_whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Olá, vi o item "${item.title}" no Pro.CV. Ainda está disponível?`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
