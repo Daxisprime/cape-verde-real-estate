@@ -306,6 +306,39 @@ export interface Translations {
   upgradeNow: string;
   property: string;
   itemService: string;
+
+  // Reviews
+  reviewsTitle: string;
+  review: string;
+  reviewsPlural: string;
+  noReviewsYet: string;
+  beTheFirst: string;
+  leaveReview: string;
+  rateVendor: string;
+  howWasExperience: string;
+  ratingBad: string;
+  ratingFair: string;
+  ratingGood: string;
+  ratingVeryGood: string;
+  ratingExcellent: string;
+  commentOptional: string;
+  describeExperience: string;
+  submitReview: string;
+  submittingReview: string;
+  reviewSubmitted: string;
+  thanksFeedback: string;
+  vendorReplyLabel: string;
+  receivedReviews: string;
+  loadingReviews: string;
+  noReceivedReviews: string;
+  replyAction: string;
+  writeReply: string;
+  sendReply: string;
+  replySent: string;
+  cancelReply: string;
+  selectRating: string;
+  networkError: string;
+  yourReply: string;
 }
 
 // Translations data
@@ -603,6 +636,39 @@ const translations: Record<LanguageCode, Translations> = {
     upgradeNow: 'Upgrade Now',
     property: 'Property',
     itemService: 'Item / Service',
+
+    // Reviews
+    reviewsTitle: 'Reviews',
+    review: 'review',
+    reviewsPlural: 'reviews',
+    noReviewsYet: 'No reviews yet.',
+    beTheFirst: 'Be the first!',
+    leaveReview: 'Leave a Review',
+    rateVendor: 'Rate Seller',
+    howWasExperience: 'How was your experience with',
+    ratingBad: 'Poor',
+    ratingFair: 'Fair',
+    ratingGood: 'Good',
+    ratingVeryGood: 'Very Good',
+    ratingExcellent: 'Excellent',
+    commentOptional: 'Comment (optional)',
+    describeExperience: 'Describe your experience...',
+    submitReview: 'Submit Review',
+    submittingReview: 'Submitting...',
+    reviewSubmitted: 'Review Submitted!',
+    thanksFeedback: 'Thank you for your feedback.',
+    vendorReplyLabel: 'Seller Reply',
+    receivedReviews: 'Received Reviews',
+    loadingReviews: 'Loading...',
+    noReceivedReviews: 'No reviews received yet.',
+    replyAction: 'Reply',
+    writeReply: 'Write your reply...',
+    sendReply: 'Reply',
+    replySent: 'Reply sent!',
+    cancelReply: 'Cancel',
+    selectRating: 'Select a rating.',
+    networkError: 'Network error.',
+    yourReply: 'Your reply',
   },
   pt: {
     // UI Navigation
@@ -897,6 +963,39 @@ const translations: Record<LanguageCode, Translations> = {
     upgradeNow: 'Atualizar Agora',
     property: 'Propriedade',
     itemService: 'Artigo / Serviço',
+
+    // Reviews
+    reviewsTitle: 'Avaliações',
+    review: 'avaliação',
+    reviewsPlural: 'avaliações',
+    noReviewsYet: 'Nenhuma avaliação ainda.',
+    beTheFirst: 'Seja o primeiro!',
+    leaveReview: 'Deixar Avaliação',
+    rateVendor: 'Avaliar Vendedor',
+    howWasExperience: 'Como foi a sua experiência com',
+    ratingBad: 'Mau',
+    ratingFair: 'Razoável',
+    ratingGood: 'Bom',
+    ratingVeryGood: 'Muito Bom',
+    ratingExcellent: 'Excelente',
+    commentOptional: 'Comentário (opcional)',
+    describeExperience: 'Descreva a sua experiência...',
+    submitReview: 'Enviar Avaliação',
+    submittingReview: 'Enviando...',
+    reviewSubmitted: 'Avaliação Enviada!',
+    thanksFeedback: 'Obrigado pelo seu feedback.',
+    vendorReplyLabel: 'Resposta do Vendedor',
+    receivedReviews: 'Avaliações Recebidas',
+    loadingReviews: 'Carregando...',
+    noReceivedReviews: 'Nenhuma avaliação recebida ainda.',
+    replyAction: 'Responder',
+    writeReply: 'Escreva a sua resposta...',
+    sendReply: 'Responder',
+    replySent: 'Resposta enviada!',
+    cancelReply: 'Cancelar',
+    selectRating: 'Selecione uma avaliação.',
+    networkError: 'Erro de rede.',
+    yourReply: 'A sua resposta',
   },
   fr: {
     // UI Navigation
@@ -1181,6 +1280,39 @@ const translations: Record<LanguageCode, Translations> = {
     upgradeNow: 'Mettre à Niveau',
     property: 'Propriété',
     itemService: 'Article / Service',
+
+    // Reviews
+    reviewsTitle: 'Avis',
+    review: 'avis',
+    reviewsPlural: 'avis',
+    noReviewsYet: 'Aucun avis pour le moment.',
+    beTheFirst: 'Soyez le premier!',
+    leaveReview: 'Laisser un Avis',
+    rateVendor: 'Évaluer le Vendeur',
+    howWasExperience: 'Comment était votre expérience avec',
+    ratingBad: 'Mauvais',
+    ratingFair: 'Passable',
+    ratingGood: 'Bon',
+    ratingVeryGood: 'Très Bon',
+    ratingExcellent: 'Excellent',
+    commentOptional: 'Commentaire (optionnel)',
+    describeExperience: 'Décrivez votre expérience...',
+    submitReview: 'Envoyer l\'Avis',
+    submittingReview: 'Envoi...',
+    reviewSubmitted: 'Avis Envoyé!',
+    thanksFeedback: 'Merci pour votre retour.',
+    vendorReplyLabel: 'Réponse du Vendeur',
+    receivedReviews: 'Avis Reçus',
+    loadingReviews: 'Chargement...',
+    noReceivedReviews: 'Aucun avis reçu pour le moment.',
+    replyAction: 'Répondre',
+    writeReply: 'Écrivez votre réponse...',
+    sendReply: 'Répondre',
+    replySent: 'Réponse envoyée!',
+    cancelReply: 'Annuler',
+    selectRating: 'Sélectionnez une note.',
+    networkError: 'Erreur réseau.',
+    yourReply: 'Votre réponse',
   },
   cv: {
     // UI Navigation
@@ -1465,6 +1597,39 @@ const translations: Record<LanguageCode, Translations> = {
     upgradeNow: 'Atualiza Agora',
     property: 'Propriedadi',
     itemService: 'Artigu / Servisu',
+
+    // Reviews
+    reviewsTitle: 'Avaliason',
+    review: 'avaliason',
+    reviewsPlural: 'avaliasons',
+    noReviewsYet: 'Ninhun avaliason ainda.',
+    beTheFirst: 'Ser primeru!',
+    leaveReview: 'Dxa Avaliason',
+    rateVendor: 'Avalia Vendedor',
+    howWasExperience: 'Kumé ki foi bo experiênsia ku',
+    ratingBad: 'Mau',
+    ratingFair: 'Razuavel',
+    ratingGood: 'Bon',
+    ratingVeryGood: 'Mutu Bon',
+    ratingExcellent: 'Exselenti',
+    commentOptional: 'Komentariu (opsional)',
+    describeExperience: 'Diskrevê bo experiênsia...',
+    submitReview: 'Manda Avaliason',
+    submittingReview: 'Ta manda...',
+    reviewSubmitted: 'Avaliason Mandadu!',
+    thanksFeedback: 'Obrigadu pa bo feedback.',
+    vendorReplyLabel: 'Resposta di Vendedor',
+    receivedReviews: 'Avaliasons Risibidu',
+    loadingReviews: 'Ta karrega...',
+    noReceivedReviews: 'Ninhun avaliason risibidu ainda.',
+    replyAction: 'Respondê',
+    writeReply: 'Skrevê bo resposta...',
+    sendReply: 'Respondê',
+    replySent: 'Resposta mandadu!',
+    cancelReply: 'Kansela',
+    selectRating: 'Skolhe un nota.',
+    networkError: 'Erru di rede.',
+    yourReply: 'Bo resposta',
   }
 };
 

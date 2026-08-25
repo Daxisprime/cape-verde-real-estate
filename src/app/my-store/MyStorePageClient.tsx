@@ -82,6 +82,7 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (userId) fetchReviews();
@@ -114,7 +115,7 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
         body: JSON.stringify({ reviewId, vendorReply: replyText.trim() }),
       });
       if (res.ok) {
-        toast({ title: "Resposta enviada!" });
+        toast({ title: t.replySent });
         setReplyingTo(null);
         setReplyText("");
         fetchReviews();
@@ -134,14 +135,14 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
     <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mt-8">
       <div className="flex items-center gap-2 mb-5">
         <MessageSquare className="w-5 h-5 text-amber-500" />
-        <h2 className="text-lg font-bold text-gray-900">Avaliacoes Recebidas</h2>
+        <h2 className="text-lg font-bold text-gray-900">{t.receivedReviews}</h2>
         <span className="text-sm text-gray-400 ml-1">({reviews.length})</span>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400 animate-pulse">Carregando...</p>
+        <p className="text-sm text-gray-400 animate-pulse">{t.loadingReviews}</p>
       ) : reviews.length === 0 ? (
-        <p className="text-sm text-gray-400 italic">Nenhuma avaliacao recebida ainda.</p>
+        <p className="text-sm text-gray-400 italic">{t.noReceivedReviews}</p>
       ) : (
         <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
           {reviews.map((review) => (
@@ -165,7 +166,7 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
 
               {review.vendor_reply ? (
                 <div className="ml-4 pl-3 border-l-2 border-blue-200 bg-blue-50/50 rounded-r-lg p-2.5">
-                  <p className="text-xs font-semibold text-blue-700 mb-0.5">A sua resposta</p>
+                  <p className="text-xs font-semibold text-blue-700 mb-0.5">{t.yourReply}</p>
                   <p className="text-sm text-gray-700">{review.vendor_reply}</p>
                 </div>
               ) : (
@@ -175,7 +176,7 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
                       <textarea
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        placeholder="Escreva a sua resposta..."
+                        placeholder={t.writeReply}
                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                         rows={2}
                         maxLength={300}
@@ -187,13 +188,13 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                         >
                           <Send className="w-3 h-3" />
-                          {submitting ? "Enviando..." : "Responder"}
+                          {submitting ? t.submittingReview : t.sendReply}
                         </button>
                         <button
                           onClick={() => { setReplyingTo(null); setReplyText(""); }}
                           className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
                         >
-                          Cancelar
+                          {t.cancelReply}
                         </button>
                       </div>
                     </div>
@@ -202,7 +203,7 @@ function VendorReviewsSection({ userId }: { userId: string | null }) {
                       onClick={() => setReplyingTo(review.id)}
                       className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline ml-4"
                     >
-                      Responder
+                      {t.replyAction}
                     </button>
                   )}
                 </>
