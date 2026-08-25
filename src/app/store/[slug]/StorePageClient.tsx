@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import ReviewDrawer from "@/components/ReviewDrawer";
 import SocialShareBar from "@/components/SocialShareBar";
 import { useSearchMode } from "@/contexts/SearchModeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   CheckCircle,
   MapPin,
@@ -223,6 +224,14 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
   const [isMockProfile, setIsMockProfile] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { setSearchMode } = useSearchMode();
+  const { currentLanguage } = useLanguage();
+  const storeLabels = {
+    en: { all: "All", properties: "Properties", furniture: "Goods", results: "result", resultsPlural: "results", activeAds: "active listing", activeAdsPlural: "active listings", memberSince: "Member since", noListings: "No listings", noListingsDesc: "This seller has not published any listings yet." },
+    pt: { all: "Todos", properties: "Imoveis", furniture: "Moveis", results: "resultado", resultsPlural: "resultados", activeAds: "anuncio activo", activeAdsPlural: "anuncios activos", memberSince: "Membro desde", noListings: "Sem anuncios", noListingsDesc: "Este vendedor ainda nao publicou anuncios." },
+    fr: { all: "Tous", properties: "Immobilier", furniture: "Biens", results: "resultat", resultsPlural: "resultats", activeAds: "annonce active", activeAdsPlural: "annonces actives", memberSince: "Membre depuis", noListings: "Aucune annonce", noListingsDesc: "Ce vendeur n'a pas encore publie d'annonces." },
+    cv: { all: "Tudu", properties: "Imovel", furniture: "Movel", results: "resultado", resultsPlural: "resultados", activeAds: "anuncio ativu", activeAdsPlural: "anuncios ativus", memberSince: "Membro disdi", noListings: "Sen anuncio", noListingsDesc: "Es vendedor ainda ka publika anuncio." },
+  };
+  const sl = storeLabels[currentLanguage] || storeLabels.en;
 
   useEffect(() => {
     if (listings.length === 0) return;
@@ -575,12 +584,12 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
 
                 <p className="mt-2 text-sm text-gray-500 flex items-center justify-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
-                  Membro desde: {memberSince}
+                  {sl.memberSince}: {memberSince}
                 </p>
 
                 {listings.length > 0 && (
                   <p className="mt-2 text-sm font-medium text-teal-600">
-                    {listings.length} {listings.length === 1 ? "anuncio" : "anuncios"} activos
+                    {listings.length} {listings.length === 1 ? sl.activeAds : sl.activeAdsPlural}
                   </p>
                 )}
 
@@ -701,9 +710,9 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
               <div className="mb-5">
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {[
-                    { value: "all", label: "Todos" },
-                    { value: "property", label: "Imoveis" },
-                    { value: "marketplace", label: "Moveis" },
+                    { value: "all", label: sl.all },
+                    { value: "property", label: sl.properties },
+                    { value: "marketplace", label: sl.furniture },
                     ...[...new Set(listings.filter(l => l.category).map(l => l.category!))].map((cat) => ({
                       value: `cat:${cat}`,
                       label: cat,
@@ -724,7 +733,7 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
                   ))}
                 </div>
                 <p className="text-xs text-gray-400 mt-2">
-                  {filteredListings.length} {filteredListings.length === 1 ? "resultado" : "resultados"}
+                  {filteredListings.length} {filteredListings.length === 1 ? sl.results : sl.resultsPlural}
                 </p>
               </div>
             )}
@@ -734,8 +743,8 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Eye className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800">Sem anuncios</h3>
-                <p className="text-gray-500 mt-1">Este vendedor ainda nao publicou anuncios.</p>
+                <h3 className="text-lg font-semibold text-gray-800">{sl.noListings}</h3>
+                <p className="text-gray-500 mt-1">{sl.noListingsDesc}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

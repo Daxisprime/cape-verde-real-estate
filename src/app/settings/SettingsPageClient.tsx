@@ -27,10 +27,19 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPageClient() {
   const { user, isAuthenticated, updateProfile, changePassword, logout } = useAuth();
   const { refreshProfile } = useSupabaseAuth();
+  const { currentLanguage } = useLanguage();
+  const vl = {
+    en: { verification: "Verification", verifyAccount: "Verify My Account", verifyDesc: "Verification is free and increases buyer trust in your profile.", verified: "Account Verified", verifiedDesc: "Your profile displays the Verified Business badge.", inReview: "In Review", inReviewDesc: "Your documents are being reviewed by the team. You will be notified soon.", acceptedDocs: "Accepted Documents:", nifDoc: "NIF (Tax Identification Number)", biDoc: "Cape Verde Identity Card (BI)", passport: "Valid passport", businessLicense: "Business license (for companies)", fullNameLabel: "Full Legal Name *", fullNamePlaceholder: "Name as shown on document...", nifLabel: "NIF / BI *", nifPlaceholder: "NIF or BI number...", uploadDoc: "Upload Document (NIF or BI)", dragOrClick: "Drag or click to upload", fileTypes: "PDF, JPG or PNG (max 5MB)", submitting: "Submitting...", verifyStore: "Verify My Store (Free)", freeService: "This service is 100% free. Verification takes 1-3 business days.", rejected: "Verification Rejected", rejectedDesc: "Documents were not accepted. You can resubmit with correct documents.", requestSent: "Request Sent", requestSentDesc: "Your documents are under review. You will be notified when approved.", saving: "Saving...", savePrefs: "Save Preferences" },
+    pt: { verification: "Verificacao", verifyAccount: "Verificar Minha Conta", verifyDesc: "A verificacao e gratuita e aumenta a confianca dos compradores no seu perfil.", verified: "Conta Verificada", verifiedDesc: "O seu perfil exibe o selo de Negocio Verificado.", inReview: "Em Revisao", inReviewDesc: "Os seus documentos estao a ser analisados pela equipa. Sera notificado em breve.", acceptedDocs: "Documentos Aceites:", nifDoc: "NIF (Numero de Identificacao Fiscal)", biDoc: "Bilhete de Identidade (BI) de Cabo Verde", passport: "Passaporte valido", businessLicense: "Alvara comercial (para empresas)", fullNameLabel: "Nome Legal Completo *", fullNamePlaceholder: "Nome conforme o documento...", nifLabel: "NIF / BI *", nifPlaceholder: "Numero do NIF ou BI...", uploadDoc: "Carregar Documento (NIF ou BI)", dragOrClick: "Arraste ou clique para carregar", fileTypes: "PDF, JPG ou PNG (max 5MB)", submitting: "A submeter...", verifyStore: "Verificar Minha Loja (Gratis)", freeService: "Este servico e 100% gratuito. A verificacao demora 1-3 dias uteis.", rejected: "Verificacao Rejeitada", rejectedDesc: "Os documentos nao foram aceites. Pode submeter novamente com documentos corretos.", requestSent: "Pedido Enviado", requestSentDesc: "Os seus documentos estao em revisao. Sera notificado quando aprovado.", saving: "A guardar...", savePrefs: "Guardar Preferencias" },
+    fr: { verification: "Verification", verifyAccount: "Verifier Mon Compte", verifyDesc: "La verification est gratuite et augmente la confiance des acheteurs envers votre profil.", verified: "Compte Verifie", verifiedDesc: "Votre profil affiche le badge Entreprise Verifiee.", inReview: "En Cours de Revision", inReviewDesc: "Vos documents sont en cours d'analyse par l'equipe. Vous serez notifie bientot.", acceptedDocs: "Documents Acceptes:", nifDoc: "NIF (Numero d'Identification Fiscale)", biDoc: "Carte d'Identite du Cap-Vert (BI)", passport: "Passeport valide", businessLicense: "Licence commerciale (pour les entreprises)", fullNameLabel: "Nom Legal Complet *", fullNamePlaceholder: "Nom tel qu'il apparait sur le document...", nifLabel: "NIF / BI *", nifPlaceholder: "Numero du NIF ou BI...", uploadDoc: "Telecharger un Document (NIF ou BI)", dragOrClick: "Glissez ou cliquez pour telecharger", fileTypes: "PDF, JPG ou PNG (max 5 Mo)", submitting: "Envoi en cours...", verifyStore: "Verifier Ma Boutique (Gratuit)", freeService: "Ce service est 100% gratuit. La verification prend 1-3 jours ouvrables.", rejected: "Verification Rejetee", rejectedDesc: "Les documents n'ont pas ete acceptes. Vous pouvez soumettre a nouveau avec les bons documents.", requestSent: "Demande Envoyee", requestSentDesc: "Vos documents sont en cours de revision. Vous serez notifie lorsqu'ils seront approuves.", saving: "Enregistrement...", savePrefs: "Enregistrer les Preferences" },
+    cv: { verification: "Verifikason", verifyAccount: "Verifika Nha Konta", verifyDesc: "Verifikason e gratis i aumenta konfiansa di kumpradores na bu perfil.", verified: "Konta Verifikadu", verifiedDesc: "Bu perfil ta mostra selu di Negosio Verifikadu.", inReview: "Na Revisao", inReviewDesc: "Bus dokumentos sta ser analizadu pa ekipa. Bu ta ser notifikadu brebi.", acceptedDocs: "Dokumentos Aseitadu:", nifDoc: "NIF (Numeru di Identifikason Fiskal)", biDoc: "Bilhete di Identidadi (BI) di Kabu Verdi", passport: "Pasaporti validu", businessLicense: "Alvara komersial (pa empresas)", fullNameLabel: "Nomi Legal Kompletu *", fullNamePlaceholder: "Nomi konforme dokumentu...", nifLabel: "NIF / BI *", nifPlaceholder: "Numeru di NIF o BI...", uploadDoc: "Karega Dokumentu (NIF o BI)", dragOrClick: "Arasta o klika pa karega", fileTypes: "PDF, JPG o PNG (max 5MB)", submitting: "Ta submete...", verifyStore: "Verifika Nha Loja (Gratis)", freeService: "Es servisu e 100% gratis. Verifikason demora 1-3 dia util.", rejected: "Verifikason Rejeitadu", rejectedDesc: "Dokumentos ka foi aseitadu. Bu podi submete di novu ku dokumentos koretu.", requestSent: "Pedidu Enviadu", requestSentDesc: "Bus dokumentos sta na revisao. Bu ta ser notifikadu kantu aprovadu.", saving: "Ta guarda...", savePrefs: "Guarda Preferensias" },
+  };
+  const sv = vl[currentLanguage] || vl.en;
   const { toast } = useToast();
   const router = useRouter();
 
@@ -134,7 +143,7 @@ export default function SettingsPageClient() {
       setVerificationStatus("pending_review");
       setVerificationForm({ fullName: "", nifNumber: "" });
       setVerificationDoc(null);
-      toast({ title: "Pedido Enviado", description: "Os seus documentos estao em revisao. Sera notificado quando aprovado." });
+      toast({ title: sv.requestSent, description: sv.requestSentDesc });
     } else {
       toast({ title: "Erro", description: "Falha ao submeter pedido. Tente novamente.", variant: "destructive" });
     }
@@ -454,7 +463,7 @@ export default function SettingsPageClient() {
             )}
             <TabsTrigger value="verification" className="flex items-center">
               <Shield className="h-4 w-4 mr-2" />
-              Verificacao
+              {sv.verification}
             </TabsTrigger>
           </TabsList>
 
@@ -867,7 +876,7 @@ export default function SettingsPageClient() {
                 <div className="flex justify-end pt-2">
                   <Button onClick={handleSaveNotifPrefs} disabled={savingNotifPrefs}>
                     <Save className="h-4 w-4 mr-2" />
-                    {savingNotifPrefs ? "A guardar..." : "Guardar Preferencias"}
+                    {savingNotifPrefs ? sv.saving : sv.savePrefs}
                   </Button>
                 </div>
               </CardContent>
@@ -1031,10 +1040,10 @@ export default function SettingsPageClient() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Verificar Minha Conta
+                  {sv.verifyAccount}
                 </CardTitle>
                 <CardDescription>
-                  A verificacao e gratuita e aumenta a confianca dos compradores no seu perfil.
+                  {sv.verifyDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1042,8 +1051,8 @@ export default function SettingsPageClient() {
                   <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                     <CheckCircle className="h-6 w-6 text-emerald-600" />
                     <div>
-                      <p className="text-sm font-bold text-emerald-900">Conta Verificada</p>
-                      <p className="text-xs text-emerald-700">O seu perfil exibe o selo de Negocio Verificado.</p>
+                      <p className="text-sm font-bold text-emerald-900">{sv.verified}</p>
+                      <p className="text-xs text-emerald-700">{sv.verifiedDesc}</p>
                     </div>
                   </div>
                 )}
@@ -1052,8 +1061,8 @@ export default function SettingsPageClient() {
                   <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                     <Eye className="h-6 w-6 text-amber-600" />
                     <div>
-                      <p className="text-sm font-bold text-amber-900">Em Revisao</p>
-                      <p className="text-xs text-amber-700">Os seus documentos estao a ser analisados pela equipa. Sera notificado em breve.</p>
+                      <p className="text-sm font-bold text-amber-900">{sv.inReview}</p>
+                      <p className="text-xs text-amber-700">{sv.inReviewDesc}</p>
                     </div>
                   </div>
                 )}
@@ -1061,43 +1070,43 @@ export default function SettingsPageClient() {
                 {verificationStatus === "unverified" && (
                   <div className="space-y-4">
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-                      <p className="text-sm font-medium text-gray-900">Documentos Aceites:</p>
+                      <p className="text-sm font-medium text-gray-900">{sv.acceptedDocs}</p>
                       <ul className="text-xs text-gray-600 space-y-1.5 list-disc pl-4">
-                        <li>NIF (Numero de Identificacao Fiscal)</li>
-                        <li>Bilhete de Identidade (BI) de Cabo Verde</li>
-                        <li>Passaporte valido</li>
-                        <li>Alvara comercial (para empresas)</li>
+                        <li>{sv.nifDoc}</li>
+                        <li>{sv.biDoc}</li>
+                        <li>{sv.passport}</li>
+                        <li>{sv.businessLicense}</li>
                       </ul>
                     </div>
 
                     <div className="space-y-3">
                       <div>
-                        <Label htmlFor="v-fullname">Nome Legal Completo *</Label>
+                        <Label htmlFor="v-fullname">{sv.fullNameLabel}</Label>
                         <input
                           id="v-fullname"
                           type="text"
                           value={verificationForm.fullName}
                           onChange={(e) => setVerificationForm(f => ({ ...f, fullName: e.target.value }))}
-                          placeholder="Nome conforme o documento..."
+                          placeholder={sv.fullNamePlaceholder}
                           className="mt-1 w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none"
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="v-nif">NIF / BI *</Label>
+                        <Label htmlFor="v-nif">{sv.nifLabel}</Label>
                         <input
                           id="v-nif"
                           type="text"
                           value={verificationForm.nifNumber}
                           onChange={(e) => setVerificationForm(f => ({ ...f, nifNumber: e.target.value }))}
-                          placeholder="Numero do NIF ou BI..."
+                          placeholder={sv.nifPlaceholder}
                           className="mt-1 w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <Label htmlFor="verification-doc">Carregar Documento (NIF ou BI)</Label>
+                      <Label htmlFor="verification-doc">{sv.uploadDoc}</Label>
                       <div
                         className="mt-1.5 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-gray-300 transition-colors cursor-pointer"
                         onClick={() => document.getElementById("verification-doc")?.click()}
@@ -1107,8 +1116,8 @@ export default function SettingsPageClient() {
                           <p className="text-xs text-teal-700 font-medium">{verificationDoc.name}</p>
                         ) : (
                           <>
-                            <p className="text-xs text-gray-500">Arraste ou clique para carregar</p>
-                            <p className="text-[11px] text-gray-400 mt-1">PDF, JPG ou PNG (max 5MB)</p>
+                            <p className="text-xs text-gray-500">{sv.dragOrClick}</p>
+                            <p className="text-[11px] text-gray-400 mt-1">{sv.fileTypes}</p>
                           </>
                         )}
                         <input
@@ -1127,11 +1136,11 @@ export default function SettingsPageClient() {
                       className="w-full"
                     >
                       <Shield className="h-4 w-4 mr-2" />
-                      {verificationSubmitting ? "A submeter..." : "Verificar Minha Loja (Gratis)"}
+                      {verificationSubmitting ? sv.submitting : sv.verifyStore}
                     </Button>
 
                     <p className="text-[11px] text-gray-400 text-center">
-                      Este servico e 100% gratuito. A verificacao demora 1-3 dias uteis.
+                      {sv.freeService}
                     </p>
                   </div>
                 )}
@@ -1141,8 +1150,8 @@ export default function SettingsPageClient() {
                     <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                       <Shield className="h-6 w-6 text-red-600" />
                       <div>
-                        <p className="text-sm font-bold text-red-900">Verificacao Rejeitada</p>
-                        <p className="text-xs text-red-700">Os documentos nao foram aceites. Pode submeter novamente com documentos corretos.</p>
+                        <p className="text-sm font-bold text-red-900">{sv.rejected}</p>
+                        <p className="text-xs text-red-700">{sv.rejectedDesc}</p>
                       </div>
                     </div>
                     <Button onClick={() => setVerificationStatus("unverified")} variant="outline" className="w-full">

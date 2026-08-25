@@ -48,7 +48,7 @@ export default function NotificationBell() {
     <a
       href="/profile/notifications"
       className="relative p-2 rounded-lg text-gray-600 hover:text-teal-600 hover:bg-gray-50 transition-colors"
-      aria-label="Notificacoes"
+      aria-label="Notifications"
     >
       <Bell className="w-5 h-5" />
       {unreadCount > 0 && (

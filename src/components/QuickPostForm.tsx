@@ -34,7 +34,14 @@ interface QuickPostFormProps {
 
 export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
   const { user } = useSupabaseAuth();
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
+  const ql = {
+    en: { networkError: "Connection error. Make sure you have data or Wi-Fi active and try again.", error: "Error", limitTitle: "Listing Limit Reached!", limitDesc: "Your current plan has reached the free limit for this category. Upgrade to Premium to publish more listings.", activeListings: "Active listings", upgradePremium: "Upgrade to Premium", close: "Close", myStore: "My Store" },
+    pt: { networkError: "Erro de conexão. Certifique-se de que tem os dados móveis ativos e tente novamente.", error: "Erro", limitTitle: "Limite de Anuncios Atingido!", limitDesc: "O seu plano atual atingiu o limite gratuito para esta categoria. Atualize para o plano Premium para publicar mais anuncios.", activeListings: "Anuncios ativos", upgradePremium: "Atualizar para Premium", close: "Fechar", myStore: "Minha Loja" },
+    fr: { networkError: "Erreur de connexion. Assurez-vous que vos donnees mobiles sont actives et reessayez.", error: "Erreur", limitTitle: "Limite d'annonces atteinte!", limitDesc: "Votre plan actuel a atteint la limite gratuite pour cette categorie. Passez au Premium pour publier plus d'annonces.", activeListings: "Annonces actives", upgradePremium: "Passer au Premium", close: "Fermer", myStore: "Ma Boutique" },
+    cv: { networkError: "Erru di koneksao. Sertifika-bu ma bu ten dadus movel ativu i tenta di novu.", error: "Erru", limitTitle: "Limite di Anuncios Atinjidu!", limitDesc: "Bu planu atual atinjibu limite gratis pa es kategoria. Atualiza pa Premium pa publika mas anuncios.", activeListings: "Anuncios ativus", upgradePremium: "Atualiza pa Premium", close: "Fitxa", myStore: "Nha Loja" },
+  };
+  const qLab = ql[currentLanguage] || ql.en;
   const router = useRouter();
   const [title, setTitle] = useState("");
   const { toast } = useToast();
@@ -150,7 +157,7 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       if (existingStore) {
         resolvedStoreId = existingStore.id;
       } else {
-        const storeName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Minha Loja";
+        const storeName = user?.user_metadata?.name || user?.email?.split("@")[0] || qLab.myStore;
         const storeSlug = slugify(storeName) + "-" + Date.now().toString(36);
         const { data: newStore, error: storeErr } = await supabase
           .from("stores" as never)
@@ -266,12 +273,12 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
       const msg = (err as { message?: string })?.message || "";
       const isNetworkError = msg.includes("fetch") || msg.includes("network") || msg.includes("Failed to fetch") || !navigator.onLine;
       const displayMsg = isNetworkError
-        ? "Erro de conexão. Certifique-se de que tem os dados móveis ativos e tente novamente."
+        ? qLab.networkError
         : msg || "Failed to post. Try again.";
       setErrorMessage(displayMsg);
       setStatus("error");
       toast({
-        title: "Erro",
+        title: qLab.error,
         description: displayMsg,
         variant: "destructive",
       });
@@ -523,15 +530,14 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
                 <AlertTriangle className="w-7 h-7 text-amber-600" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Limite de Anuncios Atingido!
+                {qLab.limitTitle}
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                O seu plano atual atingiu o limite gratuito para esta categoria.
-                Atualize para o plano Premium para publicar mais anuncios.
+                {qLab.limitDesc}
               </p>
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-amber-700 font-medium">Anuncios ativos</span>
+                  <span className="text-amber-700 font-medium">{qLab.activeListings}</span>
                   <span className="font-bold text-amber-900">{limitInfo?.current ?? 0} / {limitInfo?.limit ?? 0}</span>
                 </div>
                 <div className="mt-2 h-2 bg-amber-100 rounded-full overflow-hidden">
@@ -546,13 +552,13 @@ export default function QuickPostForm({ onSuccess }: QuickPostFormProps) {
                 className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
               >
                 <Crown className="w-4 h-4" />
-                Atualizar para Premium
+                {qLab.upgradePremium}
               </button>
               <button
                 onClick={() => setShowLimitModal(false)}
                 className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Fechar
+                {qLab.close}
               </button>
             </div>
           </div>

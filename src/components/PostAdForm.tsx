@@ -116,7 +116,14 @@ interface PostAdFormProps {
 
 export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
   const { user, profile } = useSupabaseAuth();
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
+  const fl = {
+    en: { fillTitlePrice: "Please fill in the title and price.", selectIsland: "Select an island.", selectCategory: "Select a category.", limitReached: (c: number, l: number) => `Limit reached: ${c}/${l} active listings in this category. Upgrade to publish more.`, sessionExpired: "Session expired. Please sign in again.", publishFailed: "Failed to publish. Please make sure you are signed in and try again.", realEstateWarning: "We detected that this listing belongs to the Real Estate category. Please publish it under the Properties tab to ensure approval.", myStore: "My Store" },
+    pt: { fillTitlePrice: "Preencha o titulo e o preco.", selectIsland: "Selecione uma ilha.", selectCategory: "Selecione uma categoria.", limitReached: (c: number, l: number) => `Limite atingido: ${c}/${l} anuncios ativos nesta categoria. Atualize para publicar mais.`, sessionExpired: "Sessao expirada. Por favor, faca login novamente.", publishFailed: "Falha ao publicar. Verifique que esta autenticado e tente novamente.", realEstateWarning: "Detetamos que este anuncio pertence a categoria do Imobiliario. Por favor, publique o seu anuncio no separador de Imoveis para garantir a aprovacao.", myStore: "Minha Loja" },
+    fr: { fillTitlePrice: "Veuillez remplir le titre et le prix.", selectIsland: "Selectionnez une ile.", selectCategory: "Selectionnez une categorie.", limitReached: (c: number, l: number) => `Limite atteinte: ${c}/${l} annonces actives dans cette categorie. Passez au premium pour publier plus.`, sessionExpired: "Session expiree. Veuillez vous reconnecter.", publishFailed: "Echec de la publication. Verifiez que vous etes connecte et reessayez.", realEstateWarning: "Nous avons detecte que cette annonce appartient a la categorie Immobilier. Veuillez la publier sous l'onglet Immobilier.", myStore: "Ma Boutique" },
+    cv: { fillTitlePrice: "Prenxe titulo i presu.", selectIsland: "Skodje un ilha.", selectCategory: "Skodje un kategoria.", limitReached: (c: number, l: number) => `Limite atinjidu: ${c}/${l} anuncios ativus nesta kategoria. Atualiza pa publika mas.`, sessionExpired: "Sessao spiradu. Faz login di novu.", publishFailed: "Falha na publikason. Verifica ki bu sta autentikadu.", realEstateWarning: "Nos deteta ma es anuncio pertense a kategoria di Imobiliario. Publika na separador di Imoveis.", myStore: "Nha Loja" },
+  };
+  const formL = fl[currentLanguage] || fl.en;
   const router = useRouter();
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
@@ -207,17 +214,17 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
     e.preventDefault();
     if (!title.trim() || !price) {
       setStatus("error");
-      setErrorMessage("Preencha o titulo e o preco.");
+      setErrorMessage(formL.fillTitlePrice);
       return;
     }
     if (!island) {
       setStatus("error");
-      setErrorMessage("Selecione uma ilha.");
+      setErrorMessage(formL.selectIsland);
       return;
     }
     if (!category) {
       setStatus("error");
-      setErrorMessage("Selecione uma categoria.");
+      setErrorMessage(formL.selectCategory);
       return;
     }
 
@@ -244,7 +251,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
       const { allowed, current, limit } = await checkListingLimit(sellerId, checkCategory, paywallActive);
       if (!allowed) {
         setStatus("error");
-        setErrorMessage(`Limite atingido: ${current}/${limit} anuncios ativos nesta categoria. Atualize para publicar mais.`);
+        setErrorMessage(formL.limitReached(current, limit));
         return;
       }
     }
@@ -272,7 +279,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
 
       // Verify the session is active before proceeding
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Sessao expirada. Por favor, faca login novamente.");
+      if (!session) throw new Error(formL.sessionExpired);
 
       // Ensure the user has a profiles row (required by FK constraints)
       const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", sellerId).maybeSingle();
@@ -301,7 +308,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         if (existingStore) {
           resolvedStoreId = existingStore.id;
         } else {
-          const storeName = profile?.name || session.user.email?.split("@")[0] || "Minha Loja";
+          const storeName = profile?.name || session.user.email?.split("@")[0] || formL.myStore;
           const storeSlug = slugify(storeName) + "-" + Date.now().toString(36);
           const { data: newStore, error: storeErr } = await supabase
             .from("stores" as never)
@@ -376,7 +383,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .select("id")
             .maybeSingle();
           if (error) throw error;
-          if (!inserted) throw new Error("Falha ao publicar. Verifique que esta autenticado e tente novamente.");
+          if (!inserted) throw new Error(formL.publishFailed);
         }
       } else {
         const realEstateKeywords = ['casa', 'apartamento', 'vivenda', 'terreno', 't1', 't2', 't3', 'aluga-se', 'quarto'];
@@ -384,7 +391,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
         const words = textToScan.split(/\s+/);
         const matched = realEstateKeywords.some(kw => words.includes(kw));
         if (matched) {
-          throw new Error("Detetamos que este anuncio pertence a categoria do Imobiliario. Por favor, publique o seu anuncio no separador de Imoveis para garantir a aprovacao.");
+          throw new Error(formL.realEstateWarning);
         }
 
         const marketPayload = {
@@ -412,7 +419,7 @@ export default function PostAdForm({ onAdCreated, editData }: PostAdFormProps) {
             .select("id")
             .maybeSingle();
           if (error) throw error;
-          if (!inserted) throw new Error("Falha ao publicar. Verifique que esta autenticado e tente novamente.");
+          if (!inserted) throw new Error(formL.publishFailed);
         }
       }
 
