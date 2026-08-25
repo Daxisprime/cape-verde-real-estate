@@ -132,7 +132,7 @@ export function useMyListings() {
 
       const { data: itemsData, error: itemsError } = await supabase
         .from('marketplace_items')
-        .select('id, title, description, price_cve, category, subcategory, condition, island, municipality, images, status, user_id, contact_phone, contact_whatsapp, view_count, is_featured, created_at, updated_at')
+        .select('id, title, description, price_cve, category, condition, island, municipality, images, status, user_id, contact_whatsapp, is_featured, created_at')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
 
