@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     if (action === "bump") {
       const { error: updateError } = await supabase
         .from(table)
-        .update({ last_bumped_at: new Date().toISOString() } as never)
+        .update({ updated_at: new Date().toISOString() } as never)
         .eq("id", listingId);
 
       if (updateError) {
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
         .update({
           is_featured: true,
           featured_until: featuredUntil.toISOString(),
-          last_bumped_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         } as never)
         .eq("id", listingId);
 

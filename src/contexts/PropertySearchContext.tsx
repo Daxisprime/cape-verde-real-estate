@@ -322,7 +322,7 @@ export function PropertySearchProvider({ children }: { children: ReactNode }) {
           .select('id, title, description, price, property_type, listing_type, bedrooms, bathrooms, total_area, location, island, latitude, longitude, images, features, agent_id, is_featured, status, created_at')
           .eq('status', 'active')
           .order('is_featured', { ascending: false })
-          .order('last_bumped_at', { ascending: false })
+          .order('updated_at', { ascending: false })
           .limit(100);
 
         if (error || !data || data.length === 0) return;

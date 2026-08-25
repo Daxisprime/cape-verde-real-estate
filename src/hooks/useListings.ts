@@ -55,7 +55,7 @@ export function useListings() {
       try {
         let query = supabase
           .from('properties')
-          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude, last_bumped_at')
+          .select('id, title, price, island, location, property_type, listing_type, images, bedrooms, bathrooms, total_area, description, agent_id, status, created_at, is_featured, latitude, longitude')
           .eq('status', 'active');
 
         if (selectedIslands.length > 0) {
@@ -65,7 +65,7 @@ export function useListings() {
 
         const { data, error } = await query
           .order('is_featured', { ascending: false })
-          .order('last_bumped_at', { ascending: false })
+          .order('updated_at', { ascending: false })
           .limit(50);
 
         if (!error && data) {

@@ -293,14 +293,14 @@ export default function StorePageClient({ profileId, slug, storeId }: Props) {
         .select("*")
         .eq("status", "active")
         .order("is_featured", { ascending: false })
-        .order("last_bumped_at", { ascending: false });
+        .order("updated_at", { ascending: false });
 
     let marketplaceQuery = supabase
         .from("marketplace_items")
         .select("*")
         .eq("status", "active")
         .order("is_featured", { ascending: false })
-        .order("last_bumped_at", { ascending: false });
+        .order("updated_at", { ascending: false });
 
     if (effectiveStoreId) {
       propertiesQuery = propertiesQuery.or(`store_id.eq.${effectiveStoreId},and(store_id.is.null,agent_id.eq.${resolvedProfileId})`);
