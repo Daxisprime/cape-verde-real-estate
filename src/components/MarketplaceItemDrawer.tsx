@@ -217,7 +217,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     ? new Date(seller.created_at).toLocaleDateString('pt-CV', { month: 'short', year: 'numeric' })
     : '--';
 
-  const extraPhotos = images.length > 4 ? images.length - 4 : 0;
+  const extraPhotos = images.length > 3 ? images.length - 3 : 0;
 
   return (
     <>
@@ -276,29 +276,57 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
             {/* Full-Width Photo Gallery - same as property */}
             <section className="mt-4">
               <div className="space-y-2">
-                <button
-                  onClick={() => { setGalleryOpen(true); setCurrentImageIndex(0); }}
-                  className="w-full block"
-                >
-                  <img
-                    src={images[0]}
-                    alt={item.title}
-                    className="w-full h-64 sm:h-80 md:h-[420px] object-cover rounded-xl bg-slate-100"
-                  />
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={() => { setGalleryOpen(true); setCurrentImageIndex(currentImageIndex); }}
+                    className="w-full block"
+                  >
+                    <img
+                      src={images[currentImageIndex]}
+                      alt={item.title}
+                      className="w-full h-64 sm:h-80 md:h-[420px] object-cover rounded-xl bg-slate-100"
+                    />
+                  </button>
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition-opacity opacity-0 group-hover:opacity-100"
+                        aria-label="Previous photo"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition-opacity opacity-0 group-hover:opacity-100"
+                        aria-label="Next photo"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1">
+                        {images.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
+                            className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
                 {images.length > 1 && (
                   <div className="grid grid-cols-3 gap-2">
-                    {images.slice(1, 4).map((img, i) => {
-                      const isLast = i === 2 || i === images.length - 2;
-                      const showOverlay = isLast && extraPhotos > 0;
+                    {images.slice(0, 3).map((img, i) => {
+                      const isLast = i === 2 && extraPhotos > 0;
                       return (
                         <button
                           key={i}
-                          onClick={() => { setGalleryOpen(true); setCurrentImageIndex(i + 1); }}
-                          className="relative w-full aspect-[4/3] overflow-hidden rounded-lg"
+                          onClick={() => { setCurrentImageIndex(i); }}
+                          className={`relative w-full aspect-[4/3] overflow-hidden rounded-lg ring-2 transition-all ${i === currentImageIndex ? 'ring-blue-500' : 'ring-transparent'}`}
                         >
-                          <img src={img} alt={`${item.title} ${i + 2}`} className="w-full h-full object-cover bg-slate-100" />
-                          {showOverlay && (
+                          <img src={img} alt={`${item.title} ${i + 1}`} className="w-full h-full object-cover bg-slate-100" />
+                          {isLast && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                               <span className="text-white text-sm font-semibold">+{extraPhotos} Photos</span>
                             </div>
