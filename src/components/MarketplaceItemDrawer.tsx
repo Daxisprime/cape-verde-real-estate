@@ -76,6 +76,11 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
   const [showRatePrompt, setShowRatePrompt] = useState(false);
   const [reviewDrawerOpen, setReviewDrawerOpen] = useState(false);
 
+  // Item reviews
+  const [itemReviews, setItemReviews] = useState<Array<{ id: string; rating: number; comment: string | null; vendor_reply: string | null; created_at: string; reviewer_id: string }>>([]);
+  const [reviewsAvg, setReviewsAvg] = useState(0);
+  const [reviewsCount, setReviewsCount] = useState(0);
+
   // Touch handling for carousel
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
@@ -88,6 +93,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
       requestAnimationFrame(() => setIsVisible(true));
       document.body.style.overflow = 'hidden';
       fetchSellerProfile(item.user_id);
+      fetchItemReviews(item.id);
     } else {
       setIsVisible(false);
       setSeller(null);
@@ -134,6 +140,18 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     } finally {
       setSellerLoading(false);
     }
+  }, []);
+
+  const fetchItemReviews = useCallback(async (itemId: string) => {
+    try {
+      const res = await fetch(`/api/reviews?itemId=${itemId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setItemReviews(data.reviews || []);
+        setReviewsAvg(data.averageRating || 0);
+        setReviewsCount(data.totalCount || 0);
+      }
+    } catch { /* silent */ }
   }, []);
 
   function handleClose() {
@@ -597,6 +615,50 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                     </div>
                   </div>
                 </section>
+
+                {/* Item Reviews Section */}
+                <section className="mt-6 border-t border-gray-100 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      Avaliacoes {reviewsCount > 0 && <span className="text-sm font-normal text-gray-500">({reviewsAvg.toFixed(1)} / 5 - {reviewsCount} {reviewsCount === 1 ? 'avaliacao' : 'avaliacoes'})</span>}
+                    </h3>
+                    <button
+                      onClick={() => setReviewDrawerOpen(true)}
+                      className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                    >
+                      Deixar Avaliacao
+                    </button>
+                  </div>
+
+                  {reviewsCount === 0 ? (
+                    <p className="text-sm text-gray-400 italic">Nenhuma avaliacao ainda. Seja o primeiro!</p>
+                  ) : (
+                    <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
+                      {itemReviews.map((review) => (
+                        <div key={review.id} className="bg-gray-50 rounded-xl p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-0.5">
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
+                              ))}
+                            </div>
+                            <span className="text-xs text-gray-400">{timeAgo(review.created_at)}</span>
+                          </div>
+                          {review.comment && (
+                            <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
+                          )}
+                          {review.vendor_reply && (
+                            <div className="mt-2 ml-4 pl-3 border-l-2 border-blue-200 bg-blue-50/50 rounded-r-lg p-2.5">
+                              <p className="text-xs font-semibold text-blue-700 mb-0.5">Resposta do Vendedor</p>
+                              <p className="text-sm text-gray-700">{review.vendor_reply}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
               </main>
 
               {/* RIGHT COLUMN: Sticky Inquiry Card - 4 cols, desktop only */}
@@ -813,12 +875,13 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
       )}
     </div>
 
-    {item?.user_id && (
+    {item?.id && (
       <ReviewDrawer
-        vendorId={item.user_id}
-        vendorName={item.title || "Vendedor"}
+        itemId={item.id}
+        vendorName={sellerName}
         isOpen={reviewDrawerOpen}
         onClose={() => setReviewDrawerOpen(false)}
+        onSuccess={() => fetchItemReviews(item.id)}
       />
     )}
     </>

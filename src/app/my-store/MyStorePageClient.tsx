@@ -48,6 +48,8 @@ import {
   Globe,
   RotateCcw,
   Mail,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 
 type ListingStatus = "active" | "reviewing" | "closed";
@@ -72,6 +74,146 @@ const STATUS_TABS: { key: ListingStatus; label: string }[] = [
   { key: "reviewing", label: "Reviewing" },
   { key: "closed", label: "Closed" },
 ];
+
+function VendorReviewsSection({ userId }: { userId: string | null }) {
+  const [reviews, setReviews] = useState<Array<{ id: string; item_id: string; rating: number; comment: string | null; vendor_reply: string | null; created_at: string; reviewer_id: string }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (userId) fetchReviews();
+  }, [userId]);
+
+  async function fetchReviews() {
+    if (!userId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/reviews?vendorId=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data.reviews || []);
+      }
+    } catch { /* silent */ }
+    setLoading(false);
+  }
+
+  async function handleReply(reviewId: string) {
+    if (!replyText.trim()) return;
+    setSubmitting(true);
+    const supabase = createSupabaseBrowserClient();
+    const session = supabase ? await supabase.auth.getSession() : null;
+    const token = session?.data?.session?.access_token || "";
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reviewId, vendorReply: replyText.trim() }),
+      });
+      if (res.ok) {
+        toast({ title: "Resposta enviada!" });
+        setReplyingTo(null);
+        setReplyText("");
+        fetchReviews();
+      } else {
+        const data = await res.json();
+        toast({ title: "Erro", description: data.error || "Falha", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro", description: "Erro de rede", variant: "destructive" });
+    }
+    setSubmitting(false);
+  }
+
+  if (!userId) return null;
+
+  return (
+    <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mt-8">
+      <div className="flex items-center gap-2 mb-5">
+        <MessageSquare className="w-5 h-5 text-amber-500" />
+        <h2 className="text-lg font-bold text-gray-900">Avaliacoes Recebidas</h2>
+        <span className="text-sm text-gray-400 ml-1">({reviews.length})</span>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-400 animate-pulse">Carregando...</p>
+      ) : reviews.length === 0 ? (
+        <p className="text-sm text-gray-400 italic">Nenhuma avaliacao recebida ainda.</p>
+      ) : (
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+          {reviews.map((review) => (
+            <div key={review.id} className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {new Date(review.created_at).toLocaleDateString('pt-CV')}
+                  </span>
+                </div>
+              </div>
+
+              {review.comment && (
+                <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
+              )}
+
+              {review.vendor_reply ? (
+                <div className="ml-4 pl-3 border-l-2 border-blue-200 bg-blue-50/50 rounded-r-lg p-2.5">
+                  <p className="text-xs font-semibold text-blue-700 mb-0.5">A sua resposta</p>
+                  <p className="text-sm text-gray-700">{review.vendor_reply}</p>
+                </div>
+              ) : (
+                <>
+                  {replyingTo === review.id ? (
+                    <div className="ml-4 space-y-2">
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Escreva a sua resposta..."
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                        rows={2}
+                        maxLength={300}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleReply(review.id)}
+                          disabled={submitting || !replyText.trim()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        >
+                          <Send className="w-3 h-3" />
+                          {submitting ? "Enviando..." : "Responder"}
+                        </button>
+                        <button
+                          onClick={() => { setReplyingTo(null); setReplyText(""); }}
+                          className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setReplyingTo(review.id)}
+                      className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline ml-4"
+                    >
+                      Responder
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function MyStorePageClient() {
   const { user, profile, isAuthenticated } = useSupabaseAuth();
@@ -1023,9 +1165,10 @@ export default function MyStorePageClient() {
             </div>
           )}
         </section>
-      </div>
 
-      {/* Delete Confirmation Modal */}
+        {/* Vendor Reviews Section */}
+        <VendorReviewsSection userId={user?.id || null} />
+      </div>
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(null)}>
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>

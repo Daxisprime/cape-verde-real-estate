@@ -6,14 +6,15 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 interface ReviewDrawerProps {
-  vendorId: string;
+  itemId?: string;
+  vendorId?: string;
   vendorName: string;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export default function ReviewDrawer({ vendorId, vendorName, isOpen, onClose, onSuccess }: ReviewDrawerProps) {
+export default function ReviewDrawer({ itemId, vendorId, vendorName, isOpen, onClose, onSuccess }: ReviewDrawerProps) {
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -25,6 +26,11 @@ export default function ReviewDrawer({ vendorId, vendorName, isOpen, onClose, on
   const handleSubmit = async () => {
     if (rating === 0) {
       toast({ title: "Erro", description: "Selecione uma avaliacao.", variant: "destructive" });
+      return;
+    }
+
+    if (!itemId && !vendorId) {
+      toast({ title: "Erro", description: "Contexto de avaliacao invalido.", variant: "destructive" });
       return;
     }
 
@@ -40,7 +46,7 @@ export default function ReviewDrawer({ vendorId, vendorName, isOpen, onClose, on
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ vendorId, rating, comment }),
+        body: JSON.stringify({ itemId: itemId || undefined, vendorId: vendorId || undefined, rating, comment }),
       });
 
       const data = await response.json();
@@ -81,55 +87,57 @@ export default function ReviewDrawer({ vendorId, vendorName, isOpen, onClose, on
           </p>
 
           {/* Star Rating */}
-          <div className="flex items-center justify-center gap-1.5">
+          <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-                className="p-1 transition-transform hover:scale-110"
+                className="p-0.5 transition-transform hover:scale-110"
               >
                 <Star
                   className={`h-8 w-8 transition-colors ${
                     star <= (hoverRating || rating)
                       ? "fill-amber-400 text-amber-400"
-                      : "text-gray-200"
+                      : "text-gray-300"
                   }`}
                 />
               </button>
             ))}
+            {rating > 0 && (
+              <span className="ml-2 text-sm font-medium text-gray-700">
+                {rating === 1 && "Mau"}
+                {rating === 2 && "Razoavel"}
+                {rating === 3 && "Bom"}
+                {rating === 4 && "Muito Bom"}
+                {rating === 5 && "Excelente"}
+              </span>
+            )}
           </div>
-          <p className="text-center text-xs text-gray-400">
-            {rating === 0 && "Toque para avaliar"}
-            {rating === 1 && "Muito mau"}
-            {rating === 2 && "Mau"}
-            {rating === 3 && "Razoavel"}
-            {rating === 4 && "Bom"}
-            {rating === 5 && "Excelente"}
-          </p>
 
           {/* Comment */}
-          <textarea
-            placeholder="Escreva um comentario (opcional)..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl resize-none h-24 focus:ring-2 focus:ring-amber-200 focus:border-amber-400 outline-none"
-            maxLength={500}
-          />
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1 block">Comentario (opcional)</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Descreva a sua experiencia..."
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-400 mt-1 text-right">{comment.length}/500</p>
+          </div>
 
           {/* Submit */}
           <button
             onClick={handleSubmit}
-            disabled={rating === 0 || submitting}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={submitting || rating === 0}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-medium text-sm transition-colors"
           >
-            {submitting ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            {submitting ? "A enviar..." : "Enviar Avaliacao"}
+            <Send className="h-4 w-4" />
+            {submitting ? "Enviando..." : "Enviar Avaliacao"}
           </button>
         </div>
       </div>
