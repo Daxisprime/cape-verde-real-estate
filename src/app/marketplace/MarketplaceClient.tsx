@@ -7,6 +7,8 @@ import { useMarketplace, MARKETPLACE_CATEGORIES, CAPE_VERDE_ISLANDS, type Market
 import { useLanguage } from '@/contexts/LanguageContext';
 import MarketplaceItemDrawer from '@/components/MarketplaceItemDrawer';
 import ShareButton from '@/components/ShareButton';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const CVE_TO_EUR = 0.00907;
 
@@ -30,7 +32,7 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(days / 30)}mo`;
 }
 
-export default function MarketplaceClient() {
+export default function MarketplaceClient({ isHomepage = false }: { isHomepage?: boolean }) {
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -76,15 +78,21 @@ export default function MarketplaceClient() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {isHomepage && <Header />}
+
       {/* Top Bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors flex-shrink-0">
-            <Home className="w-4 h-4" />
-            <span className="text-sm font-medium hidden sm:inline">Home</span>
-          </Link>
-          <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
-          <h1 className="text-lg font-bold text-slate-900 flex-shrink-0">Marketplace</h1>
+          {!isHomepage && (
+            <>
+              <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors flex-shrink-0">
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">Home</span>
+              </Link>
+              <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
+            </>
+          )}
+          <h1 className="text-lg font-bold text-slate-900 flex-shrink-0">{isHomepage ? 'Pro.CV' : 'Marketplace'}</h1>
 
           {/* Search */}
           <form onSubmit={handleSearch} className="flex-1 max-w-lg ml-auto">
@@ -423,6 +431,8 @@ export default function MarketplaceClient() {
 
       {/* Item Detail Drawer */}
       <MarketplaceItemDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />
+
+      {isHomepage && <Footer />}
     </div>
   );
 }
