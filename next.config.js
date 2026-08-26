@@ -25,6 +25,16 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
+  productionBrowserSourceMaps: false,
+  output: 'standalone',
+  webpack: (config, { isServer }) => {
+    config.optimization.minimize = true;
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      maxSize: 200000,
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
