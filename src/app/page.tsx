@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import MarketplaceClient from "@/app/marketplace/MarketplaceClient";
+import HomeContent from '@/components/HomeContent';
 
 export default function HomePage() {
-  return (
-    <Suspense>
-      <MarketplaceClient isHomepage />
-    </Suspense>
-  );
+  return <HomeContent />;
 }
