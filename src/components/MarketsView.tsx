@@ -386,6 +386,38 @@ export default function MarketsView() {
         )}
       </div>
 
+      {/* Mobile Category Bar - horizontal scroll */}
+      <div className="md:hidden flex-shrink-0 bg-white border-b border-slate-100 relative z-30">
+        <div className="flex overflow-x-auto gap-1 px-2 py-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <button
+            onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
+            className={`flex flex-col items-center justify-center flex-shrink-0 w-[68px] py-1.5 rounded-lg transition-colors ${
+              !selectedCategory ? 'bg-blue-50 text-[#0044FF]' : 'text-slate-600'
+            }`}
+          >
+            <span className="text-base leading-none mb-1"><LayoutGrid className="w-4 h-4" /></span>
+            <span className="text-[10px] font-medium leading-tight text-center">{t.allCat || 'Todos'}</span>
+          </button>
+          {MARKET_TAXONOMY.map((cat) => (
+            <button
+              key={cat.name}
+              onClick={() => {
+                setSelectedCategory(selectedCategory === cat.name ? null : cat.name);
+                setSelectedSubcategory(null);
+              }}
+              className={`flex flex-col items-center justify-center flex-shrink-0 w-[68px] py-1.5 rounded-lg transition-colors ${
+                selectedCategory === cat.name ? 'bg-blue-50 text-[#0044FF]' : 'text-slate-600'
+              }`}
+            >
+              <span className="text-base leading-none mb-1">{cat.icon}</span>
+              <span className="text-[10px] font-medium leading-tight text-center line-clamp-2">
+                {(t[CATEGORY_TRANSLATION_KEYS[cat.name]] || cat.name).split(' ')[0]}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Container */}
       <div className="w-full flex-1 flex flex-row overflow-hidden relative">
 
