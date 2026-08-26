@@ -34,12 +34,10 @@ function timeAgo(dateStr: string): string {
 
 interface SellerProfile {
   id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  island: string | null;
-  municipality: string | null;
+  name: string | null;
+  avatar: string | null;
   phone: string | null;
-  whatsapp: string | null;
+  whatsapp_number: string | null;
   created_at: string | null;
   store_name: string | null;
   store_logo: string | null;
@@ -118,7 +116,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, island, municipality, phone, whatsapp, created_at, store_name, store_logo, verified_at, rating_average, review_count')
+        .select('id, name, avatar, phone, whatsapp_number, created_at, store_name, store_logo, verified_at, rating_average, review_count')
         .eq('id', userId)
         .maybeSingle();
 
@@ -220,14 +218,14 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
     : ['https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=600&h=400&fit=crop'];
 
   const sellerPhone = seller?.phone || item.contact_phone || '';
-  const sellerWhatsapp = seller?.whatsapp || item.contact_whatsapp || sellerPhone;
+  const sellerWhatsapp = seller?.whatsapp_number || item.contact_whatsapp || sellerPhone;
   const whatsappMessage = encodeURIComponent(`Olá, estou interessado no seu item "${item.title}" anunciado no Pro.CV. Ainda está disponível?`);
   const whatsappUrl = sellerWhatsapp
     ? `https://wa.me/${sellerWhatsapp.replace(/\D/g, '')}?text=${whatsappMessage}`
     : '#';
-  const sellerName = seller?.store_name || seller?.full_name || 'Seller';
-  const sellerAvatar = seller?.store_logo || seller?.avatar_url || null;
-  const sellerIsland = seller?.island || item.island;
+  const sellerName = seller?.store_name || seller?.name || 'Seller';
+  const sellerAvatar = seller?.store_logo || seller?.avatar || null;
+  const sellerIsland = item.island;
   const sellerIsVerified = !!seller?.verified_at;
   const sellerRating = seller?.rating_average || 0;
   const sellerReviewCount = seller?.review_count || 0;
