@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useSearchMode } from '@/contexts/SearchModeContext';
@@ -229,6 +229,58 @@ export default function MarketsView() {
   const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
+
+  // Bottom sheet snap logic (mobile only)
+  type SnapPoint = 'collapsed' | 'half' | 'expanded';
+  const [sheetSnap, setSheetSnap] = useState<SnapPoint>('collapsed');
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const dragCurrentY = useRef(0);
+  const isDragging = useRef(false);
+
+  const snapHeights: Record<SnapPoint, string> = {
+    collapsed: '80px',
+    half: '40vh',
+    expanded: 'calc(100vh - 64px)',
+  };
+
+  const snapOrder: SnapPoint[] = ['collapsed', 'half', 'expanded'];
+
+  const handleSheetTouchStart = useCallback((e: React.TouchEvent) => {
+    isDragging.current = true;
+    dragStartY.current = e.touches[0].clientY;
+    dragCurrentY.current = e.touches[0].clientY;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = 'none';
+    }
+  }, []);
+
+  const handleSheetTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging.current || !sheetRef.current) return;
+    dragCurrentY.current = e.touches[0].clientY;
+    const delta = dragStartY.current - dragCurrentY.current;
+    const currentHeight = sheetRef.current.getBoundingClientRect().height;
+    const newHeight = Math.max(80, Math.min(window.innerHeight - 64, currentHeight + delta));
+    sheetRef.current.style.height = `${newHeight}px`;
+    dragStartY.current = dragCurrentY.current;
+  }, []);
+
+  const handleSheetTouchEnd = useCallback(() => {
+    isDragging.current = false;
+    if (!sheetRef.current) return;
+    sheetRef.current.style.transition = 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+    const currentHeight = sheetRef.current.getBoundingClientRect().height;
+    const vh = window.innerHeight - 64;
+    const thresholds = [80, vh * 0.4, vh];
+    let closest: SnapPoint = 'collapsed';
+    let minDist = Infinity;
+    thresholds.forEach((t, i) => {
+      const dist = Math.abs(currentHeight - t);
+      if (dist < minDist) { minDist = dist; closest = snapOrder[i]; }
+    });
+    setSheetSnap(closest);
+    sheetRef.current.style.height = snapHeights[closest];
+  }, []);
 
   const { items: marketplaceDbItems } = useMarketplace({});
 
@@ -644,28 +696,48 @@ export default function MarketsView() {
                   onDetailRequest={handleDetailRequest}
                 />
               </div>
-              {/* Desktop sidebar / Mobile bottom drawer with GPU-accelerated slide */}
-              <div className="
-                order-2 md:order-1
-                fixed md:relative
-                bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto
-                w-full md:w-80
-                h-[45vh] md:h-full
-                bg-white
-                border-t md:border-t-0 md:border-r border-slate-200
-                rounded-t-2xl md:rounded-none
-                shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:shadow-none
-                z-30 md:z-auto
-                overflow-hidden
-                will-change-transform
-                translate-y-0
-                transition-transform duration-300
-              " style={{ transitionTimingFunction: 'cubic-bezier(0.32, 0.72, 0, 1)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
-                {/* Drawer handle for mobile */}
-                <div className="md:hidden flex justify-center pt-2 pb-1">
-                  <div className="w-10 h-1 bg-slate-300 rounded-full" />
+              {/* Desktop sidebar / Mobile draggable bottom sheet */}
+              <div
+                ref={sheetRef}
+                onTouchStart={handleSheetTouchStart}
+                onTouchMove={handleSheetTouchMove}
+                onTouchEnd={handleSheetTouchEnd}
+                className="
+                  order-2 md:order-1
+                  fixed md:relative
+                  bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto
+                  w-full md:w-80
+                  md:!h-full
+                  bg-white
+                  border-t md:border-t-0 md:border-r border-slate-200
+                  rounded-t-2xl md:rounded-none
+                  shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:shadow-none
+                  z-30 md:z-auto
+                  overflow-hidden
+                  will-change-[height]
+                "
+                style={{
+                  height: snapHeights[sheetSnap],
+                  transition: 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                }}
+              >
+                {/* Drag handle for mobile */}
+                <div
+                  className="md:hidden flex flex-col items-center pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none"
+                  onClick={() => {
+                    const idx = snapOrder.indexOf(sheetSnap);
+                    const next = snapOrder[(idx + 1) % snapOrder.length];
+                    setSheetSnap(next);
+                  }}
+                >
+                  <div className="w-10 h-1.5 bg-slate-300 rounded-full" />
+                  <span className="text-[9px] text-slate-400 mt-0.5 font-medium">
+                    {filteredItems.length} items
+                  </span>
                 </div>
-                <div className="h-full overflow-y-auto px-2 py-2 md:px-3 md:py-3">
+                <div className={`flex-1 px-2 py-2 md:px-3 md:py-3 ${sheetSnap === 'collapsed' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
                   <div className="columns-1 gap-1.5 md:gap-2">
                     {filteredItems.map((item, index) => (
                       <div
@@ -741,7 +813,7 @@ export default function MarketsView() {
 
       {/* Floating View Toggle Pill */}
       <div
-        onClick={() => setIsMapViewActive(!isMapViewActive)}
+        onClick={() => { setIsMapViewActive(!isMapViewActive); setSheetSnap('collapsed'); }}
         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[99] bg-white border border-slate-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer font-semibold text-xs text-slate-800 active:scale-95"
       >
         {isMapViewActive ? (
