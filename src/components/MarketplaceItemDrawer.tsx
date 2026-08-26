@@ -48,7 +48,7 @@ interface SellerProfile {
 
 interface SellerLink {
   platform: string;
-  url: string;
+  formatted_url: string;
 }
 
 interface MarketplaceItemDrawerProps {
@@ -126,9 +126,9 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
 
       const { data: linksData } = await supabase
         .from('user_links')
-        .select('platform, url')
+        .select('platform, formatted_url')
         .eq('user_id', userId)
-        .eq('is_active', true);
+        .eq('is_public', true);
 
       if (linksData) {
         setSellerLinks(linksData as unknown as SellerLink[]);
@@ -490,7 +490,7 @@ export default function MarketplaceItemDrawer({ item, onClose }: MarketplaceItem
                         {sellerLinks.map((link, i) => (
                           <a
                             key={i}
-                            href={link.url}
+                            href={link.formatted_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-600 hover:border-blue-300 hover:text-blue-600 transition-colors"

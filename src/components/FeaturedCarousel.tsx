@@ -72,7 +72,7 @@ export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarousel
       if (supabase && mode === "markets") {
         const { data } = await supabase
           .from("marketplace_items")
-          .select("id, title, price, island, images, category")
+          .select("id, title, price_cve, island, images, category")
           .eq("is_featured", true)
           .gte("featured_until", new Date().toISOString())
           .order("featured_until", { ascending: false })
@@ -82,7 +82,7 @@ export default function FeaturedCarousel({ mode, onItemClick }: FeaturedCarousel
           fetched = data.map((m) => ({
             id: m.id,
             title: m.title || "Untitled",
-            price: m.price || 0,
+            price: m.price_cve || 0,
             location: "",
             island: m.island || "Cape Verde",
             image: m.images?.[0] || "",
