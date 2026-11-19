@@ -24,15 +24,6 @@ const nextConfig = {
   experimental: {
     workerThreads: false,
     cpus: 1,
-    webpackMemoryOptimizations: true,
-  },
-  productionBrowserSourceMaps: false,
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      config.cache = false;
-      config.parallelism = 1;
-    }
-    return config;
   },
 };
 
