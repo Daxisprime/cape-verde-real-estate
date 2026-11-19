@@ -51,7 +51,7 @@ export default function ZapProLoginPage() {
   return (
     <div className="min-h-screen bg-[#0F172A] text-white flex flex-col">
       <header className="px-4 h-16 flex items-center">
-        <Link href="/zappro" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="font-bold text-xl">ZapPro</span>
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EF4444] opacity-75" />

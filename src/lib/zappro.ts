@@ -1,104 +1,175 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ---------- Types matching the existing zappro_* schema ----------
+export type StoreType = 'retail' | 'showcase';
+
+export interface ProductOption {
+  name: string;
+  choices: string[];
+}
 
 export interface DeliveryZone {
-  id: string;
-  name: string;
+  zone: string;
   fee: number;
-}
-
-export interface RetailOptionChoice {
-  label: string;
-  price_delta: number;
-}
-export interface RetailOption {
-  name: string;
-  choices: RetailOptionChoice[];
-}
-export interface ShowcaseSpec {
-  label: string;
-  value: string;
 }
 
 export interface ZapShop {
   id: string;
-  owner_id: string;
   slug: string;
   name: string;
   whatsapp_number: string;
-  store_type: 'retail' | 'showcase';
+  store_type: StoreType;
   logo_url: string | null;
   banner_url: string | null;
   currency: string;
-  delivery_zones: DeliveryZone[] | null;
-  sync_to_marketplace: boolean;
-  plan_tier: 'free' | 'pro';
-  monthly_order_count: number;
-  created_at: string;
+  description: string | null;
+  delivery_zones: DeliveryZone[];
 }
 
 export interface ZapProduct {
   id: string;
-  shop_id: string;
   title: string;
   description: string | null;
   price: number;
   image_url: string | null;
   category: string | null;
-  options: RetailOption[] | ShowcaseSpec[] | null;
-  in_stock: boolean;
-  created_at: string;
+  options: ProductOption[];
 }
 
-export interface ZapOrderInsert {
-  shop_id: string;
-  order_type: 'order' | 'inquiry';
-  customer_name: string;
-  customer_phone: string | null;
-  delivery_zone: string | null;
-  delivery_fee: number;
-  delivery_landmark: string | null;
-  payment_method: string | null;
-  items: unknown;
-  subtotal: number;
-  total: number;
-  notes: string | null;
-  status: 'new';
+export interface SelectedOption {
+  name: string;
+  choice: string;
+  priceDelta: number;
 }
 
-// ---------- Supabase client (ZapPro-scoped session) ----------
+export interface CartItem {
+  key: string;
+  productId: string;
+  title: string;
+  qty: number;
+  selectedOptions: SelectedOption[];
+  unitPrice: number;
+}
+
+export const PAYMENT_METHODS = ['Cash', 'Vinti4 / POS', 'Bank Transfer / Mobile Money'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const ZAPPRO_SIGNATURE = '\n\n⚡ _Storefront powered by ZapPro_';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-let _client: ReturnType<typeof createClient> | null = null;
+let client: ReturnType<typeof createClient> | null = null;
 
 export function zapproClient() {
   if (!supabaseUrl || !supabaseAnonKey) return null;
-  if (_client) return _client;
-  _client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      storageKey: 'zappro-auth-token',
-    },
-    global: { headers: { 'X-Client-Info': 'zappro-web' } },
-  });
-  return _client;
+  if (!client) {
+    client = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storageKey: 'zappro-auth-token',
+      },
+      global: { headers: { 'X-Client-Info': 'zappro-web' } },
+    });
+  }
+  return client;
 }
 
-// ---------- Currency formatting ----------
+// ---------- Defensive parsing of rows from zappro_shops / zappro_products ----------
+
+type Row = Record<string, unknown>;
+
+function asArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function str(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function num(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export function parseOptions(value: unknown): ProductOption[] {
+  return asArray(value)
+    .map((o) => {
+      const row = (o ?? {}) as Row;
+      const name = str(row.name);
+      const choices = asArray(row.choices)
+        .map((c) => (typeof c === 'string' ? c.trim() : typeof c === 'number' ? String(c) : ''))
+        .filter(Boolean);
+      return name && choices.length ? { name, choices } : null;
+    })
+    .filter((o): o is ProductOption => o !== null);
+}
+
+export function parseZones(value: unknown): DeliveryZone[] {
+  return asArray(value)
+    .map((z) => {
+      const row = (z ?? {}) as Row;
+      const zone = str(row.zone) ?? str(row.name);
+      return zone ? { zone, fee: Math.max(0, num(row.fee)) } : null;
+    })
+    .filter((z): z is DeliveryZone => z !== null);
+}
+
+export function parseShop(row: Row): ZapShop {
+  return {
+    id: String(row.id),
+    slug: String(row.slug ?? ''),
+    name: str(row.name) ?? 'Store',
+    whatsapp_number: String(row.whatsapp_number ?? ''),
+    store_type: row.store_type === 'showcase' ? 'showcase' : 'retail',
+    logo_url: str(row.logo_url),
+    banner_url: str(row.banner_url),
+    currency: str(row.currency) ?? 'CVE',
+    description: str(row.description),
+    delivery_zones: parseZones(row.delivery_zones),
+  };
+}
+
+export function parseProduct(row: Row): ZapProduct {
+  return {
+    id: String(row.id),
+    title: str(row.title) ?? str(row.name) ?? 'Untitled',
+    description: str(row.description),
+    price: num(row.price),
+    image_url: str(row.image_url),
+    category: str(row.category),
+    options: parseOptions(row.options),
+  };
+}
+
+export function isProductActive(row: Row): boolean {
+  return row.is_active !== false && row.in_stock !== false && row.active !== false;
+}
+
+/** Reads a price hint like "Spicy Sauce (+100)" from a choice label. */
+export function choicePriceDelta(choice: string): number {
+  const match = choice.match(/\(\s*\+\s*([\d.,]+)\s*\)/);
+  return match ? num(match[1].replace(/,/g, '')) : 0;
+}
+
+export function choiceLabel(choice: string): string {
+  return choice.replace(/\(\s*\+\s*[\d.,]+\s*\)/, '').trim() || choice;
+}
+
+// ---------- Formatting ----------
 
 export function formatPrice(amount: number, currency: string): string {
-  const rounded = Math.round(amount);
-  const formatted = rounded.toLocaleString('en-US');
-  return `${formatted} ${currency}`;
+  return `${Math.round(amount).toLocaleString('pt-PT')} ${currency}`;
 }
-
-// ---------- WhatsApp helpers ----------
 
 export function cleanWhatsAppNumber(raw: string): string {
   return raw.replace(/\D/g, '');
@@ -112,260 +183,100 @@ export function orderCodeFromId(id: string): string {
   return id.replace(/-/g, '').slice(0, 6).toUpperCase();
 }
 
-// ---------- Cart item shape ----------
+// ---------- Receipts ----------
 
-export interface CartItem {
-  productId: string;
-  title: string;
-  basePrice: number;
-  qty: number;
-  selectedOptions: { name: string; choice: string; priceDelta: number }[];
-  unitPrice: number;
-  lineTotal: number;
+interface OrderReceipt {
+  shop: ZapShop;
+  code: string | null;
+  items: CartItem[];
+  customerName: string;
+  customerPhone: string;
+  zone: DeliveryZone | null;
+  landmark: string;
+  payment: PaymentMethod;
+  subtotal: number;
+  total: number;
 }
 
-export function computeUnitPrice(base: number, deltas: number[]): number {
-  return base + deltas.reduce((a, b) => a + b, 0);
+export function buildOrderMessage(r: OrderReceipt): string {
+  const c = r.shop.currency;
+  const lines = r.items.map((i) => {
+    const opts = i.selectedOptions.map((o) => `   - ${o.name}: ${o.choice}`).join('\n');
+    return `• ${i.qty}x ${i.title} — ${formatPrice(i.unitPrice * i.qty, c)}${opts ? `\n${opts}` : ''}`;
+  });
+  const parts = [
+    `🛒 *NEW ORDER${r.code ? ` #${r.code}` : ''}*`,
+    `*${r.shop.name}*`,
+    '',
+    '*Items*',
+    ...lines,
+    '',
+    `Subtotal: ${formatPrice(r.subtotal, c)}`,
+  ];
+  if (r.zone) parts.push(`Delivery (${r.zone.zone}): ${formatPrice(r.zone.fee, c)}`);
+  parts.push(`*TOTAL: ${formatPrice(r.total, c)}*`, '', `👤 *Name:* ${r.customerName}`);
+  if (r.customerPhone) parts.push(`📞 *Phone:* ${r.customerPhone}`);
+  if (r.zone) parts.push(`📍 *Zone:* ${r.zone.zone}`);
+  if (r.landmark) parts.push(`🏠 *Landmark:* ${r.landmark}`);
+  parts.push(`💳 *Payment:* ${r.payment}`);
+  return parts.join('\n') + ZAPPRO_SIGNATURE;
 }
 
-// ---------- Demo data ----------
-
-export const DEMO_RETAIL_SLUG = 'demo-retail';
-export const DEMO_SHOWCASE_SLUG = 'demo-showcase';
-
-export const demoRetailShop: ZapShop = {
-  id: 'demo-retail-shop',
-  owner_id: 'demo',
-  slug: DEMO_RETAIL_SLUG,
-  name: 'Sabor da Terra',
-  whatsapp_number: '238991234567',
-  store_type: 'retail',
-  logo_url: null,
-  banner_url: null,
-  currency: 'CVE',
-  delivery_zones: [
-    { id: 'z1', name: 'Achada Grande', fee: 200 },
-    { id: 'z2', name: 'Fazenda', fee: 250 },
-    { id: 'z3', name: 'Palmarejo', fee: 300 },
-    { id: 'z4', name: 'Plateau', fee: 350 },
-  ],
-  sync_to_marketplace: true,
-  plan_tier: 'pro',
-  monthly_order_count: 0,
-  created_at: new Date().toISOString(),
-};
-
-export const demoRetailProducts: ZapProduct[] = [
-  {
-    id: 'r1',
-    shop_id: 'demo-retail-shop',
-    title: 'Smash Duplo',
-    description: 'Dois hambúrgres smash, cheddar, picles, molho da casa no pão brioche.',
-    price: 950,
-    image_url:
-      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=70',
-    category: 'Burgers',
-    options: [
-      {
-        name: 'Extra',
-        choices: [
-          { label: 'Normal', price_delta: 0 },
-          { label: 'Extra Cheese', price_delta: 150 },
-          { label: 'Extra Bacon', price_delta: 200 },
-        ],
-      },
-      {
-        name: 'Spice',
-        choices: [
-          { label: 'Mild', price_delta: 0 },
-          { label: 'Spicy', price_delta: 0 },
-        ],
-      },
-    ],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'r2',
-    shop_id: 'demo-retail-shop',
-    title: 'Frango Grelhado',
-    description: 'Meio frango grelhado, batata frita e salada.',
-    price: 850,
-    image_url:
-      'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?auto=format&fit=crop&w=900&q=70',
-    category: 'Pratos',
-    options: [],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'r3',
-    shop_id: 'demo-retail-shop',
-    title: 'Cachupa Quente',
-    description: 'Cachupa tradicional caboverdiana, servida com linguiça e ovo.',
-    price: 700,
-    image_url:
-      'https://images.unsplash.com/photo-1604908554007-3d69-1cb3a9d6dba3?auto=format&fit=crop&w=900&q=70',
-    category: 'Pratos',
-    options: [],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'r4',
-    shop_id: 'demo-retail-shop',
-    title: 'Sumo Natural de Papaya',
-    description: 'Sumo natural 350ml, sem açúcar adicionado.',
-    price: 300,
-    image_url:
-      'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=900&q=70',
-    category: 'Bebidas',
-    options: [],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'r5',
-    shop_id: 'demo-retail-shop',
-    title: 'Pastel com Queijo',
-    description: 'Pastel frito recheado com queijo local. Unidade.',
-    price: 120,
-    image_url:
-      'https://images.unsplash.com/photo-1505253716362-afaea1d3d1a0?auto=format&fit=crop&w=900&q=70',
-    category: 'Snacks',
-    options: [],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'r6',
-    shop_id: 'demo-retail-shop',
-    title: 'Bifana no Pão',
-    description: 'Bifana de porco marinada, mostarda e cebola caramelizada.',
-    price: 480,
-    image_url:
-      'https://images.unsplash.com/photo-1521305916504-4a112358de2c?auto=format&fit=crop&w=900&q=70',
-    category: 'Sandes',
-    options: [
-      {
-        name: 'Bebida',
-        choices: [
-          { label: 'Sem bebida', price_delta: 0 },
-          { label: 'Sumo +', price_delta: 200 },
-          { label: 'Refrigerante +', price_delta: 150 },
-        ],
-      },
-    ],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-];
-
-export const demoShowcaseShop: ZapShop = {
-  id: 'demo-showcase-shop',
-  owner_id: 'demo',
-  slug: DEMO_SHOWCASE_SLUG,
-  name: 'CV Motors & Imóveis',
-  whatsapp_number: '238998765432',
-  store_type: 'showcase',
-  logo_url: null,
-  banner_url: null,
-  currency: 'CVE',
-  delivery_zones: null,
-  sync_to_marketplace: false,
-  plan_tier: 'pro',
-  monthly_order_count: 0,
-  created_at: new Date().toISOString(),
-};
-
-export const demoShowcaseProducts: ZapProduct[] = [
-  {
-    id: 's1',
-    shop_id: 'demo-showcase-shop',
-    title: 'Toyota Hilux 2.4 Diesel 4x4',
-    description:
-      'Pick-up robusta, única dona, revisões na concessionária. Pneus novos, ar condicionado, câmara de marcha.',
-    price: 4500000,
-    image_url:
-      'https://images.unsplash.com/photo-1605436855712-4e1e3d6c8e8e?auto=format&fit=crop&w=1200&q=70',
-    category: 'Viaturas',
-    options: [
-      { label: 'Ano', value: '2022' },
-      { label: 'Caixa', value: 'Manual' },
-      { label: 'Combustível', value: 'Diesel' },
-      { label: 'Km', value: '38.000' },
-    ],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 's2',
-    shop_id: 'demo-showcase-shop',
-    title: 'T2 Ocean View — Santa Maria',
-    description:
-      'Apartamento T2 a 200m da praia de Santa Maria, varanda com vista oceano, condomínio com piscina.',
-    price: 18500000,
-    image_url:
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=70',
-    category: 'Imóveis',
-    options: [
-      { label: 'Tipologia', value: 'T2' },
-      { label: 'Área', value: '92 m²' },
-      { label: 'Vista', value: 'Oceano' },
-      { label: 'Piso', value: '3º' },
-    ],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 's3',
-    shop_id: 'demo-showcase-shop',
-    title: 'Honda CG 160 Start',
-    description: 'Mota nova, garantia de 2 anos, ideal para entregas e deslocações urbanas.',
-    price: 320000,
-    image_url:
-      'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=70',
-    category: 'Motas',
-    options: [
-      { label: 'Ano', value: '2024' },
-      { label: 'Cilindrada', value: '160cc' },
-      { label: 'Combustível', value: 'Gasolina' },
-    ],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 's4',
-    shop_id: 'demo-showcase-shop',
-    title: 'Armazém Industrial — Praia',
-    description:
-      'Armazém 280m² com escritório, portão de carga, zona industrial da Achada Grande. Ideal para logística.',
-    price: 22000000,
-    image_url:
-      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=70',
-    category: 'Imóveis',
-    options: [
-      { label: 'Área', value: '280 m²' },
-      { label: 'Tipo', value: 'Armazém' },
-      { label: 'Portão', value: 'Carga' },
-    ],
-    in_stock: true,
-    created_at: new Date().toISOString(),
-  },
-];
-
-export function getDemoShop(slug: string): ZapShop | null {
-  if (slug === DEMO_RETAIL_SLUG) return demoRetailShop;
-  if (slug === DEMO_SHOWCASE_SLUG) return demoShowcaseShop;
-  return null;
+interface InquiryReceipt {
+  shop: ZapShop;
+  code: string | null;
+  product: ZapProduct;
+  customerName: string;
+  customerPhone: string;
+  message: string;
 }
 
-export function getDemoProducts(slug: string): ZapProduct[] {
-  if (slug === DEMO_RETAIL_SLUG) return demoRetailProducts;
-  if (slug === DEMO_SHOWCASE_SLUG) return demoShowcaseProducts;
-  return [];
+export function buildInquiryMessage(r: InquiryReceipt): string {
+  const parts = [
+    `📩 *NEW INQUIRY${r.code ? ` #${r.code}` : ''}*`,
+    `*${r.shop.name}*`,
+    '',
+    `*Listing:* ${r.product.title}`,
+    `*Price:* ${formatPrice(r.product.price, r.shop.currency)}`,
+    '',
+    `👤 *Name:* ${r.customerName}`,
+    `📞 *Phone:* ${r.customerPhone}`,
+  ];
+  if (r.message) parts.push(`🗓️ *Viewing / Question:* ${r.message}`);
+  return parts.join('\n') + ZAPPRO_SIGNATURE;
 }
 
-export function isDemoSlug(slug: string): boolean {
-  return slug === DEMO_RETAIL_SLUG || slug === DEMO_SHOWCASE_SLUG;
+// ---------- Saving orders ----------
+
+/**
+ * Saves the order and returns a short order code, or null if it could not be saved.
+ * A failed save never blocks the WhatsApp hand-off so the merchant still receives the order.
+ */
+export async function saveOrder(payload: Row): Promise<string | null> {
+  const db = zapproClient();
+  if (!db) return null;
+  const { data, error } = await db
+    .from('zappro_orders')
+    .insert(payload as never)
+    .select('id')
+    .maybeSingle();
+  const row = data as { id?: string } | null;
+  if (error || !row?.id) {
+    console.error('ZapPro: could not save order', error?.message);
+    return null;
+  }
+  return orderCodeFromId(String(row.id));
+}
+
+/**
+ * Opens a blank tab synchronously (so mobile browsers don't block it as a popup),
+ * then points it at WhatsApp once the async save has finished.
+ */
+export function openPendingTab(): Window | null {
+  return typeof window !== 'undefined' ? window.open('', '_blank') : null;
+}
+
+export function sendToWhatsApp(tab: Window | null, url: string) {
+  if (tab && !tab.closed) tab.location.href = url;
+  else window.location.href = url;
 }
